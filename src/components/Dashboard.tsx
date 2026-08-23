@@ -150,7 +150,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <section className="bg-white rounded-[2rem] p-6 sm:p-8 border border-slate-100 shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           <div className="flex-1 space-y-2.5 max-w-xl text-left">
-            <span className="text-[11px] sm:text-xs font-extrabold text-blue-600 uppercase tracking-wider block">
+            <span className="text-[11px] sm:text-xs font-extrabold text-green-600 uppercase tracking-wider block">
               PAINEL PRINCIPAL
             </span>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
@@ -167,7 +167,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <div className="relative w-32 sm:w-36 h-40 sm:h-44 bg-gradient-to-b from-white to-slate-50 rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-300/40 p-3.5 flex flex-col justify-between transform rotate-2 hover:rotate-0 transition-transform duration-300">
               <div className="space-y-2">
                 {/* Linhas de cabeçalho do documento */}
-                <div className="h-2 w-12 bg-blue-100 rounded-full"></div>
+                <div className="h-2 w-12 bg-green-100 rounded-full"></div>
                 <div className="h-1.5 w-full bg-slate-200 rounded-full"></div>
                 <div className="h-1.5 w-4/5 bg-slate-200 rounded-full"></div>
                 <div className="h-1.5 w-full bg-slate-200 rounded-full"></div>
@@ -177,7 +177,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               {/* Linha de Assinatura com Tinta Azul */}
               <div className="pt-2 border-t border-slate-100">
                 <div className="h-5 flex items-center">
-                  <svg viewBox="0 0 100 25" className="w-20 h-5 text-blue-600">
+                  <svg viewBox="0 0 100 25" className="w-20 h-5 text-green-600">
                     <path
                       d="M 5,18 Q 15,4 25,12 T 45,8 T 65,16 T 85,10"
                       fill="none"
@@ -192,13 +192,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* Escudo 3D Azul com Checkmark */}
-            <div className="absolute -bottom-1 -left-2 sm:-left-4 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center shadow-lg shadow-blue-500/40 border-2 border-white transform -rotate-6">
+            <div className="absolute -bottom-1 -left-2 sm:-left-4 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-green-500 to-green-700 text-white flex items-center justify-center shadow-lg shadow-blue-500/40 border-2 border-white transform -rotate-6">
               <ShieldCheck className="w-8 h-8 sm:w-9 sm:h-9 text-white stroke-[2.5]" />
             </div>
 
             {/* Caneta 3D Inclinada */}
             <div className="absolute -top-1 -right-1 sm:right-1 transform rotate-45">
-              <div className="w-4 h-14 bg-gradient-to-b from-blue-600 to-blue-800 rounded-full shadow-md flex flex-col items-center justify-between p-0.5 border border-white">
+              <div className="w-4 h-14 bg-gradient-to-b from-green-600 to-green-800 rounded-full shadow-md flex flex-col items-center justify-between p-0.5 border border-white">
                 <div className="w-2 h-3 bg-white/40 rounded-full"></div>
                 <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[6px] border-t-amber-400"></div>
               </div>
@@ -218,8 +218,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
         >
           <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
             {/* Ícone dentro de círculo branco */}
-            <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-white text-blue-600 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform">
-              <Home className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600 stroke-[2]" />
+            <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-white text-green-600 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform">
+              <Home className="w-7 h-7 sm:w-8 sm:h-8 text-green-600 stroke-[2]" />
             </div>
             <div className="min-w-0 text-left">
               <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white leading-snug">
@@ -232,7 +232,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           {/* Botão de seta redonda à direita */}
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-blue-600 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-green-600 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
             <ChevronRight className="w-5 h-5 stroke-[2.5]" />
           </div>
         </div>
@@ -268,14 +268,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* Card 3: Exclusividade */}
         <div
           onClick={() => onNewContract('exclusividade')}
-          className="w-full rounded-[1.75rem] p-4 sm:p-5 bg-gradient-to-r from-[#7c3aed] via-[#8b5cf6] to-[#a855f7] text-white shadow-md shadow-purple-600/15 hover:shadow-lg hover:shadow-purple-600/25 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-between gap-4 group"
+          className="w-full rounded-[1.75rem] p-4 sm:p-5 bg-gradient-to-r from-[#7c3aed] via-[#8b5cf6] to-[#a855f7] text-white shadow-md shadow-slate-600/15 hover:shadow-lg hover:shadow-slate-600/25 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-between gap-4 group"
           role="button"
           title="Criar Contrato de Exclusividade com Monitor de Prazos"
         >
           <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
             {/* Ícone dentro de círculo branco */}
-            <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-white text-purple-600 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform">
-              <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8 text-purple-600 stroke-[2]" />
+            <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-white text-slate-600 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform">
+              <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8 text-slate-600 stroke-[2]" />
             </div>
             <div className="min-w-0 text-left">
               <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white leading-snug">
@@ -288,7 +288,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           {/* Botão de seta redonda à direita */}
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-purple-600 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-slate-600 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
             <ChevronRight className="w-5 h-5 stroke-[2.5]" />
           </div>
         </div>
@@ -299,8 +299,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* Cabeçalho do Resumo com Filtro */}
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
           <div className="flex items-center gap-2">
-            <BarChart2 className="w-4 h-4 text-blue-600 stroke-[2.5]" />
-            <span className="text-xs font-extrabold text-blue-600 uppercase tracking-wider">
+            <BarChart2 className="w-4 h-4 text-green-600 stroke-[2.5]" />
+            <span className="text-xs font-extrabold text-green-600 uppercase tracking-wider">
               RESUMO GERAL
             </span>
           </div>
@@ -332,12 +332,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       }}
                       className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center justify-between ${
                         timeFilter === key
-                          ? 'bg-blue-50 text-blue-700 font-bold'
+                          ? 'bg-green-50 text-green-700 font-bold'
                           : 'text-slate-700 hover:bg-slate-50'
                       }`}
                     >
                       <span>{timeFilterLabels[key]}</span>
-                      {timeFilter === key && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                      {timeFilter === key && <Check className="w-3.5 h-3.5 text-green-600" />}
                     </button>
                   ))}
                 </div>
@@ -357,7 +357,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               {formatCurrency(totalVendasGeral || 375000)}
             </div>
             <p className="text-xs text-slate-500 font-medium">
-              <span className="font-bold text-blue-600">{countTotalVendas || 2}</span> contratos de venda gerados
+              <span className="font-bold text-green-600">{countTotalVendas || 2}</span> contratos de venda gerados
             </p>
           </div>
 
@@ -368,7 +368,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="md:col-span-6 grid grid-cols-2 gap-x-4 gap-y-4 sm:gap-x-6 sm:gap-y-4">
             {/* 1. Contratos Gerados */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0">
                 <FileText className="w-5 h-5" />
               </div>
               <div>
@@ -413,7 +413,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* 4. Assinaturas Pendentes */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0">
                 <PenTool className="w-5 h-5" />
               </div>
               <div>
@@ -441,7 +441,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             onClick={scrollToContracts}
             className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-100 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center group-hover:scale-105 transition-transform">
               <Folder className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold text-slate-700 leading-tight">
@@ -454,7 +454,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             onClick={() => setIsClientsModalOpen(true)}
             className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-100 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center group-hover:scale-105 transition-transform">
               <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold text-slate-700 leading-tight">
@@ -467,7 +467,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             onClick={() => setIsPropertiesModalOpen(true)}
             className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-100 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center group-hover:scale-105 transition-transform">
               <Home className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold text-slate-700 leading-tight">
@@ -480,7 +480,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             onClick={() => setIsReportsModalOpen(true)}
             className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-100 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center group-hover:scale-105 transition-transform">
               <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold text-slate-700 leading-tight">
@@ -493,7 +493,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             onClick={() => onOpenWordTemplates?.()}
             className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-100 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center group-hover:scale-105 transition-transform">
               <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold text-slate-700 leading-tight">
@@ -508,7 +508,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <section className="bg-white rounded-[1.75rem] border border-slate-100 shadow-sm p-5 sm:p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold">
                 <Clock className="w-5 h-5" />
               </div>
               <div>
@@ -580,7 +580,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <div className="flex items-center justify-between pt-2 border-t border-slate-200 text-xs">
                     <div className="text-slate-600">
                       Valor: <strong className="text-slate-900">{formatCurrency(contract.valorTotal)}</strong>
-                      <span className="text-[10px] text-purple-700 ml-1 font-bold">
+                      <span className="text-[10px] text-slate-700 ml-1 font-bold">
                         ({ex?.percentualComissao}% comissão)
                       </span>
                     </div>
@@ -589,7 +589,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       onClick={() => onSelectContract(contract)}
                       className="px-3 py-1 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 font-bold text-xs flex items-center gap-1 cursor-pointer"
                     >
-                      <Eye className="w-3.5 h-3.5 text-blue-600" />
+                      <Eye className="w-3.5 h-3.5 text-green-600" />
                       <span>Ver</span>
                     </button>
                   </div>
@@ -605,7 +605,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Layers className="w-5 h-5 text-blue-600 shrink-0" />
+              <Layers className="w-5 h-5 text-green-600 shrink-0" />
               Contratos Registrados ({filteredContracts.length})
             </h3>
             <p className="text-xs text-slate-500">
@@ -628,7 +628,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <button
                 onClick={() => setSelectedCategory('venda_vista')}
                 className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === 'venda_vista' ? 'bg-white text-blue-700 shadow-xs font-bold' : 'text-slate-600'
+                  selectedCategory === 'venda_vista' ? 'bg-white text-green-700 shadow-xs font-bold' : 'text-slate-600'
                 }`}
               >
                 À Vista
@@ -644,7 +644,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <button
                 onClick={() => setSelectedCategory('exclusividade')}
                 className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === 'exclusividade' ? 'bg-white text-purple-700 shadow-xs font-bold' : 'text-slate-600'
+                  selectedCategory === 'exclusividade' ? 'bg-white text-slate-700 shadow-xs font-bold' : 'text-slate-600'
                 }`}
               >
                 Exclusividade
@@ -659,7 +659,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 placeholder="Buscar contrato, cliente ou nº..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-green-500 outline-none"
               />
             </div>
           </div>
@@ -697,7 +697,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                       <div className="shrink-0">
                         {contract.tipo === 'venda_vista' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold text-[10px] border border-blue-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 font-bold text-[10px] border border-green-200">
                             {contract.subcategoria === 'outros_bens' ? 'À Vista (Bens Móveis)' : 'À Vista (Imóvel)'}
                           </span>
                         )}
@@ -707,7 +707,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           </span>
                         )}
                         {contract.tipo === 'exclusividade' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 font-bold text-[10px] border border-purple-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-50 text-slate-700 font-bold text-[10px] border border-slate-200">
                             Exclusividade
                           </span>
                         )}
@@ -738,7 +738,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             <CheckCircle className="w-3 h-3" /> 100% Assinado
                           </span>
                         ) : hasSignatures ? (
-                          <span className="inline-flex items-center gap-1 text-blue-700 font-bold text-[11px] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                          <span className="inline-flex items-center gap-1 text-green-700 font-bold text-[11px] bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
                             <PenTool className="w-3 h-3" /> Parcialmente Assinado
                           </span>
                         ) : (
@@ -751,7 +751,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div className="grid grid-cols-5 gap-1.5 pt-2 border-t border-slate-100">
                       <button
                         onClick={() => onSelectContract(contract)}
-                        className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
+                        className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
                         title="Ver Contrato"
                       >
                         <Eye className="w-4 h-4" />
@@ -763,7 +763,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
                         title="Baixar Word (.docx)"
                       >
-                        <FileDown className="w-4 h-4 text-blue-600" />
+                        <FileDown className="w-4 h-4 text-green-600" />
                         <span>Word</span>
                       </button>
 
@@ -778,7 +778,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                       <button
                         onClick={() => onSignContractDirect(contract)}
-                        className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
+                        className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
                         title="Assinar Digitalmente"
                       >
                         <PenTool className="w-4 h-4" />
@@ -836,10 +836,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         {/* Modalidade */}
                         <td className="py-3 px-3">
                           {contract.tipo === 'venda_vista' && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-bold border border-blue-200">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-50 text-green-700 font-bold border border-green-200">
                               {contract.subcategoria === 'outros_bens' ? (
                                 <>
-                                  <Car className="w-3 h-3 text-blue-600" /> Venda à Vista (Bens Móveis)
+                                  <Car className="w-3 h-3 text-green-600" /> Venda à Vista (Bens Móveis)
                                 </>
                               ) : (
                                 <>
@@ -862,7 +862,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             </span>
                           )}
                           {contract.tipo === 'exclusividade' && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 font-bold border border-purple-200">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-50 text-slate-700 font-bold border border-slate-200">
                               <ShieldCheck className="w-3 h-3" /> Exclusividade ({contract.exclusividade?.prazoMesesOuDias}d)
                             </span>
                           )}
@@ -890,7 +890,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                               <CheckCircle className="w-3 h-3" /> 100% Assinado
                             </span>
                           ) : hasSignatures ? (
-                            <span className="inline-flex items-center gap-1 text-blue-700 font-bold text-[11px] bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                            <span className="inline-flex items-center gap-1 text-green-700 font-bold text-[11px] bg-green-50 px-2.5 py-0.5 rounded-full border border-green-200">
                               <PenTool className="w-3 h-3" /> Parcial ({contract.assinaturas.length}/2)
                             </span>
                           ) : (
@@ -903,7 +903,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => onSelectContract(contract)}
-                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer"
+                              className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-xl transition-colors cursor-pointer"
                               title="Visualizar Contrato"
                             >
                               <Eye className="w-4 h-4" />
@@ -911,7 +911,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                             <button
                               onClick={() => downloadDocxContract(contract)}
-                              className="p-2 text-slate-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer"
+                              className="p-2 text-slate-600 hover:text-green-700 hover:bg-green-50 rounded-xl transition-colors cursor-pointer"
                               title="Baixar Word (.docx)"
                             >
                               <FileDown className="w-4 h-4" />
@@ -927,7 +927,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                             <button
                               onClick={() => onSignContractDirect(contract)}
-                              className="p-2 text-slate-600 hover:text-purple-700 hover:bg-purple-50 rounded-xl transition-colors cursor-pointer"
+                              className="p-2 text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
                               title="Assinar Digitalmente"
                             >
                               <PenTool className="w-4 h-4" />
@@ -963,7 +963,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           onClick={() => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          className="flex flex-col items-center justify-center gap-0.5 p-1 text-blue-600 min-w-[54px] cursor-pointer"
+          className="flex flex-col items-center justify-center gap-0.5 p-1 text-green-600 min-w-[54px] cursor-pointer"
         >
           <Home className="w-5 h-5 stroke-[2.5]" />
           <span className="text-[10px] font-bold">Início</span>
@@ -972,7 +972,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* Contratos */}
         <button
           onClick={scrollToContracts}
-          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-blue-600 min-w-[54px] cursor-pointer"
+          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-green-600 min-w-[54px] cursor-pointer"
         >
           <FileText className="w-5 h-5" />
           <span className="text-[10px] font-medium">Contratos</span>
@@ -982,7 +982,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="relative -top-3 flex flex-col items-center">
           <button
             onClick={() => setIsMobileNewModalOpen(true)}
-            className="w-13 h-13 rounded-full bg-blue-600 hover:bg-blue-500 active:scale-95 text-white flex items-center justify-center shadow-lg shadow-blue-500/40 border-4 border-white transition-all cursor-pointer"
+            className="w-13 h-13 rounded-full bg-green-600 hover:bg-green-500 active:scale-95 text-white flex items-center justify-center shadow-lg shadow-blue-500/40 border-4 border-white transition-all cursor-pointer"
             title="Criar Novo Contrato"
           >
             <Plus className="w-6 h-6 stroke-[3]" />
@@ -993,7 +993,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* Vendas */}
         <button
           onClick={() => setIsReportsModalOpen(true)}
-          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-blue-600 min-w-[54px] cursor-pointer"
+          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-green-600 min-w-[54px] cursor-pointer"
         >
           <TrendingUp className="w-5 h-5" />
           <span className="text-[10px] font-medium">Vendas</span>
@@ -1002,7 +1002,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* Mais */}
         <button
           onClick={() => setIsMoreMenuOpen(true)}
-          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-blue-600 min-w-[54px] cursor-pointer"
+          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-green-600 min-w-[54px] cursor-pointer"
         >
           <MoreHorizontal className="w-5 h-5" />
           <span className="text-[10px] font-medium">Mais</span>
@@ -1017,7 +1017,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
@@ -1044,7 +1044,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <span>{c.comprador.nome} (Comprador)</span>
                     <span className="font-mono text-[11px] text-slate-500">{c.comprador.cpfCnpj}</span>
                   </div>
-                  <div className="text-[10px] text-blue-600 font-semibold pt-1 border-t border-slate-200 flex justify-between">
+                  <div className="text-[10px] text-green-600 font-semibold pt-1 border-t border-slate-200 flex justify-between">
                     <span>Ref: {c.numeroContrato} - {c.titulo}</span>
                     <span>{formatCurrency(c.valorTotal)}</span>
                   </div>
@@ -1068,7 +1068,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
                   <Home className="w-5 h-5" />
                 </div>
                 <div>
@@ -1116,7 +1116,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
                   <BarChart3 className="w-5 h-5" />
                 </div>
                 <div>
@@ -1133,12 +1133,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-between">
+              <div className="p-3.5 rounded-2xl bg-green-50 border border-green-100 flex items-center justify-between">
                 <div>
-                  <span className="text-blue-900 font-bold block">Vendas à Vista</span>
-                  <span className="text-blue-700 text-[11px]">{countVendasAVista} contratos liquidados</span>
+                  <span className="text-green-900 font-bold block">Vendas à Vista</span>
+                  <span className="text-green-700 text-[11px]">{countVendasAVista} contratos liquidados</span>
                 </div>
-                <span className="text-base font-extrabold text-blue-950">{formatCurrency(totalVendasAVista)}</span>
+                <span className="text-base font-extrabold text-green-950">{formatCurrency(totalVendasAVista)}</span>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-between">
@@ -1149,18 +1149,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <span className="text-base font-extrabold text-emerald-950">{formatCurrency(totalVendasParceladas)}</span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-between">
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
                 <div>
-                  <span className="text-purple-900 font-bold block">Contratos sob Exclusividade</span>
-                  <span className="text-purple-700 text-[11px]">{activeExclusivities.length} ativos para promoção</span>
+                  <span className="text-slate-900 font-bold block">Contratos sob Exclusividade</span>
+                  <span className="text-slate-700 text-[11px]">{activeExclusivities.length} ativos para promoção</span>
                 </div>
-                <span className="text-base font-extrabold text-purple-950">{exclusivityContracts.length} contratos</span>
+                <span className="text-base font-extrabold text-slate-950">{exclusivityContracts.length} contratos</span>
               </div>
             </div>
 
             <button
               onClick={() => setIsReportsModalOpen(false)}
-              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
+              className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
             >
               Concluído
             </button>
@@ -1174,7 +1174,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in slide-in-from-bottom sm:zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-green-600 text-white flex items-center justify-center">
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
@@ -1196,10 +1196,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   setIsMobileNewModalOpen(false);
                   onNewContract('venda_vista');
                 }}
-                className="w-full p-3.5 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 flex items-center justify-between text-left transition-colors cursor-pointer"
+                className="w-full p-3.5 rounded-2xl bg-green-50 hover:bg-green-100 border border-green-200 flex items-center justify-between text-left transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-green-600 text-white flex items-center justify-center shrink-0">
                     <Home className="w-5 h-5" />
                   </div>
                   <div>
@@ -1207,7 +1207,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div className="text-[11px] text-slate-600">Quitação integral imediata</div>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-blue-600" />
+                <ChevronRight className="w-5 h-5 text-green-600" />
               </button>
 
               <button
@@ -1234,10 +1234,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   setIsMobileNewModalOpen(false);
                   onNewContract('exclusividade');
                 }}
-                className="w-full p-3.5 rounded-2xl bg-purple-50 hover:bg-purple-100 border border-purple-200 flex items-center justify-between text-left transition-colors cursor-pointer"
+                className="w-full p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-between text-left transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-slate-600 text-white flex items-center justify-center shrink-0">
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
@@ -1245,7 +1245,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div className="text-[11px] text-slate-600">Corretagem com monitor de prazos</div>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-purple-600" />
+                <ChevronRight className="w-5 h-5 text-slate-600" />
               </button>
             </div>
           </div>
@@ -1274,7 +1274,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 }}
                 className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center gap-2 font-bold text-slate-800"
               >
-                <Users className="w-4 h-4 text-blue-600" />
+                <Users className="w-4 h-4 text-green-600" />
                 <span>Clientes</span>
               </button>
 
@@ -1285,7 +1285,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 }}
                 className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center gap-2 font-bold text-slate-800"
               >
-                <Home className="w-4 h-4 text-blue-600" />
+                <Home className="w-4 h-4 text-green-600" />
                 <span>Imóveis</span>
               </button>
 
@@ -1296,7 +1296,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 }}
                 className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center gap-2 font-bold text-slate-800"
               >
-                <BarChart3 className="w-4 h-4 text-blue-600" />
+                <BarChart3 className="w-4 h-4 text-green-600" />
                 <span>Relatórios</span>
               </button>
 
@@ -1307,7 +1307,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 }}
                 className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center gap-2 font-bold text-slate-800"
               >
-                <FileText className="w-4 h-4 text-blue-600" />
+                <FileText className="w-4 h-4 text-green-600" />
                 <span>Modelos Word</span>
               </button>
             </div>

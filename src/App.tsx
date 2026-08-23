@@ -24,7 +24,7 @@ function AuthGate() {
 
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen bg-[#070d24] flex items-center justify-center text-slate-400 text-sm">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-slate-400 text-sm">
         Carregando...
       </div>
     );
@@ -164,7 +164,7 @@ function MainApp() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f4f9] text-slate-900 font-sans flex flex-col antialiased">
+    <div className="min-h-screen bg-white text-slate-900 font-sans flex flex-col antialiased">
       {/* Barra de Navegação */}
       <Navbar
         currentView={currentView}

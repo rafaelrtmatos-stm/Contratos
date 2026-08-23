@@ -123,7 +123,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
         {/* Header Profissional */}
         <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-600 rounded-lg">
+            <div className="p-2 bg-green-600 rounded-lg">
               <FileText className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -159,7 +159,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
               onClick={() => setActiveType('venda_vista')}
               className={`p-2 sm:p-3 rounded-xl border text-left transition-all flex flex-col justify-between min-h-[58px] sm:min-h-[70px] cursor-pointer ${
                 activeType === 'venda_vista'
-                  ? 'bg-blue-50/90 border-blue-500 ring-2 ring-blue-500/20 shadow-xs'
+                  ? 'bg-green-50/90 border-green-500 ring-2 ring-green-500/20 shadow-xs'
                   : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/80 text-slate-600'
               }`}
             >
@@ -167,12 +167,12 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Banknote
                     className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${
-                      activeType === 'venda_vista' ? 'text-blue-600' : 'text-slate-400'
+                      activeType === 'venda_vista' ? 'text-green-600' : 'text-slate-400'
                     }`}
                   />
                   <span
                     className={`text-[11px] sm:text-xs font-bold truncate block ${
-                      activeType === 'venda_vista' ? 'text-blue-900' : 'text-slate-700'
+                      activeType === 'venda_vista' ? 'text-green-900' : 'text-slate-700'
                     }`}
                   >
                     1. Venda à Vista
@@ -253,7 +253,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
               onClick={() => setActiveType('exclusividade')}
               className={`p-2 sm:p-3 rounded-xl border text-left transition-all flex flex-col justify-between min-h-[58px] sm:min-h-[70px] cursor-pointer ${
                 activeType === 'exclusividade'
-                  ? 'bg-purple-50/90 border-purple-500 ring-2 ring-purple-500/20 shadow-xs'
+                  ? 'bg-slate-50/90 border-slate-500 ring-2 ring-slate-500/20 shadow-xs'
                   : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/80 text-slate-600'
               }`}
             >
@@ -261,12 +261,12 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                 <div className="flex items-center gap-1.5 min-w-0">
                   <ShieldCheck
                     className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${
-                      activeType === 'exclusividade' ? 'text-purple-600' : 'text-slate-400'
+                      activeType === 'exclusividade' ? 'text-slate-600' : 'text-slate-400'
                     }`}
                   />
                   <span
                     className={`text-[11px] sm:text-xs font-bold truncate block ${
-                      activeType === 'exclusividade' ? 'text-purple-900' : 'text-slate-700'
+                      activeType === 'exclusividade' ? 'text-slate-900' : 'text-slate-700'
                     }`}
                   >
                     3. Exclusividade
@@ -303,7 +303,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
             <div className="flex items-center gap-3">
               <div
                 className={`p-2.5 sm:p-3 rounded-xl shrink-0 ${
-                  currentMeta ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                  currentMeta ? 'bg-emerald-100 text-emerald-700' : 'bg-green-100 text-green-700'
                 }`}
               >
                 {currentMeta ? <FileCheck className="w-5 h-5 sm:w-6 sm:h-6" /> : <FileText className="w-5 h-5 sm:w-6 sm:h-6" />}
@@ -315,7 +315,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                   </span>
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
-                      currentMeta ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                      currentMeta ? 'bg-emerald-100 text-emerald-800' : 'bg-green-100 text-green-800'
                     }`}
                   >
                     {currentMeta ? 'Modelo Personalizado Ativo' : 'Modelo Padrão do Sistema'}
@@ -370,7 +370,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
           )}
 
           {/* Área de Upload */}
-          <div className="border-2 border-dashed border-slate-300 hover:border-blue-500 bg-white hover:bg-blue-50/40 rounded-2xl p-6 text-center transition-all">
+          <div className="border-2 border-dashed border-slate-300 hover:border-green-500 bg-white hover:bg-green-50/40 rounded-2xl p-6 text-center transition-all">
             <input
               ref={fileInputRef}
               type="file"
@@ -384,7 +384,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
               htmlFor="docx-upload-input"
               className="cursor-pointer flex flex-col items-center justify-center space-y-2"
             >
-              <div className="p-3.5 bg-blue-100 text-blue-700 rounded-full">
+              <div className="p-3.5 bg-green-100 text-green-700 rounded-full">
                 <Upload className="w-6 h-6" />
               </div>
               <div>
@@ -397,7 +397,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                   Envie o arquivo Word oficial do seu escritório ou imobiliária. O sistema utilizará a sua estrutura gráfica e tipográfica original.
                 </p>
               </div>
-              <span className="inline-flex items-center px-4 py-2 text-xs font-bold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-xs">
+              <span className="inline-flex items-center px-4 py-2 text-xs font-bold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-xs">
                 Selecionar Arquivo Word (.docx)
               </span>
             </label>
@@ -418,7 +418,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
               {/* Partes */}
               <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                  <Users className="w-4 h-4 text-blue-600" />
+                  <Users className="w-4 h-4 text-green-600" />
                   <span>Qualificação das Partes</span>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-relaxed">
@@ -440,7 +440,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
               {/* Financeiro */}
               <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                  <Banknote className="w-4 h-4 text-purple-600" />
+                  <Banknote className="w-4 h-4 text-slate-600" />
                   <span>Condições Financeiras e Pagamento</span>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-relaxed">

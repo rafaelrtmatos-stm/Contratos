@@ -201,10 +201,10 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           <button
             onClick={handleDownloadDocx}
             disabled={isDownloadingDocx}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors shadow-2xs cursor-pointer"
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-bold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors shadow-2xs cursor-pointer"
             title="Gera o arquivo Word (.docx) original substituindo apenas as TAGs com 100% de preservação de formatação"
           >
-            <FileDown className="w-4 h-4 text-blue-600 shrink-0" />
+            <FileDown className="w-4 h-4 text-green-600 shrink-0" />
             <span>{isDownloadingDocx ? 'Gerando...' : 'Word (.docx)'}</span>
           </button>
 
@@ -246,7 +246,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             onClick={() => handleModalityChange('digital')}
             className={`flex items-start gap-3.5 p-3.5 rounded-xl border-2 transition-all cursor-pointer select-none ${
               isDigital
-                ? 'border-blue-600 bg-blue-50/70 shadow-xs'
+                ? 'border-green-600 bg-green-50/70 shadow-xs'
                 : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/70'
             }`}
           >
@@ -255,16 +255,16 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               name="modalidadeAssinatura"
               checked={isDigital}
               onChange={() => handleModalityChange('digital')}
-              className="mt-1 w-4 h-4 text-blue-600 focus:ring-blue-500"
+              className="mt-1 w-4 h-4 text-green-600 focus:ring-green-500"
             />
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-green-600 shrink-0" />
                 <strong className="text-sm font-bold text-slate-900">Assinatura digital</strong>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
                 Contratado e Contratante assinam eletronicamente via sistema com código de confirmação. 
-                <strong className="text-blue-900 block mt-0.5">Sem campos ou linhas de testemunhas.</strong>
+                <strong className="text-green-900 block mt-0.5">Sem campos ou linhas de testemunhas.</strong>
               </p>
             </div>
           </label>
@@ -274,7 +274,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             onClick={() => handleModalityChange('manual')}
             className={`flex items-start gap-3.5 p-3.5 rounded-xl border-2 transition-all cursor-pointer select-none ${
               !isDigital
-                ? 'border-blue-600 bg-blue-50/70 shadow-xs'
+                ? 'border-green-600 bg-green-50/70 shadow-xs'
                 : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/70'
             }`}
           >
@@ -283,7 +283,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               name="modalidadeAssinatura"
               checked={!isDigital}
               onChange={() => handleModalityChange('manual')}
-              className="mt-1 w-4 h-4 text-blue-600 focus:ring-blue-500"
+              className="mt-1 w-4 h-4 text-green-600 focus:ring-green-500"
             />
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -300,8 +300,8 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
         {/* Ação Rápida de Assinatura se for Modalidade Digital */}
         {isDigital && (
-          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-blue-50/60 p-3 rounded-xl border border-blue-100">
-            <div className="text-xs text-blue-900">
+          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-green-50/60 p-3 rounded-xl border border-green-100">
+            <div className="text-xs text-green-900">
               {contract.assinaturas && contract.assinaturas.length === 2 ? (
                 <span className="font-bold text-emerald-700 flex items-center gap-1">
                   <Check className="w-4 h-4" /> Ambas as partes já assinaram digitalmente!
@@ -318,7 +318,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             </div>
             <button
               onClick={() => setIsSignModalOpen(true)}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer shrink-0 min-h-[38px]"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer shrink-0 min-h-[38px]"
             >
               <PenTool className="w-4 h-4" />
               <span>Abrir Painel de Assinatura Digital</span>
@@ -332,11 +332,11 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs print:hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-lg bg-purple-50 text-purple-700 border border-purple-200">
+              <div className="p-2.5 rounded-lg bg-slate-50 text-slate-700 border border-slate-200">
                 <Calendar className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-purple-700">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
                   Monitoramento de Prazo de Exclusividade
                 </span>
                 <p className="text-xs text-slate-600 mt-0.5">
@@ -390,7 +390,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
           <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-100 font-sans text-xs sm:text-sm space-y-3">
             <div>
-              <strong className="text-blue-900 block text-xs uppercase mb-1">
+              <strong className="text-green-900 block text-xs uppercase mb-1">
                 {vTermo}:
               </strong>
               <p className="text-slate-800 leading-relaxed">
@@ -440,7 +440,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           <div className="space-y-6 pt-6 border-t border-slate-200">
             <div className="flex items-center justify-between pb-2">
               <span className="text-xs font-sans font-bold uppercase tracking-wider text-[#001f3f] flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-blue-700" />
+                <ShieldCheck className="w-4 h-4 text-green-700" />
                 Certificação de Assinatura Eletrônica (MP nº 2.200-2/2001 e Lei 14.063/2020)
               </span>
               <span className="text-[11px] font-sans font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">

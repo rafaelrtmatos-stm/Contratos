@@ -47,7 +47,7 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({ isOpen, onClos
       <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-600 rounded-lg">
+            <div className="p-2 bg-green-600 rounded-lg">
               <UserPlus className="w-5 h-5 text-white" />
             </div>
             <h3 className="font-bold text-lg">Adicionar Usuário</h3>
@@ -65,7 +65,7 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({ isOpen, onClos
               required
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500"
             />
           </div>
 
@@ -76,7 +76,7 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({ isOpen, onClos
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500"
             />
           </div>
 
@@ -88,7 +88,7 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({ isOpen, onClos
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500"
             />
           </div>
 
@@ -112,7 +112,7 @@ export const AdminUsersPanel: React.FC<AdminUsersPanelProps> = ({ isOpen, onClos
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-bold text-sm py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
+            className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-60 text-white font-bold text-sm py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
           >
             {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
             Criar Usuário
