@@ -347,421 +347,56 @@ export function processDocxWithTemplater(
   }
 }
 
-// Gera o arquivo .docx preenchido a partir do modelo mestre ativo
+// Gera o arquivo .docx preenchido a partir do template enviado pelo usuário
 export async function generateFilledDocx(contract: ContractData): Promise<Uint8Array> {
   const tags = buildUnifiedContractTags(contract);
   const templateKey = resolveTemplateKey(contract.tipo, contract.subcategoria);
+  
+  // Buscar template customizado salvo pelo usuário
   let templateBuffer = getCustomWordTemplate(templateKey);
 
   if (!templateBuffer) {
-    // Se o usuário ainda não fez upload de um .docx específico, gerar a estrutura base .docx
-    templateBuffer = await generateBaseDocxTemplate(templateKey);
+    throw new Error(
+      `Template não encontrado para ${templateKey}. Por favor, envie um documento DOCX formatado com as tags para substituição.`
+    );
   }
 
-  // Usar Docxtemplater para substituição confiável de tags {{}}
-  try {
-    return await processDocxWithTemplaterFixed(templateBuffer, tags);
-  } catch (error) {
-    console.warn('Docxtemplater falhou, usando processador direto:', error);
-    // Fallback: processar o arquivo .docx original preservando 100% da formatação OpenXML
-    return await processDocxDirectly(templateBuffer, tags);
-  }
+  // Processar o template usando Docxtemplater para substituir tags {{}}
+  return await processDocxWithTemplater(templateBuffer, tags);
 }
 
-// Nova função usando Docxtemplater com melhor tratamento de erros
-async function processDocxWithTemplaterFixed(docxBuffer: ArrayBuffer, tags: Record<string, string>): Promise<Uint8Array> {
+// Processar DOCX com Docxtemplater - substitui {{TAG}} pelos dados
+async function processDocxWithTemplater(docxBuffer: ArrayBuffer, tags: Record<string, string>): Promise<Uint8Array> {
   try {
     const zip = new PizZip(docxBuffer);
     const doc = new Docxtemplater(zip, {
-      paragraphLoop: true,
-      linebreaks: true,
-      delimiters: { start: '{{', end: '}}' },
-      nullGetter: () => '', // Remove tags sem valor
+      paragraphLoop: true,      // Permite {{#ARRAY}}...{{/ARRAY}}
+      linebreaks: true,          // Preserva quebras de linha \n
+      delimiters: { 
+        start: '{{', 
+        end: '}}' 
+      },
+      nullGetter: () => '',     // Tags sem valor viram strings vazias
     });
 
+    // Renderizar com os tags do contrato
     doc.render(tags);
 
+    // Gerar novo DOCX preenchido
     return doc.getZip().generate({
       type: 'uint8array',
       mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       compression: 'DEFLATE',
     });
   } catch (error) {
-    console.error('Erro ao processar DOCX com Docxtemplater:', error);
-    throw error;
+    console.error('Erro ao processar DOCX:', error);
+    throw new Error(
+      `Erro ao gerar documento: ${error instanceof Error ? error.message : 'Verifique o template enviado'}`
+    );
   }
 }
 
 // Construtor do documento base .docx oficial nativo com formatação jurídica e tabelas OpenXML
-export async function generateBaseDocxTemplate(templateKey: CustomTemplateKey): Promise<ArrayBuffer> {
-  const zip = new JSZip();
-
-  // [Content_Types].xml
-  zip.file(
-    '[Content_Types].xml',
-    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-  <Default Extension="xml" ContentType="application/xml"/>
-  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
-  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
-</Types>`
-  );
-
-  // _rels/.rels
-  zip.file(
-    '_rels/.rels',
-    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
-</Relationships>`
-  );
-
-  // word/_rels/document.xml.rels
-  zip.file(
-    'word/_rels/document.xml.rels',
-    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
-</Relationships>`
-  );
-
-  // word/styles.xml
-  zip.file(
-    'word/styles.xml',
-    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:docDefaults>
-    <w:rPrDefault>
-      <w:rPr>
-        <w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>
-        <w:sz w:val="24"/>
-        <w:lang w:val="pt-BR"/>
-      </w:rPr>
-    </w:rPrDefault>
-  </w:docDefaults>
-</w:styles>`
-  );
-
-  // Gerar o documento XML correspondente ao tipo com tags {{ }}
-  let documentXmlContent = '';
-
-  if (templateKey === 'venda_vista_imovel') {
-    documentXmlContent = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:body>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="240"/></w:pPr>
-      <w:r><w:rPr><w:b/><w:sz w:val="28"/></w:rPr><w:t>INSTRUMENTO PARTICULAR DE COMPRA E VENDA DE IMÓVEL À VISTA</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>1. PROMITENTE(S) VENDEDOR(ES): </w:t></w:r>
-      <w:r><w:t>{{VENDEDOR_NOME}}, {{VENDEDOR_NACIONALIDADE}}, {{VENDEDOR_ESTADO_CIVIL}}, {{VENDEDOR_PROFISSAO}}, portador(a) do RG nº {{VENDEDOR_RG}}, inscrito(a) no CPF/CNPJ sob o nº {{VENDEDOR_CPF}}, residente e domiciliado(a) no endereço: {{VENDEDOR_ENDERECO}}, {{VENDEDOR_CIDADE}}/{{VENDEDOR_UF}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>2. PROMITENTE(S) COMPRADOR(ES): </w:t></w:r>
-      <w:r><w:t>{{COMPRADOR_NOME}}, {{COMPRADOR_NACIONALIDADE}}, {{COMPRADOR_ESTADO_CIVIL}}, {{COMPRADOR_PROFISSAO}}, portador(a) do RG nº {{COMPRADOR_RG}}, inscrito(a) no CPF sob o nº {{COMPRADOR_CPF}}, residente e domiciliado(a) no endereço: {{COMPRADOR_ENDERECO}}, {{COMPRADOR_CIDADE}}/{{COMPRADOR_UF}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA PRIMEIRA – DO OBJETO: </w:t></w:r>
-      <w:r><w:t>O(s) VENDEDOR(ES) é(são) legítimo(s) proprietário(s) e possuidor(es) do bem imóvel caracterizado como Lote nº {{LOTE}}, Quadra nº {{QUADRA}}, situado no loteamento/empreendimento {{EMPREENDIMENTO}}, na cidade de {{CIDADE_IMOVEL}}/{{UF_IMOVEL}}, confrontando pela frente em {{FRENTE_M}}m com {{CONFRONTACAO_FRENTE}}, lateral direita em {{LATERAL_DIR_M}}m com {{CONFRONTACAO_LATERAL_DIR}}, lateral esquerda em {{LATERAL_ESQ_M}}m com {{CONFRONTACAO_LATERAL_ESQ}}, fundos em {{FUNDOS_M}}m com {{CONFRONTACAO_FUNDOS}}, perfazendo a área total de {{AREA_TOTAL_M2}} m².</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA SEGUNDA – DO PREÇO E QUITAÇÃO INTEGRAL: </w:t></w:r>
-      <w:r><w:t>A presente alienação é celebrada pelo preço certo e ajustado de {{VALOR_TOTAL}} ({{VALOR_TOTAL_EXTENSO}}), pago integralmente à vista através de {{CONDICOES_PAGAMENTO}}, dando o(s) VENDEDOR(ES) plena, geral e irrevogável quitação de pago e satisfeito.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA TERCEIRA – DA POSSE E TRANSMISSÃO: </w:t></w:r>
-      <w:r><w:t>A posse direta, mansa e pacífica do imóvel é transmitida ao(s) COMPRADOR(ES) nesta data, livre e desembaraçado de quaisquer dúvidas, dívidas, taxas, impostos, hipotecas ou ônus reais.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA QUARTA – DO FORO: </w:t></w:r>
-      <w:r><w:t>As partes elegem o Foro da Comarca de {{FORO_COMARCA}} para dirimir qualquer dúvida ou litígio resultante deste instrumento.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="right"/><w:spacing w:before="240" w:after="400"/></w:pPr>
-      <w:r><w:t>{{CIDADE_ASSINATURA}}/{{ESTADO_ASSINATURA}}, {{DIA}} de {{MES_EXTENSO}} de {{ANO}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:before="300" w:after="80"/></w:pPr>
-      <w:r><w:t>____________________________________________________</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="200"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>{{VENDEDOR_NOME}}</w:t></w:r>
-      <w:r><w:t> (Vendedor - CPF/CNPJ: {{VENDEDOR_CPF}})</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:before="200" w:after="80"/></w:pPr>
-      <w:r><w:t>____________________________________________________</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="200"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>{{COMPRADOR_NOME}}</w:t></w:r>
-      <w:r><w:t> (Comprador - CPF/CNPJ: {{COMPRADOR_CPF}})</w:t></w:r>
-    </w:p>
-  </w:body>
-</w:document>`;
-  } else if (templateKey === 'venda_vista_outros') {
-    documentXmlContent = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:body>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="240"/></w:pPr>
-      <w:r><w:rPr><w:b/><w:sz w:val="28"/></w:rPr><w:t>INSTRUMENTO PARTICULAR DE COMPRA E VENDA DE BEM MÓVEL / VEÍCULO À VISTA</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>1. PROMITENTE(S) VENDEDOR(ES): </w:t></w:r>
-      <w:r><w:t>{{VENDEDOR_NOME}}, {{VENDEDOR_NACIONALIDADE}}, {{VENDEDOR_ESTADO_CIVIL}}, {{VENDEDOR_PROFISSAO}}, portador(a) do RG nº {{VENDEDOR_RG}}, inscrito(a) no CPF/CNPJ sob o nº {{VENDEDOR_CPF}}, residente e domiciliado(a) no endereço: {{VENDEDOR_ENDERECO}}, {{VENDEDOR_CIDADE}}/{{VENDEDOR_UF}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>2. PROMITENTE(S) COMPRADOR(ES): </w:t></w:r>
-      <w:r><w:t>{{COMPRADOR_NOME}}, {{COMPRADOR_NACIONALIDADE}}, {{COMPRADOR_ESTADO_CIVIL}}, {{COMPRADOR_PROFISSAO}}, portador(a) do RG nº {{COMPRADOR_RG}}, inscrito(a) no CPF sob o nº {{COMPRADOR_CPF}}, residente e domiciliado(a) no endereço: {{COMPRADOR_ENDERECO}}, {{COMPRADOR_CIDADE}}/{{COMPRADOR_UF}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA PRIMEIRA – DO OBJETO: </w:t></w:r>
-      <w:r><w:t>O(s) VENDEDOR(ES) é(são) legítimo(s) proprietário(s) e possuidor(es) do bem caracterizado como: {{DESCRICAO_BEM}}, Marca/Modelo: {{MARCA_BEM}} {{MODELO_BEM}}, Ano Fab/Mod: {{ANO_FABRICACAO_BEM}}/{{ANO_MODELO_BEM}}, Cor: {{COR_BEM}}, Placa: {{PLACA_BEM}}, Chassi: {{CHASSI_BEM}}, RENAVAM: {{RENAVAM_BEM}}, Quilometragem/Uso: {{QUILOMETRAGEM_BEM}}, Estado de conservação: {{ESTADO_CONSERVACAO_BEM}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA SEGUNDA – DO PREÇO E QUITAÇÃO INTEGRAL: </w:t></w:r>
-      <w:r><w:t>A presente alienação é celebrada pelo preço certo e ajustado de {{VALOR_TOTAL}} ({{VALOR_TOTAL_EXTENSO}}), pago integralmente à vista através de {{CONDICOES_PAGAMENTO}}, dando o(s) VENDEDOR(ES) plena e irrevogável quitação.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA TERCEIRA – DA TRADIÇÃO E ENTREGA DO BEM: </w:t></w:r>
-      <w:r><w:t>A posse direta e a entrega física do bem ao(s) COMPRADOR(ES) opera-se nesta data, livre de multas, débitos, tributos ou restrições judiciais até a presente data.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA QUARTA – DO FORO: </w:t></w:r>
-      <w:r><w:t>As partes elegem o Foro da Comarca de {{FORO_COMARCA}} para dirimir litígios oriundos deste contrato.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="right"/><w:spacing w:before="240" w:after="400"/></w:pPr>
-      <w:r><w:t>{{CIDADE_ASSINATURA}}/{{ESTADO_ASSINATURA}}, {{DIA}} de {{MES_EXTENSO}} de {{ANO}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:before="300" w:after="80"/></w:pPr>
-      <w:r><w:t>____________________________________________________</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="200"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>{{VENDEDOR_NOME}}</w:t></w:r>
-      <w:r><w:t> (Vendedor - CPF/CNPJ: {{VENDEDOR_CPF}})</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:before="200" w:after="80"/></w:pPr>
-      <w:r><w:t>____________________________________________________</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="200"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>{{COMPRADOR_NOME}}</w:t></w:r>
-      <w:r><w:t> (Comprador - CPF/CNPJ: {{COMPRADOR_CPF}})</w:t></w:r>
-    </w:p>
-  </w:body>
-</w:document>`;
-  } else if (templateKey === 'venda_parcelada_imovel') {
-    documentXmlContent = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:body>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="240"/></w:pPr>
-      <w:r><w:rPr><w:b/><w:sz w:val="28"/></w:rPr><w:t>CONTRATO PARTICULAR DE COMPRA E VENDA DE IMÓVEL PARCELADO COM RESERVA DE DOMÍNIO</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>DAS PARTES: </w:t></w:r>
-      <w:r><w:t>De um lado, como PROMITENTE VENDEDOR(A): {{VENDEDOR_NOME}}, inscrito(a) no CPF sob o nº {{VENDEDOR_CPF}}, residente em {{VENDEDOR_ENDERECO}}. E de outro lado, como PROMITENTE COMPRADOR(A): {{COMPRADOR_NOME}}, inscrito(a) no CPF sob o nº {{COMPRADOR_CPF}}, residente em {{COMPRADOR_ENDERECO}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA 1ª – DO OBJETO: </w:t></w:r>
-      <w:r><w:t>O presente contrato tem como objeto a venda do imóvel consistente no Lote nº {{LOTE}}, Quadra nº {{QUADRA}}, do loteamento {{EMPREENDIMENTO}}, com área total de {{AREA_TOTAL_M2}} m², localizado em {{CIDADE_IMOVEL}}/{{UF_IMOVEL}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA 2ª – DO PREÇO E CONDIÇÕES DE PAGAMENTO PARCELADO: </w:t></w:r>
-      <w:r><w:t>O preço total acordado para a compra e venda é de {{VALOR_TOTAL}} ({{VALOR_TOTAL_EXTENSO}}), a ser pago nas seguintes condições: Sinal/Entrada no valor de {{VALOR_ENTRADA}} ({{VALOR_ENTRADA_EXTENSO}}), e o saldo de {{VALOR_SALDO}} ({{VALOR_SALDO_EXTENSO}}) dividido em {{QTD_PARCELAS}} parcelas mensais e sucessivas de {{VALOR_PARCELA}} ({{VALOR_PARCELA_EXTENSO}}), vencendo-se a primeira em {{DATA_VENCIMENTO_PRIMEIRA_PARCELA}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA 3ª – DO PACTO DE RESERVA DE DOMÍNIO: </w:t></w:r>
-      <w:r><w:t>Nos termos dos Artigos 521 a 528 do Código Civil Brasileiro, a presente venda é celebrada sob a expressa cláusula de Reserva de Domínio, de modo que a propriedade definitiva do bem permanecerá com o(a) VENDEDOR(A) até a liquidação e quitação integral de todas as parcelas convencionadas.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA 4ª – DO FORO: </w:t></w:r>
-      <w:r><w:t>Fica eleito o Foro da Comarca de {{FORO_COMARCA}} para dirimir qualquer pendência decorrente deste instrumento.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="right"/><w:spacing w:before="240" w:after="400"/></w:pPr>
-      <w:r><w:t>{{CIDADE_ASSINATURA}}/{{ESTADO_ASSINATURA}}, {{DIA}} de {{MES_EXTENSO}} de {{ANO}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:before="300" w:after="80"/></w:pPr>
-      <w:r><w:t>____________________________________________________</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="200"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>{{VENDEDOR_NOME}}</w:t></w:r>
-      <w:r><w:t> (Vendedor - CPF: {{VENDEDOR_CPF}})</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:before="200" w:after="80"/></w:pPr>
-      <w:r><w:t>____________________________________________________</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="200"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>{{COMPRADOR_NOME}}</w:t></w:r>
-      <w:r><w:t> (Comprador - CPF: {{COMPRADOR_CPF}})</w:t></w:r>
-    </w:p>
-  </w:body>
-</w:document>`;
-  } else if (templateKey === 'venda_parcelada_outros') {
-    documentXmlContent = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:body>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="240"/></w:pPr>
-      <w:r><w:rPr><w:b/><w:sz w:val="28"/></w:rPr><w:t>CONTRATO DE COMPRA E VENDA PARCELADA DE BEM MÓVEL / VEÍCULO COM RESERVA DE DOMÍNIO</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>DAS PARTES: </w:t></w:r>
-      <w:r><w:t>De um lado, como PROMITENTE VENDEDOR(A): {{VENDEDOR_NOME}}, inscrito(a) no CPF sob o nº {{VENDEDOR_CPF}}, residente em {{VENDEDOR_ENDERECO}}. E de outro lado, como PROMITENTE COMPRADOR(A): {{COMPRADOR_NOME}}, inscrito(a) no CPF sob o nº {{COMPRADOR_CPF}}, residente em {{COMPRADOR_ENDERECO}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA 1ª – DO OBJETO (BEM MÓVEL / VEÍCULO): </w:t></w:r>
-      <w:r><w:t>O presente contrato tem por objeto a alienação do bem: {{DESCRICAO_BEM}}, Marca/Modelo: {{MARCA_BEM}} {{MODELO_BEM}}, Ano Fab/Mod: {{ANO_FABRICACAO_BEM}}/{{ANO_MODELO_BEM}}, Cor: {{COR_BEM}}, Placa: {{PLACA_BEM}}, Chassi: {{CHASSI_BEM}}, RENAVAM: {{RENAVAM_BEM}}, Quilometragem/Uso: {{QUILOMETRAGEM_BEM}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA 2ª – DO PREÇO E CONDIÇÕES DE PAGAMENTO PARCELADO: </w:t></w:r>
-      <w:r><w:t>O preço total acordado é de {{VALOR_TOTAL}} ({{VALOR_TOTAL_EXTENSO}}), a ser pago com Entrada de {{VALOR_ENTRADA}} ({{VALOR_ENTRADA_EXTENSO}}) e saldo de {{VALOR_SALDO}} ({{VALOR_SALDO_EXTENSO}}) em {{QTD_PARCELAS}} parcelas de {{VALOR_PARCELA}} ({{VALOR_PARCELA_EXTENSO}}), vencendo a primeira em {{DATA_VENCIMENTO_PRIMEIRA_PARCELA}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA 3ª – DA RESERVA DE DOMÍNIO: </w:t></w:r>
-      <w:r><w:t>Conforme os Artigos 521 e seguintes do Código Civil, o(a) VENDEDOR(A) reserva para si a propriedade do bem até o pagamento total de todas as parcelas.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA 4ª – DO FORO: </w:t></w:r>
-      <w:r><w:t>Fica eleito o Foro da Comarca de {{FORO_COMARCA}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="right"/><w:spacing w:before="240" w:after="400"/></w:pPr>
-      <w:r><w:t>{{CIDADE_ASSINATURA}}/{{ESTADO_ASSINATURA}}, {{DIA}} de {{MES_EXTENSO}} de {{ANO}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:before="300" w:after="80"/></w:pPr>
-      <w:r><w:t>____________________________________________________</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="200"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>{{VENDEDOR_NOME}}</w:t></w:r>
-      <w:r><w:t> (Vendedor - CPF: {{VENDEDOR_CPF}})</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:before="200" w:after="80"/></w:pPr>
-      <w:r><w:t>____________________________________________________</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="200"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>{{COMPRADOR_NOME}}</w:t></w:r>
-      <w:r><w:t> (Comprador - CPF: {{COMPRADOR_CPF}})</w:t></w:r>
-    </w:p>
-  </w:body>
-</w:document>`;
-  } else {
-    // Exclusividade
-    documentXmlContent = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:body>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="240"/></w:pPr>
-      <w:r><w:rPr><w:b/><w:sz w:val="26"/></w:rPr><w:t>CONTRATO DE CORRETAGEM DE VENDA DE BENS IMÓVEIS COM CLÁUSULA DE EXCLUSIVIDADE</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>DADOS DO CONTRATANTE: </w:t></w:r>
-      <w:r><w:t>{{CONTRATANTE_NOME}}, {{CONTRATANTE_ESTADO_CIVIL}}, {{CONTRATANTE_PROFISSAO}}, inscrito(a) no CPF sob o nº {{CONTRATANTE_CPF}}, portador(a) do RG nº {{CONTRATANTE_RG}}, residente e domiciliado(a) no endereço: {{CONTRATANTE_ENDERECO}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>DADOS DO CONTRATADO: </w:t></w:r>
-      <w:r><w:t>{{VENDEDOR_NOME}}, inscrito(a) no CPF/CNPJ sob o nº {{VENDEDOR_CPF}}, registrado(a) no CRECI sob o nº {{VENDEDOR_CRECI}}, estabelecido(a) no endereço: {{VENDEDOR_ENDERECO}}, telefone/contato: {{VENDEDOR_TELEFONE}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA 1ª – DO OBJETO DO CONTRATO E DADOS DO IMÓVEL: </w:t></w:r>
-      <w:r><w:t>O presente contrato tem por objeto a prestação de serviços de intermediação e corretagem imobiliária com cláusula de exclusividade para a promoção e venda do bem imóvel caracterizado como {{TIPO_IMOVEL}}, situado em {{LOCALIZACAO_IMOVEL}}, Matrícula nº {{MATRICULA}}, Inscrição Prefeitura: {{INSCRICAO_PREFEITURA}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA 2ª – DO VALOR E CONDIÇÕES DE VENDA: </w:t></w:r>
-      <w:r><w:t>O imóvel objeto deste instrumento será promovido para venda pelo valor total de {{VALOR_TOTAL}} ({{VALOR_TOTAL_EXTENSO}}), sob as seguintes condições de pagamento: {{CONDICOES_PAGAMENTO}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA 3ª – DO PRAZO E DA CLÁUSULA DE EXCLUSIVIDADE: </w:t></w:r>
-      <w:r><w:t>A presente autorização é outorgada em caráter de EXCLUSIVIDADE pelo prazo de {{PRAZO_EXCLUSIVIDADE_DIAS}} dias, iniciando-se na data de assinatura deste instrumento e com término fixado em {{DATA_TERMINO_EXCLUSIVIDADE}}, em consonância com o Artigo 726 do Código Civil Brasileiro.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA 4ª – DA REMUNERAÇÃO E COMISSÃO DE CORRETAGEM: </w:t></w:r>
-      <w:r><w:t>Pelos serviços de intermediação, o(a) CONTRATANTE pagará ao(à) CONTRATADO a comissão de corretagem correspondente a {{PERCENTUAL_CORRETAGEM}} ({{PERCENTUAL_CORRETAGEM_EXTENSO}}) calculada sobre o valor total da alienação concretizada.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="both"/><w:spacing w:line="360" w:lineRule="auto" w:after="160"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>CLÁUSULA 5ª – DO FORO: </w:t></w:r>
-      <w:r><w:t>As partes elegem o Foro da Comarca de {{FORO_COMARCA}} para dirimir qualquer controvérsia oriunda deste contrato.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="right"/><w:spacing w:before="240" w:after="400"/></w:pPr>
-      <w:r><w:t>{{CIDADE_ASSINATURA}}/{{ESTADO_ASSINATURA}}, {{DIA}} de {{MES_EXTENSO}} de {{ANO}}.</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:before="300" w:after="80"/></w:pPr>
-      <w:r><w:t>____________________________________________________</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="200"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>{{CONTRATANTE_NOME}}</w:t></w:r>
-      <w:r><w:t> (Contratante - CPF: {{CONTRATANTE_CPF}})</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:before="200" w:after="80"/></w:pPr>
-      <w:r><w:t>____________________________________________________</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="200"/></w:pPr>
-      <w:r><w:rPr><w:b/></w:rPr><w:t>{{VENDEDOR_NOME}}</w:t></w:r>
-      <w:r><w:t> (Contratado - CRECI: {{VENDEDOR_CRECI}} | CPF/CNPJ: {{VENDEDOR_CPF}})</w:t></w:r>
-    </w:p>
-  </w:body>
-</w:document>`;
-  }
-
-  zip.file('word/document.xml', documentXmlContent);
-
-  return await zip.generateAsync({
-    type: 'arraybuffer',
-    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    compression: 'DEFLATE',
-  });
-}
 
 // Faz o download no navegador do arquivo .docx preenchido
 export async function downloadDocxContract(contract: ContractData): Promise<void> {
@@ -783,11 +418,13 @@ export async function downloadDocxContract(contract: ContractData): Promise<void
   URL.revokeObjectURL(url);
 }
 
-// Download do arquivo de modelo .docx (exemplo pronto para o usuário editar no Word)
+// Download do arquivo de modelo .docx enviado pelo usuário
 export async function downloadSampleDocxTemplate(templateKey: CustomTemplateKey): Promise<void> {
-  let templateBuffer = getCustomWordTemplate(templateKey);
+  const templateBuffer = getCustomWordTemplate(templateKey);
   if (!templateBuffer) {
-    templateBuffer = await generateBaseDocxTemplate(templateKey);
+    throw new Error(
+      `Nenhum modelo encontrado para ${templateKey}. Por favor, envie um documento DOCX formatado com as tags.`
+    );
   }
 
   const blob = new Blob([templateBuffer], {
