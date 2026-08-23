@@ -6,9 +6,39 @@ import { ContractForm } from './components/ContractForm';
 import { ContractViewer } from './components/ContractViewer';
 import { DigitalSignatureModal } from './components/DigitalSignatureModal';
 import { WordTemplateModal } from './components/WordTemplateModal';
+import { LoginScreen } from './components/LoginScreen';
+import { AdminUsersPanel } from './components/AdminUsersPanel';
+import { AuthProvider, useAuth } from './utils/authContext';
 import { fetchContracts, saveContract, deleteContract, saveSignature } from './utils/contractsRepository';
 
 export default function App() {
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
+  );
+}
+
+function AuthGate() {
+  const { session, isLoading: isAuthLoading } = useAuth();
+
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-[#070d24] flex items-center justify-center text-slate-400 text-sm">
+        Carregando...
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <LoginScreen />;
+  }
+
+  return <MainApp />;
+}
+
+function MainApp() {
+  const { profile, signOut } = useAuth();
   const [contracts, setContracts] = useState<ContractData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -19,6 +49,7 @@ export default function App() {
   
   // Modal de modelos Word
   const [isWordTemplateModalOpen, setIsWordTemplateModalOpen] = useState(false);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
 
   // Modal de assinatura rápida acionada diretamente pelo dashboard
   const [quickSignContract, setQuickSignContract] = useState<ContractData | null>(null);
@@ -144,6 +175,9 @@ export default function App() {
         onNewContract={handleCreateNewContract}
         onOpenWordTemplates={() => setIsWordTemplateModalOpen(true)}
         contractCount={contracts.length}
+        isAdmin={profile?.role === 'admin'}
+        onOpenAdminPanel={() => setIsAdminPanelOpen(true)}
+        onSignOut={signOut}
       />
 
       {/* Conteúdo Principal */}
@@ -195,6 +229,9 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Painel de Administração de Usuários */}
+      <AdminUsersPanel isOpen={isAdminPanelOpen} onClose={() => setIsAdminPanelOpen(false)} />
 
       {/* Modal Global de Modelos Word (.docx) */}
       {isWordTemplateModalOpen && (

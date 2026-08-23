@@ -9,6 +9,8 @@ import {
   Banknote,
   CalendarClock,
   ShieldCheck,
+  UserPlus,
+  LogOut,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -17,6 +19,9 @@ interface NavbarProps {
   onNewContract: (type: ContractType) => void;
   onOpenWordTemplates: () => void;
   contractCount: number;
+  isAdmin?: boolean;
+  onOpenAdminPanel?: () => void;
+  onSignOut?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -25,6 +30,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNewContract,
   onOpenWordTemplates,
   contractCount,
+  isAdmin,
+  onOpenAdminPanel,
+  onSignOut,
 }) => {
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
 
@@ -77,6 +85,26 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Modelos Institucionais Word (.docx)"
             >
               <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+
+            {/* Botão de Adicionar Usuário (somente admin) */}
+            {isAdmin && (
+              <button
+                onClick={onOpenAdminPanel}
+                className="p-2.5 rounded-xl bg-[#101935] hover:bg-[#18254b] border border-slate-700/60 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+                title="Adicionar Usuário"
+              >
+                <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            )}
+
+            {/* Botão de Sair */}
+            <button
+              onClick={onSignOut}
+              className="p-2.5 rounded-xl bg-[#101935] hover:bg-[#18254b] border border-slate-700/60 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+              title="Sair"
+            >
+              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             {/* Botão "+ Novo" em Destaque com Dropdown */}

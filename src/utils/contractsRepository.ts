@@ -84,22 +84,14 @@ function fromRow(row: any): ContractData {
 }
 
 // ============================================================
-// Autenticação anônima
-// Garante um auth.uid() para satisfazer as políticas de RLS
-// sem exigir tela de login. Requer "Anonymous Sign-Ins"
-// habilitado em Authentication > Settings no painel Supabase.
+// Sessão do usuário autenticado (login real via LoginScreen)
 // ============================================================
-export async function ensureSession() {
+export async function getSession() {
   const { data } = await supabase.auth.getSession();
-  if (data.session) return data.session;
-
-  const { data: signInData, error } = await supabase.auth.signInAnonymously();
-  if (error) {
-    throw new Error(
-      `Não foi possível autenticar: ${error.message}. Habilite "Anonymous Sign-Ins" em Authentication > Settings no Supabase.`
-    );
+  if (!data.session) {
+    throw new Error('Sessão expirada. Faça login novamente.');
   }
-  return signInData.session;
+  return data.session;
 }
 
 // ============================================================
@@ -107,7 +99,7 @@ export async function ensureSession() {
 // ============================================================
 
 export async function fetchContracts(): Promise<ContractData[]> {
-  await ensureSession();
+  await getSession();
   const { data, error } = await supabase
     .from('contracts')
     .select('*')
@@ -118,7 +110,7 @@ export async function fetchContracts(): Promise<ContractData[]> {
 }
 
 export async function saveContract(contract: ContractData): Promise<ContractData> {
-  const session = await ensureSession();
+  const session = await getSession();
   const row = { ...toRow(contract), owner_id: session?.user.id };
 
   const { data, error } = await supabase
@@ -146,7 +138,7 @@ export async function saveContract(contract: ContractData): Promise<ContractData
 }
 
 export async function deleteContract(contractId: string): Promise<void> {
-  await ensureSession();
+  await getSession();
   const { error } = await supabase.from('contracts').delete().eq('id', contractId);
   if (error) throw error;
 }
@@ -156,7 +148,7 @@ export async function deleteContract(contractId: string): Promise<void> {
 // ============================================================
 
 export async function saveSignature(contractId: string, signature: ContractData['assinaturas'][number]) {
-  await ensureSession();
+  await getSession();
   const { error } = await supabase.from('contract_signatures').insert({
     contract_id: contractId,
     role: signature.role,
@@ -172,7 +164,7 @@ export async function saveSignature(contractId: string, signature: ContractData[
 }
 
 export async function fetchSignatures(contractId: string) {
-  await ensureSession();
+  await getSession();
   const { data, error } = await supabase
     .from('contract_signatures')
     .select('*')
