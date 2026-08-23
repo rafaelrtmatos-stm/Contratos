@@ -184,6 +184,9 @@ export interface ContractData {
   // Assinaturas Digitais
   assinaturas: DigitalSignature[];
   status: 'rascunho' | 'assinado_parcial' | 'assinado_total';
+
+  // Configuração de Blocos do Contrato (para exclusividade e outros)
+  blockConfig?: Record<string, boolean>;
 }
 
 export interface ContractFilter {
