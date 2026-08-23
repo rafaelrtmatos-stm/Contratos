@@ -1,0 +1,183 @@
+import { supabase } from './supabaseClient';
+import { ContractData } from '../types/contract';
+
+// ============================================================
+// Mapeamento ContractData (app) <-> linha da tabela `contracts`
+// ============================================================
+
+function toRow(contract: ContractData) {
+  return {
+    id: contract.id,
+    tipo: contract.tipo,
+    subcategoria: contract.subcategoria ?? null,
+    titulo: contract.titulo,
+    numero_contrato: contract.numeroContrato,
+    status: contract.status,
+
+    cidade_foro: contract.cidadeForo,
+    uf_foro: contract.ufForo,
+    cidade_assinatura: contract.cidadeAssinatura,
+    uf_assinatura: contract.ufAssinatura,
+
+    vendedor: contract.vendedor,
+    comprador: contract.comprador,
+    compradores_adicionais: contract.compradoresAdicionais ?? null,
+
+    imovel: contract.imovel ?? null,
+    bem_outros: contract.bemOutros ?? null,
+    objeto_descricao: contract.objetoDescricao ?? null,
+
+    valor_total: contract.valorTotal,
+    valor_total_extenso: contract.valorTotalExtenso ?? null,
+    venda_vista: contract.vendaVista ?? null,
+    venda_parcelada: contract.vendaParcelada ?? null,
+    exclusividade: contract.exclusividade ?? null,
+
+    clausulas_extras: contract.clausulasExtras ?? null,
+    modalidade_assinatura: contract.modalidadeAssinatura ?? null,
+    testemunhas: {
+      testemunha1: contract.testemunha1 ?? null,
+      testemunha2: contract.testemunha2 ?? null,
+      testemunha3: contract.testemunha3 ?? null,
+    },
+  };
+}
+
+function fromRow(row: any): ContractData {
+  return {
+    id: row.id,
+    tipo: row.tipo,
+    subcategoria: row.subcategoria ?? undefined,
+    titulo: row.titulo,
+    numeroContrato: row.numero_contrato,
+    dataCriacao: row.created_at,
+    status: row.status,
+
+    cidadeForo: row.cidade_foro,
+    ufForo: row.uf_foro,
+    cidadeAssinatura: row.cidade_assinatura,
+    ufAssinatura: row.uf_assinatura,
+
+    vendedor: row.vendedor,
+    comprador: row.comprador,
+    compradoresAdicionais: row.compradores_adicionais ?? undefined,
+    temMaisCompradores: !!(row.compradores_adicionais && row.compradores_adicionais.length),
+
+    imovel: row.imovel ?? undefined,
+    bemOutros: row.bem_outros ?? undefined,
+    objetoDescricao: row.objeto_descricao ?? undefined,
+
+    valorTotal: Number(row.valor_total),
+    valorTotalExtenso: row.valor_total_extenso ?? undefined,
+    vendaVista: row.venda_vista ?? undefined,
+    vendaParcelada: row.venda_parcelada ?? undefined,
+    exclusividade: row.exclusividade ?? undefined,
+
+    clausulasExtras: row.clausulas_extras ?? undefined,
+    modalidadeAssinatura: row.modalidade_assinatura ?? undefined,
+    testemunha1: row.testemunhas?.testemunha1 ?? undefined,
+    testemunha2: row.testemunhas?.testemunha2 ?? undefined,
+    testemunha3: row.testemunhas?.testemunha3 ?? undefined,
+
+    assinaturas: [], // carregadas separadamente via fetchSignatures
+  };
+}
+
+// ============================================================
+// Autenticação anônima
+// Garante um auth.uid() para satisfazer as políticas de RLS
+// sem exigir tela de login. Requer "Anonymous Sign-Ins"
+// habilitado em Authentication > Settings no painel Supabase.
+// ============================================================
+export async function ensureSession() {
+  const { data } = await supabase.auth.getSession();
+  if (data.session) return data.session;
+
+  const { data: signInData, error } = await supabase.auth.signInAnonymously();
+  if (error) {
+    throw new Error(
+      `Não foi possível autenticar: ${error.message}. Habilite "Anonymous Sign-Ins" em Authentication > Settings no Supabase.`
+    );
+  }
+  return signInData.session;
+}
+
+// ============================================================
+// CRUD de contratos
+// ============================================================
+
+export async function fetchContracts(): Promise<ContractData[]> {
+  await ensureSession();
+  const { data, error } = await supabase
+    .from('contracts')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []).map(fromRow);
+}
+
+export async function saveContract(contract: ContractData): Promise<ContractData> {
+  const session = await ensureSession();
+  const row = { ...toRow(contract), owner_id: session?.user.id };
+
+  const { data, error } = await supabase
+    .from('contracts')
+    .upsert(row, { onConflict: 'id' })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  // Sincroniza parcelas (venda parcelada)
+  if (contract.vendaParcelada?.parcelas?.length) {
+    await supabase.from('contract_installments').delete().eq('contract_id', contract.id);
+    await supabase.from('contract_installments').insert(
+      contract.vendaParcelada.parcelas.map((p) => ({
+        contract_id: contract.id,
+        numero: p.numero,
+        valor: p.valor,
+        data_vencimento: p.dataVencimento,
+      }))
+    );
+  }
+
+  return fromRow(data);
+}
+
+export async function deleteContract(contractId: string): Promise<void> {
+  await ensureSession();
+  const { error } = await supabase.from('contracts').delete().eq('id', contractId);
+  if (error) throw error;
+}
+
+// ============================================================
+// Assinaturas digitais
+// ============================================================
+
+export async function saveSignature(contractId: string, signature: ContractData['assinaturas'][number]) {
+  await ensureSession();
+  const { error } = await supabase.from('contract_signatures').insert({
+    contract_id: contractId,
+    role: signature.role,
+    signer_index: signature.signerIndex ?? null,
+    nome_signatario: signature.nomeSignatario,
+    documento_signatario: signature.documentoSignatario,
+    assinatura_url: signature.assinaturaDataUrl, // recomendado migrar para Storage futuramente
+    hash_autenticacao: signature.hashAutenticacao,
+    ip_assinatura: signature.ipAssinatura ?? null,
+    metadados_navegador: signature.metadadosNavegador,
+  });
+  if (error) throw error;
+}
+
+export async function fetchSignatures(contractId: string) {
+  await ensureSession();
+  const { data, error } = await supabase
+    .from('contract_signatures')
+    .select('*')
+    .eq('contract_id', contractId)
+    .order('assinado_em', { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
