@@ -358,8 +358,38 @@ export async function generateFilledDocx(contract: ContractData): Promise<Uint8A
     templateBuffer = await generateBaseDocxTemplate(templateKey);
   }
 
-  // Processar o arquivo .docx original preservando 100% da formatação OpenXML
-  return await processDocxDirectly(templateBuffer, tags);
+  // Usar Docxtemplater para substituição confiável de tags {{}}
+  try {
+    return await processDocxWithTemplaterFixed(templateBuffer, tags);
+  } catch (error) {
+    console.warn('Docxtemplater falhou, usando processador direto:', error);
+    // Fallback: processar o arquivo .docx original preservando 100% da formatação OpenXML
+    return await processDocxDirectly(templateBuffer, tags);
+  }
+}
+
+// Nova função usando Docxtemplater com melhor tratamento de erros
+async function processDocxWithTemplaterFixed(docxBuffer: ArrayBuffer, tags: Record<string, string>): Promise<Uint8Array> {
+  try {
+    const zip = new PizZip(docxBuffer);
+    const doc = new Docxtemplater(zip, {
+      paragraphLoop: true,
+      linebreaks: true,
+      delimiters: { start: '{{', end: '}}' },
+      nullGetter: () => '', // Remove tags sem valor
+    });
+
+    doc.render(tags);
+
+    return doc.getZip().generate({
+      type: 'uint8array',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      compression: 'DEFLATE',
+    });
+  } catch (error) {
+    console.error('Erro ao processar DOCX com Docxtemplater:', error);
+    throw error;
+  }
 }
 
 // Construtor do documento base .docx oficial nativo com formatação jurídica e tabelas OpenXML
