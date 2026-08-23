@@ -200,6 +200,12 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   };
 
   const handleTipoChange = (newTipo: ContractType) => {
+    // Impedir mudança de tipo se está editando um contrato existente
+    if (initialData) {
+      console.warn('Não é permitido alterar o tipo de um contrato existente');
+      return; // Sair sem fazer nada
+    }
+
     setTipo(newTipo);
     if (!initialData) {
       setNumeroContrato(
@@ -436,66 +442,89 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               </button>
             </div>
 
+            {/* Badge do Tipo Atual quando está editando */}
+            {initialData && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span className="text-sm font-bold text-green-900">
+                  Tipo de Contrato: <strong>
+                    {tipo === 'venda_vista' ? 'Venda à Vista' : 
+                     tipo === 'venda_parcelada' ? 'Venda Parcelada' : 
+                     'Exclusividade'}
+                  </strong> (não pode ser alterado)
+                </span>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <button
-                type="button"
-                onClick={() => handleTipoChange('venda_vista')}
-                className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
-                  tipo === 'venda_vista'
-                    ? 'border-green-600 bg-green-50/60 ring-2 ring-green-500/20'
-                    : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
-                }`}
-              >
-                <div className={`p-2 rounded-lg ${tipo === 'venda_vista' ? 'bg-green-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
-                  <Banknote className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-slate-900 block">1. Venda à Vista</span>
-                  <span className="text-[11px] text-slate-500 block mt-0.5 leading-tight">
-                    Quitação integral e transmissão imediata
-                  </span>
-                </div>
-              </button>
+              {/* BOTÃO VENDA À VISTA - Mostrar apenas se não for o tipo atual */}
+              {tipo !== 'venda_vista' && (
+                <button
+                  type="button"
+                  onClick={() => handleTipoChange('venda_vista')}
+                  className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
+                    tipo === 'venda_vista'
+                      ? 'border-green-600 bg-green-50/60 ring-2 ring-green-500/20'
+                      : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg ${tipo === 'venda_vista' ? 'bg-green-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                    <Banknote className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">1. Venda à Vista</span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5 leading-tight">
+                      Quitação integral e transmissão imediata
+                    </span>
+                  </div>
+                </button>
+              )}
 
-              <button
-                type="button"
-                onClick={() => handleTipoChange('venda_parcelada')}
-                className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
-                  tipo === 'venda_parcelada'
-                    ? 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/20'
-                    : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
-                }`}
-              >
-                <div className={`p-2 rounded-lg ${tipo === 'venda_parcelada' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
-                  <CalendarDays className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-slate-900 block">2. Venda Parcelada</span>
-                  <span className="text-[11px] text-slate-500 block mt-0.5 leading-tight">
-                    Entrada, parcelamento e reserva de domínio
-                  </span>
-                </div>
-              </button>
+              {/* BOTÃO VENDA PARCELADA - Mostrar apenas se não for o tipo atual */}
+              {tipo !== 'venda_parcelada' && (
+                <button
+                  type="button"
+                  onClick={() => handleTipoChange('venda_parcelada')}
+                  className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
+                    tipo === 'venda_parcelada'
+                      ? 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/20'
+                      : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg ${tipo === 'venda_parcelada' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                    <CalendarDays className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">2. Venda Parcelada</span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5 leading-tight">
+                      Entrada, parcelamento e reserva de domínio
+                    </span>
+                  </div>
+                </button>
+              )}
 
-              <button
-                type="button"
-                onClick={() => handleTipoChange('exclusividade')}
-                className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
-                  tipo === 'exclusividade'
-                    ? 'border-slate-600 bg-slate-50/60 ring-2 ring-slate-500/20'
-                    : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
-                }`}
-              >
-                <div className={`p-2 rounded-lg ${tipo === 'exclusividade' ? 'bg-slate-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-slate-900 block">3. Exclusividade</span>
-                  <span className="text-[11px] text-slate-500 block mt-0.5 leading-tight">
-                    Intermediação imobiliária e controle de vigência
-                  </span>
-                </div>
-              </button>
+              {/* BOTÃO EXCLUSIVIDADE - Mostrar apenas se não for o tipo atual */}
+              {tipo !== 'exclusividade' && (
+                <button
+                  type="button"
+                  onClick={() => handleTipoChange('exclusividade')}
+                  className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
+                    tipo === 'exclusividade'
+                      ? 'border-slate-600 bg-slate-50/60 ring-2 ring-slate-500/20'
+                      : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg ${tipo === 'exclusividade' ? 'bg-slate-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">3. Exclusividade</span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5 leading-tight">
+                      Intermediação imobiliária e controle de vigência
+                    </span>
+                  </div>
+                </button>
+              )}
             </div>
 
             {/* SELETOR DE SUBCATEGORIA (Imóvel vs Outros Bens) */}
