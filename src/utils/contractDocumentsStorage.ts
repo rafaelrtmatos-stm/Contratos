@@ -60,12 +60,17 @@ export async function saveContractDocumentToSupabase(
 
     console.log(`✅ Upload concluído: ${data.path}`);
 
-    // 4. Obter URL pública
-    const { data: publicUrlData } = supabase.storage
+    // 4. Gerar link assinado (temporário, seguro) - o bucket é PRIVADO
+    // desde a trava de RLS por usuário, então getPublicUrl() não serve mais
+    // (URL pública de bucket privado sempre retorna acesso negado). Guardamos
+    // o CAMINHO do arquivo e geramos um link assinado válido por 7 dias;
+    // outros pontos do app (ex: link de assinatura do cliente) geram um
+    // novo link assinado na hora, sob demanda, em vez de depender deste.
+    const { data: signedUrlData } = await supabase.storage
       .from(DOCUMENTS_BUCKET)
-      .getPublicUrl(filePath);
+      .createSignedUrl(filePath, 60 * 60 * 24 * 7);
 
-    const publicUrl = publicUrlData.publicUrl;
+    const signedUrl = signedUrlData?.signedUrl || '';
 
     // 5. Registrar na tabela de documentos (opcional, para auditoria)
     const { error: dbError } = await supabase
@@ -74,7 +79,7 @@ export async function saveContractDocumentToSupabase(
         contract_id: contractId,
         file_name: fileName,
         storage_path: filePath,
-        public_url: publicUrl,
+        public_url: signedUrl,
         size_bytes: docxBuffer.byteLength,
         tipo_contrato: metadata?.tipo,
         vendedor_nome: metadata?.vendedor,
@@ -87,11 +92,13 @@ export async function saveContractDocumentToSupabase(
       console.warn('Aviso: DOCX uploaded mas não registrado na tabela:', dbError.message);
     }
 
-    // 6. Atualizar contrato com URL do documento
+    // 6. Atualizar contrato com o CAMINHO do documento (não a URL, que
+    // expira) - quem for baixar gera um link assinado novo na hora.
     await supabase
       .from('contracts')
       .update({
-        documento_url: publicUrl,
+        documento_url: signedUrl,
+        documento_storage_path: filePath,
         documento_salvo_em: new Date().toISOString(),
       })
       .eq('id', contractId);
@@ -100,7 +107,7 @@ export async function saveContractDocumentToSupabase(
       id: filePath,
       contractId,
       fileName,
-      url: publicUrl,
+      url: signedUrl,
       size: docxBuffer.byteLength,
       savedAt: new Date().toISOString(),
     };
@@ -133,22 +140,25 @@ export async function listContractDocuments(
 
     if (!files) return [];
 
-    // Mapear para SavedDocument
-    const documents = files.map((file) => {
-      const filePath = `contratos/${contractId}/${file.name}`;
-      const { data: urlData } = supabase.storage
-        .from(DOCUMENTS_BUCKET)
-        .getPublicUrl(filePath);
+    // Mapear para SavedDocument - gera link assinado pra cada um (bucket
+    // privado desde a trava de RLS por usuário, getPublicUrl() não serve mais)
+    const documents = await Promise.all(
+      files.map(async (file) => {
+        const filePath = `contratos/${contractId}/${file.name}`;
+        const { data: urlData } = await supabase.storage
+          .from(DOCUMENTS_BUCKET)
+          .createSignedUrl(filePath, 60 * 10);
 
-      return {
-        id: filePath,
-        contractId,
-        fileName: file.name,
-        url: urlData.publicUrl,
-        size: file.metadata?.size || 0,
-        savedAt: file.created_at || new Date().toISOString(),
-      };
-    });
+        return {
+          id: filePath,
+          contractId,
+          fileName: file.name,
+          url: urlData?.signedUrl || '',
+          size: file.metadata?.size || 0,
+          savedAt: file.created_at || new Date().toISOString(),
+        };
+      })
+    );
 
     return documents;
   } catch (error: any) {
@@ -208,3 +218,32 @@ export async function deleteContractDocuments(contractId: string): Promise<void>
     console.error('Erro ao deletar documentos:', error.message);
   }
 }
+
+/**
+ * Gera um link assinado (temporário) para o documento salvo no Storage,
+ * a partir do caminho guardado em contract.documentoStoragePath. O bucket
+ * é privado (RLS por dono/admin, ou por link de assinatura ativo no caso
+ * do cliente), então não existe mais "URL pública fixa" que funcione -
+ * cada download deve gerar seu próprio link, sob demanda.
+ */
+export async function getSignedDocumentUrl(
+  storagePath: string,
+  expiresInSeconds: number = 60 * 10
+): Promise<string | null> {
+  if (!storagePath) return null;
+  try {
+    const { data, error } = await supabase.storage
+      .from(DOCUMENTS_BUCKET)
+      .createSignedUrl(storagePath, expiresInSeconds);
+
+    if (error || !data?.signedUrl) {
+      console.warn('Não foi possível gerar link assinado do documento:', error?.message);
+      return null;
+    }
+    return data.signedUrl;
+  } catch (err: any) {
+    console.warn('Erro ao gerar link assinado do documento:', err.message);
+    return null;
+  }
+}
+

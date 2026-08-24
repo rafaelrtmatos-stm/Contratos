@@ -112,8 +112,10 @@ export async function fetchContractForSignatureToken(token: string): Promise<{
     // do cliente abrir o link) - vem do RPC get_contract_for_signature_token,
     // que busca em contract_signatures. Nunca deixar hardcoded [].
     assinaturas: Array.isArray(data.assinaturas) ? data.assinaturas : [],
-    // URL do .docx salvo no Storage, se já existir (documento final assinado).
+    // Link assinado antigo salvo no banco - pode já ter expirado, não
+    // usar direto; regenerar via documentoStoragePath quando for baixar.
     documentoUrl: row.documento_url ?? undefined,
+    documentoStoragePath: row.documento_storage_path ?? undefined,
   };
 
   // "Já assinado" considera tanto o link em si (reaberto depois de assinar

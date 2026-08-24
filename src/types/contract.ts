@@ -199,9 +199,13 @@ export interface ContractData {
   assinaturas: DigitalSignature[];
   status: 'rascunho' | 'assinado_parcial' | 'assinado_total';
 
-  // URL pública do documento (.docx) salvo no Supabase Storage
-  // (preenchida após o upload feito em contractDocumentsStorage.ts)
+  // Link assinado (temporário, expira) do documento salvo no Storage -
+  // não usar como referência permanente, gerar um novo via
+  // getSignedDocumentUrl(documentoStoragePath) quando precisar baixar.
   documentoUrl?: string;
+  // Caminho do arquivo no bucket contract-documents (privado) - usar
+  // este campo pra gerar um link assinado novo sob demanda.
+  documentoStoragePath?: string;
 
   // Configuração de Blocos do Contrato (para exclusividade e outros)
   blockConfig?: Record<string, boolean>;

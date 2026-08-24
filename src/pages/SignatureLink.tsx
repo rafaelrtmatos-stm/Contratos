@@ -9,6 +9,7 @@ import {
   signContractViaLink,
 } from '../utils/signatureLinksRepository';
 import { renderContractDocumentHtml, renderContractDocumentPdf } from '../utils/renderContractFromDocx';
+import { getSignedDocumentUrl } from '../utils/contractDocumentsStorage';
 import { sha256Hex, getClientIpAddress } from '../utils/signatureOtpUtils';
 
 export const SignatureLink: React.FC = () => {
@@ -173,6 +174,19 @@ export const SignatureLink: React.FC = () => {
     if (!contract || downloading) return;
     setDownloading(true);
     try {
+      // Se já existe o documento final salvo no Storage (ex: o corretor
+      // baixou o Word depois de assinar), abre exatamente esse arquivo -
+      // gera um link assinado novo na hora (o antigo pode ter expirado).
+      if (contract.documentoStoragePath) {
+        const signedUrl = await getSignedDocumentUrl(contract.documentoStoragePath, 60 * 10);
+        if (signedUrl) {
+          window.open(signedUrl, '_blank', 'noopener,noreferrer');
+          return;
+        }
+        // Se não conseguiu gerar o link (arquivo removido, etc.), cai pro
+        // PDF gerado na hora a partir dos dados do contrato.
+      }
+
       const pdfBlob = await renderContractDocumentPdf(contract);
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
@@ -183,10 +197,11 @@ export const SignatureLink: React.FC = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Erro ao gerar PDF:', err);
+      console.error('Erro ao baixar contrato:', err);
     } finally {
       setDownloading(false);
-    }  };
+    }
+  };
 
   if (loadingPage) {
     return (
