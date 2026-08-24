@@ -202,10 +202,21 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   };
 
   const handleSignatureRegistered = async (auditStamp: AuditStamp) => {
+    // "usuario" (quem assina com senha de login) é sempre o CORRETOR/CONTRATADO.
+    // Na exclusividade, quem guarda os dados do corretor é o campo "comprador"
+    // (o campo "vendedor" guarda o CONTRATANTE/proprietário) - mesma inversão
+    // usada no download e no selo de assinatura. Antes, esse handler sempre
+    // gravava role:'vendedor' com os dados de contract.vendedor, então na
+    // exclusividade a assinatura do corretor era registrada com o nome/CPF
+    // do Contratante e aparecia como se o Contratante tivesse assinado.
+    const isExclSig = contract.tipo === 'exclusividade';
+    const dadosCorretorSig = isExclSig ? contract.comprador : contract.vendedor;
+    const roleCorretorSig: 'vendedor' | 'comprador' = isExclSig ? 'comprador' : 'vendedor';
+
     const signature: DigitalSignature = {
-      role: signFlowParte === 'usuario' ? 'vendedor' : 'comprador',
-      nomeSignatario: signFlowParte === 'usuario' ? contract.vendedor.nome : contract.comprador.nome,
-      documentoSignatario: signFlowParte === 'usuario' ? contract.vendedor.cpfCnpj : contract.comprador.cpfCnpj,
+      role: signFlowParte === 'usuario' ? roleCorretorSig : 'comprador',
+      nomeSignatario: signFlowParte === 'usuario' ? dadosCorretorSig.nome : contract.comprador.nome,
+      documentoSignatario: signFlowParte === 'usuario' ? dadosCorretorSig.cpfCnpj : contract.comprador.cpfCnpj,
       assinaturaDataUrl: auditStamp.signatureId,
       assinadoEm: auditStamp.dataAssinatura,
       hashAutenticacao: auditStamp.hashDocumento,

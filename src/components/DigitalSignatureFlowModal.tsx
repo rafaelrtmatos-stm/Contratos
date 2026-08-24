@@ -52,8 +52,10 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
         return;
       }
 
-      const nomeAssinante = profile?.nome || contract.vendedor.nome;
-      const cpfAssinante = contract.vendedor.cpfCnpj;
+      const isExclFlow = contract.tipo === 'exclusividade';
+      const dadosCorretorFlow = isExclFlow ? contract.comprador : contract.vendedor;
+      const nomeAssinante = profile?.nome || dadosCorretorFlow.nome;
+      const cpfAssinante = dadosCorretorFlow.cpfCnpj;
       const ip = await getClientIpAddress();
       // Hash do CONTEÚDO REAL do contrato preenchido (não mais uma string
       // de metadados arbitrária) - prova de integridade de verdade: se o
