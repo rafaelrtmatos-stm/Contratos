@@ -28,9 +28,19 @@ export interface StampImageResult {
   heightPx: number;
 }
 
-const SCALE = 16; // px por mm — resolução suficiente para texto nítido
+const SCALE = 16; // px por mm — resolução do canvas (fixa a nitidez do PNG)
 const STAMP_WIDTH_MM = 69.3; // 33% de 210mm (A4)
 const STAMP_HEIGHT_MM = 20.79; // 7% de 297mm — define a proporção do desenho
+
+// Conversão correta pt -> px do canvas (1pt = 25.4/72 mm; canvas usa SCALE px/mm).
+// Sem essa conversão, usar o valor "em mm" direto como tamanho de fonte deixa o
+// texto ~2.8x maior do que deveria (foi o que causou a fonte "estourada").
+const PT_TO_PX = (pt: number) => pt * (25.4 / 72) * SCALE;
+
+const FONT_PT = 3.2; // tamanho único de fonte do selo, conforme solicitado
+const FONT_PX = Math.round(PT_TO_PX(FONT_PT));
+const FONT_PX_SMALL = Math.round(PT_TO_PX(FONT_PT - 0.3)); // ID/hash, campos mais apertados
+const LINE_MM = (FONT_PT * 1.3) * (25.4 / 72); // altura de linha proporcional à fonte, em mm
 
 const COLORS = {
   azulPrincipal: '#0D376B',
@@ -74,6 +84,7 @@ export async function renderSignatureStampPng(data: StampImageData): Promise<Sta
   const w = Math.round(STAMP_WIDTH_MM * SCALE);
   const h = Math.round(STAMP_HEIGHT_MM * SCALE);
   const mm = SCALE;
+  const lh = LINE_MM * mm; // altura de linha em px
 
   const canvas = document.createElement('canvas');
   canvas.width = w;
@@ -113,21 +124,19 @@ export async function renderSignatureStampPng(data: StampImageData): Promise<Sta
   ctx.lineTo(painelCx + checkR * 0.5, checkCy - checkR * 0.35);
   ctx.stroke();
 
-  let py = checkCy + 2.9 * mm;
-  const lh = (pt: number) => pt * 1.35 * (mm / 3.78); // aproximação pt->px na escala usada
+  let py = checkCy + checkR + lh * 0.9;
   ctx.textAlign = 'center';
   ctx.fillStyle = COLORS.branco;
-  ctx.font = `700 ${3.6 * mm * 0.32}px Arial`;
-  ctx.font = `bold ${Math.round(3.4 * mm)}px Arial`;
+  ctx.font = `bold ${FONT_PX}px Arial`;
   ctx.fillText('ASSINADO', painelCx, py);
-  py += 3.6 * mm;
+  py += lh;
   ctx.fillText('ELETRONICAMENTE', painelCx, py);
-  py += 3.9 * mm;
-  ctx.font = `normal ${Math.round(3.2 * mm)}px Arial`;
+  py += lh * 1.1;
+  ctx.font = `normal ${FONT_PX}px Arial`;
   ctx.fillText('COM VALIDADE', painelCx, py);
-  py += 3.4 * mm;
+  py += lh;
   ctx.fillText('JURÍDICA', painelCx, py);
-  py += 2.4 * mm;
+  py += lh * 0.7;
 
   ctx.strokeStyle = 'rgba(255,255,255,0.5)';
   ctx.lineWidth = mm * 0.08;
@@ -135,11 +144,11 @@ export async function renderSignatureStampPng(data: StampImageData): Promise<Sta
   ctx.moveTo(3 + painelW * 0.3, py);
   ctx.lineTo(3 + painelW * 0.7, py);
   ctx.stroke();
-  py += 3.4 * mm;
+  py += lh;
 
-  ctx.font = `bold ${Math.round(3.2 * mm)}px Arial`;
+  ctx.font = `bold ${FONT_PX}px Arial`;
   ctx.fillText('MP 2.200-2/2001', painelCx, py);
-  py += 3.4 * mm;
+  py += lh;
   ctx.fillText('LEI 14.063/2020', painelCx, py);
 
   // ===== ÁREA DE CONTEÚDO CENTRAL =====
@@ -166,65 +175,65 @@ export async function renderSignatureStampPng(data: StampImageData): Promise<Sta
 
   const textX = contentX + avatarR * 2 + 0.6 * mm;
   ctx.textAlign = 'left';
-  ctx.font = `bold ${Math.round(3.4 * mm)}px Arial`;
+  ctx.font = `bold ${FONT_PX}px Arial`;
   ctx.fillStyle = COLORS.cinzaTexto;
   const roleLabelTxt = `${data.roleLabel || 'ASSINANTE'}: `;
   ctx.fillText(roleLabelTxt, textX, cy);
   const roleW = ctx.measureText(roleLabelTxt).width;
   ctx.fillStyle = COLORS.azulPrincipal;
   ctx.fillText(data.signerName, textX + roleW, cy);
-  cy += 3.6 * mm;
+  cy += lh;
 
-  ctx.font = `bold ${Math.round(3.4 * mm)}px Arial`;
+  ctx.font = `bold ${FONT_PX}px Arial`;
   ctx.fillStyle = COLORS.cinzaTexto;
-  ctx.fillText('CPF: ', textX - avatarR * 2 - 0.6 * mm, cy);
+  const gx0 = textX - avatarR * 2 - 0.6 * mm;
+  ctx.fillText('CPF: ', gx0, cy);
   const cpfLabelW = ctx.measureText('CPF: ').width;
-  ctx.font = `bold ${Math.round(3.4 * mm)}px Courier New`;
+  ctx.font = `bold ${FONT_PX}px Courier New`;
   ctx.fillStyle = COLORS.textoForte;
-  ctx.fillText(data.cpfCnpj, textX - avatarR * 2 - 0.6 * mm + cpfLabelW, cy);
-  cy += 4.2 * mm;
+  ctx.fillText(data.cpfCnpj, gx0 + cpfLabelW, cy);
+  cy += lh * 1.2;
 
   // Grid DATA / HORA / ID
   const colW = contentW / 3;
   const gx = contentX - avatarR * 2 - 0.6 * mm;
   const gridLabelY = cy;
-  const gridValueY = cy + 3.4 * mm;
+  const gridValueY = cy + lh;
 
   const drawGridCol = (label: string, value: string, colX: number) => {
-    ctx.font = `bold ${Math.round(3.2 * mm)}px Arial`;
+    ctx.font = `bold ${FONT_PX}px Arial`;
     ctx.fillStyle = COLORS.cinzaTexto;
     ctx.fillText(label, colX, gridLabelY);
-    ctx.font = `normal ${Math.round(3.2 * mm)}px Arial`;
+    ctx.font = `normal ${FONT_PX}px Arial`;
     ctx.fillStyle = '#1E222C';
     ctx.fillText(value, colX, gridValueY);
   };
   drawGridCol('DATA', data.dateStr, gx);
   drawGridCol('HORA', data.timeStr, gx + colW);
-  ctx.font = `bold ${Math.round(2.9 * mm)}px Courier New`;
+  ctx.font = `bold ${FONT_PX}px Arial`;
   ctx.fillStyle = COLORS.cinzaTexto;
-  ctx.font = `bold ${Math.round(3.2 * mm)}px Arial`;
   ctx.fillText('ID', gx + colW * 2, gridLabelY);
-  ctx.font = `normal ${Math.round(2.9 * mm)}px Courier New`;
+  ctx.font = `normal ${FONT_PX_SMALL}px Courier New`;
   ctx.fillStyle = '#1E222C';
   ctx.fillText(data.signatureId, gx + colW * 2, gridValueY);
 
-  cy = gridValueY + 3.4 * mm;
+  cy = gridValueY + lh;
 
   // Integridade
-  ctx.font = `bold ${Math.round(3.2 * mm)}px Arial`;
+  ctx.font = `bold ${FONT_PX}px Arial`;
   ctx.fillStyle = COLORS.cinzaTexto;
   ctx.fillText('INTEGRIDADE: ', gx, cy);
   const integW = ctx.measureText('INTEGRIDADE: ').width;
   ctx.fillStyle = COLORS.verde;
   ctx.fillText('VERIFICADA', gx + integW, cy);
-  cy += 3.6 * mm;
+  cy += lh;
 
   // Hash completo, quebrando linha se necessário
-  ctx.font = `bold ${Math.round(3.2 * mm)}px Arial`;
+  ctx.font = `bold ${FONT_PX}px Arial`;
   ctx.fillStyle = COLORS.cinzaTexto;
   ctx.fillText('HASH: ', gx, cy);
   const hashLabelW = ctx.measureText('HASH: ').width;
-  ctx.font = `normal ${Math.round(2.9 * mm)}px Courier New`;
+  ctx.font = `normal ${FONT_PX_SMALL}px Courier New`;
   ctx.fillStyle = '#3C404A';
   const maxHashW = contentW - hashLabelW;
   let hashLine = data.hash;
@@ -234,14 +243,14 @@ export async function renderSignatureStampPng(data: StampImageData): Promise<Sta
     }
   }
   ctx.fillText(hashLine, gx + hashLabelW, cy);
-  cy += 3.6 * mm;
+  cy += lh;
 
   // Documento protegido
-  ctx.font = `bold ${Math.round(3.2 * mm)}px Arial`;
+  ctx.font = `bold ${FONT_PX}px Arial`;
   ctx.fillStyle = COLORS.cinzaTexto;
   ctx.fillText('DOCUMENTO PROTEGIDO', gx, cy);
-  cy += 3.2 * mm;
-  ctx.font = `normal ${Math.round(3.2 * mm)}px Arial`;
+  cy += lh * 0.95;
+  ctx.font = `normal ${FONT_PX}px Arial`;
   ctx.fillStyle = COLORS.cinzaClaro;
   ctx.fillText('Contra alterações após a assinatura', gx, cy);
 
@@ -268,13 +277,13 @@ export async function renderSignatureStampPng(data: StampImageData): Promise<Sta
   }
 
   const qrCx = qrX + qrSize / 2;
-  let qy = qrY + qrSize + 3.4 * mm;
+  let qy = qrY + qrSize + lh;
   ctx.textAlign = 'center';
-  ctx.font = `bold ${Math.round(3.2 * mm)}px Arial`;
+  ctx.font = `bold ${FONT_PX}px Arial`;
   ctx.fillStyle = COLORS.azulPrincipal;
   ctx.fillText('VALIDAR', qrCx, qy);
-  qy += 3.2 * mm;
-  ctx.font = `normal ${Math.round(3.2 * mm)}px Arial`;
+  qy += lh * 0.9;
+  ctx.font = `normal ${FONT_PX}px Arial`;
   ctx.fillStyle = COLORS.cinzaClaro;
   ctx.fillText('Escaneie o QR', qrCx, qy);
 
