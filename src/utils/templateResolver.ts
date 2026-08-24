@@ -61,7 +61,7 @@ const TEMPLATES: Record<string, TemplateResolved> = {
   // mas nunca era referenciado aqui - por isso o download "manual" sempre
   // caía no template misto (com o aviso de assinatura eletrônica pendente).
   'exclusividade_manual': {
-    arquivo: 'exclusividade_manual_2_testemunhas.docx',
+    arquivo: 'exclusividade_ambos_manuais_2_testemunhas.docx',
     testemunhas: true,
     tagsAssinatura: [],
   },
