@@ -44,6 +44,16 @@ export interface PartyDetailedInfo {
   };
 }
 
+// Contato salvo (Contratado/Vendedor) reutilizável entre contratos,
+// gerenciado em Configurações e selecionável via dropdown no formulário.
+export interface SavedParty {
+  id: string;
+  nome: string;
+  cpfCnpj?: string;
+  data: PartyDetailedInfo;
+  criadoEm?: string;
+}
+
 export interface PropertyDetails {
   nomeEmpreendimento: string;
   localizacaoImovel: string;
@@ -188,6 +198,10 @@ export interface ContractData {
   // Assinaturas Digitais
   assinaturas: DigitalSignature[];
   status: 'rascunho' | 'assinado_parcial' | 'assinado_total';
+
+  // URL pública do documento (.docx) salvo no Supabase Storage
+  // (preenchida após o upload feito em contractDocumentsStorage.ts)
+  documentoUrl?: string;
 
   // Configuração de Blocos do Contrato (para exclusividade e outros)
   blockConfig?: Record<string, boolean>;

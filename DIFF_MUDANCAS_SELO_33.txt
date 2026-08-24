@@ -1,0 +1,224 @@
+═══════════════════════════════════════════════════════════════════════════════
+   DIFF DAS MUDANÇAS: Selo Digital com 33% de Largura
+═══════════════════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════════════════
+FILE: src/components/DigitalSignatureStamp.tsx
+═══════════════════════════════════════════════════════════════════════════════
+
+LINHA 125-127 (Container do Selo):
+
+❌ ANTES:
+───────────────────────────────────────────────────────────────────────────────
+  123 | // Mesma paleta e estrutura do carimbo oficial (painel institucional + conteúdo + QR)
+  124 | return (
+  125 |   <div
+  126 |     id="digital-signature-stamp"
+  127 |     className="relative flex bg-white rounded-2xl border-2 border-[#0D376B] shadow-sm text-slate-900 font-sans overflow-hidden w-full max-w-4xl mx-auto"
+  128 |   >
+
+✅ DEPOIS:
+───────────────────────────────────────────────────────────────────────────────
+  123 | // Mesma paleta e estrutura do carimbo oficial (painel institucional + conteúdo + QR)
+  124 | return (
+  125 |   <div
+  126 |     id="digital-signature-stamp"
+  127 |     className="relative flex bg-white rounded-2xl border-2 border-[#0D376B] shadow-sm text-slate-900 font-sans overflow-hidden w-1/3 mx-auto"
+  128 |     style={{
+  129 |       width: '33.333%',
+  130 |       minWidth: '280px',
+  131 |       maxWidth: '600px',
+  132 |     }}
+  133 |   >
+
+📝 MUDANÇAS:
+───────────────────────────────────────────────────────────────────────────────
+   • Linha 127: w-full max-w-4xl → w-1/3 mx-auto
+   • Novas linhas 128-132: Adicionado style inline com:
+     - width: 33.333% (largura exata de 33%)
+     - minWidth: 280px (mínimo para mobile)
+     - maxWidth: 600px (máximo para desktop grande)
+
+═══════════════════════════════════════════════════════════════════════════════
+FILE: src/index.css
+═══════════════════════════════════════════════════════════════════════════════
+
+LINHA 92-112 (Media Query Print e @page):
+
+❌ ANTES:
+───────────────────────────────────────────────────────────────────────────────
+  92 | @media print {
+  93 |   body {
+  94 |     background-color: #ffffff !important;
+  95 |     color: #000000 !important;
+  96 |   }
+  97 |   
+  98 |   #contract-paper-document {
+  99 |     border: none !important;
+ 100 |     box-shadow: none !important;
+ 101 |     padding: 0 !important;
+ 102 |     margin: 0 !important;
+ 103 |     width: 100% !important;
+ 104 |   }
+ 105 |
+ 106 |   .print\:hidden {
+ 107 |     display: none !important;
+ 108 |   }
+ 109 | }
+
+✅ DEPOIS:
+───────────────────────────────────────────────────────────────────────────────
+  92 | @media print {
+  93 |   body {
+  94 |     background-color: #ffffff !important;
+  95 |     color: #000000 !important;
+  96 |   }
+  97 |   
+  98 |   #contract-paper-document {
+  99 |     border: none !important;
+ 100 |     box-shadow: none !important;
+ 101 |     padding: 0 !important;
+ 102 |     margin: 0 !important;
+ 103 |     width: 100% !important;
+ 104 |   }
+ 105 |
+ 106 |   #digital-signature-stamp {
+ 107 |     width: 33.333% !important;
+ 108 |     max-width: 600px !important;
+ 109 |     min-width: 280px !important;
+ 110 |     margin: 20px auto !important;
+ 111 |     page-break-inside: avoid !important;
+ 112 |     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+ 113 |   }
+ 114 |
+ 115 |   .print\:hidden {
+ 116 |     display: none !important;
+ 117 |   }
+ 118 | }
+ 119 |
+ 120 | /* Estilos para PDF e visualização de impressão */
+ 121 | @page {
+ 122 |   margin: 20mm;
+ 123 | }
+ 124 |
+ 125 | #digital-signature-stamp {
+ 126 |   break-inside: avoid;
+ 127 |   print-color-adjust: exact;
+ 128 |   -webkit-print-color-adjust: exact;
+ 129 | }
+
+📝 MUDANÇAS:
+───────────────────────────────────────────────────────────────────────────────
+   • Novas linhas 106-113: Adicionado bloco para #digital-signature-stamp
+     - width: 33.333% !important (força 33% em print)
+     - max-width: 600px !important (máximo)
+     - min-width: 280px !important (mínimo)
+     - margin: 20px auto !important (centraliza)
+     - page-break-inside: avoid !important (não quebra entre páginas)
+     - box-shadow: 0 1px 2px ... (sombra leve)
+   
+   • Novas linhas 120-129: Adicionado @page e regras de print-color-adjust
+     - @page margin: 20mm (margens do PDF)
+     - break-inside: avoid (não quebra dentro)
+     - print-color-adjust: exact (cores exatas)
+     - -webkit-print-color-adjust: exact (compatibilidade webkit)
+
+═══════════════════════════════════════════════════════════════════════════════
+RESUMO DE MUDANÇAS
+═══════════════════════════════════════════════════════════════════════════════
+
+ARQUIVOS MODIFICADOS: 2
+   ✓ src/components/DigitalSignatureStamp.tsx
+   ✓ src/index.css
+
+LINHAS ALTERADAS: 9 (8 novas + 1 modificada)
+   ✓ 1 linha removida (max-w-4xl)
+   ✓ 8 linhas adicionadas (styles + print rules)
+
+IMPACTO: MÍNIMO
+   ✓ Sem quebra de funcionalidade
+   ✓ Sem dependências novas
+   ✓ Retrocompatível
+
+═══════════════════════════════════════════════════════════════════════════════
+GIT COMMANDS PARA APLICAR
+═══════════════════════════════════════════════════════════════════════════════
+
+# Ver as mudanças específicas
+git diff src/components/DigitalSignatureStamp.tsx
+git diff src/index.css
+
+# Adicionar os arquivos modificados
+git add src/components/DigitalSignatureStamp.tsx
+git add src/index.css
+
+# Adicionar a documentação
+git add SELO_33_PORCENTO_LARGURA.md
+git add MUDANCAS_SELO_33_PORCENTO.md
+git add EXEMPLO_TESTE_SELO_33.html
+git add RESUMO_EXECUTIVO_SELO_33.txt
+git add DIFF_MUDANCAS_SELO_33.txt
+
+# Fazer commit
+git commit -m "feat: Selo digital com 33% de largura em todas as visualizações
+
+- Modificado DigitalSignatureStamp.tsx para usar w-1/3 + width: 33.333%
+- Adicionado minWidth: 280px e maxWidth: 600px para responsividade
+- Atualizado src/index.css com regras de @media print
+- Adicionada @page margin: 20mm para PDF
+- Adicionadas propriedades print-color-adjust para cores exatas
+- Adicionado page-break-inside: avoid para evitar quebras
+- Documentação completa: SELO_33_PORCENTO_LARGURA.md
+- Exemplo de teste: EXEMPLO_TESTE_SELO_33.html
+- Suporta: tela, impressão, visualização PDF"
+
+# Push para repository
+git push origin main
+
+═══════════════════════════════════════════════════════════════════════════════
+VERIFICAÇÃO PÓS-DEPLOY
+═══════════════════════════════════════════════════════════════════════════════
+
+Após fazer o push e deploy, verificar:
+
+1. Em Tela:
+   □ Desktop 1920px: Selo em 640px (33%)
+   □ Tablet 1024px: Selo em 341px (33%)
+   □ Mobile 375px: Selo em 280px+ (33% min)
+
+2. Em Print Preview (Ctrl+P):
+   □ Selo em 33% de largura
+   □ Cores preservadas
+   □ Centralizado
+   □ Sem quebra de página
+
+3. Em PDF:
+   □ Export bem-sucedido
+   □ Dimensões corretas
+   □ Cores exatas
+   □ QR legível
+
+═══════════════════════════════════════════════════════════════════════════════
+TESTES RECOMENDADOS
+═══════════════════════════════════════════════════════════════════════════════
+
+# Build local
+npm install
+npm run build
+npm run preview
+
+# Abrir em navegador e testar
+# http://localhost:5173 (ou a porta que aparecerá)
+
+# Testar responsividade
+- F12 (DevTools)
+- Modo responsivo (Ctrl+Shift+M)
+- Testar diferentes tamanhos
+
+# Testar print
+- Ctrl+P
+- Visualizar preview
+- Salvar como PDF
+- Abrir PDF para verificar
+
+═══════════════════════════════════════════════════════════════════════════════

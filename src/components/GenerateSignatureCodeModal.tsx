@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { ContractData } from '../types/contract';
 import { createSignatureLink } from '../utils/signatureLinksRepository';
-import { Link as LinkIcon, Copy, CheckCircle2, AlertCircle, Loader, X } from 'lucide-react';
+import { Link as LinkIcon, Copy, CheckCircle2, AlertCircle, Loader, X, ShieldCheck } from 'lucide-react';
 
 interface GenerateSignatureCodeModalProps {
   contract: ContractData;
   isOpen: boolean;
   onClose: () => void;
   onCodeGenerated: (code: string, link: string, validadeMs: number) => void;
+  // Contrato já 100% assinado: o link serve só para o cliente rever/baixar
+  // o documento, sem fluxo de assinatura. Não faz sentido gerar/mostrar
+  // código de acesso nesse caso - o cliente já sabe o próprio CPF.
+  isFullySigned?: boolean;
 }
 
 export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProps> = ({
@@ -15,6 +19,7 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
   isOpen,
   onClose,
   onCodeGenerated,
+  isFullySigned = false,
 }) => {
   const [validade, setValidade] = useState('24h');
   const [customDias, setCustomDias] = useState('');
@@ -65,7 +70,21 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
     if (!generatedLink) return;
 
     try {
-      await navigator.clipboard.writeText(generatedLink);
+      let mensagem = generatedLink;
+
+      // Contrato ainda não assinado: inclui o código de acesso (últimos 4
+      // dígitos do CPF/CNPJ) junto no texto copiado, para o cliente
+      // desbloquear o fluxo de assinatura.
+      if (!isFullySigned) {
+        const cpfCnpj = contract.comprador?.cpfCnpj || '';
+        const digitos = cpfCnpj.replace(/\D/g, '');
+        const codigoAcesso = digitos.slice(-4);
+        mensagem = `${generatedLink}\n\n💡 Código de acesso: ${codigoAcesso}`;
+      }
+      // Contrato já assinado: só o link. O cliente já sabe o próprio CPF
+      // e usa os últimos 4 dígitos para abrir - não precisa reenviar nada.
+
+      await navigator.clipboard.writeText(mensagem);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -82,7 +101,7 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
         <div className="flex items-center justify-between border-b border-slate-200 p-4">
           <h3 className="font-bold text-slate-900 flex items-center gap-2">
             <LinkIcon className="w-5 h-5 text-blue-600" />
-            Gerar Código para Cliente
+            {isFullySigned ? 'Compartilhar Contrato Assinado' : 'Gerar Código para Cliente'}
           </h3>
           <button
             type="button"
@@ -98,7 +117,9 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
           {!generatedLink ? (
             <>
               <p className="text-sm text-slate-600">
-                Escolha o tempo de validade do link de assinatura do cliente.
+                {isFullySigned
+                  ? 'Escolha o tempo de validade do link de acesso ao contrato assinado.'
+                  : 'Escolha o tempo de validade do link de assinatura do cliente.'}
               </p>
 
               <div className="space-y-3">
@@ -163,7 +184,7 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
                 ) : (
                   <>
                     <LinkIcon className="w-4 h-4" />
-                    Gerar Código e Link
+                    {isFullySigned ? 'Gerar Link de Acesso' : 'Gerar Código e Link'}
                   </>
                 )}
               </button>
@@ -173,12 +194,41 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
                 <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-bold text-blue-900">Código Gerado!</p>
+                  <p className="text-sm font-bold text-blue-900">
+                    {isFullySigned ? 'Link Gerado!' : 'Código Gerado!'}
+                  </p>
                   <p className="text-xs text-blue-700 mt-1">
-                    Compartilhe este link com seu cliente.
+                    {isFullySigned
+                      ? 'Compartilhe este link com seu cliente para ele rever e baixar o contrato assinado.'
+                      : 'Compartilhe este link com seu cliente.'}
                   </p>
                 </div>
               </div>
+
+              {/* Código de Acesso: só faz sentido no fluxo de assinatura.
+                  Para contrato já assinado, o cliente abre o link e usa os
+                  próprios últimos 4 dígitos do CPF - não precisa que o
+                  corretor gere/reenvie nenhum código separado. */}
+              {isFullySigned ? (
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-start gap-2">
+                  <ShieldCheck className="w-4 h-4 text-slate-500 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-slate-600">
+                    Para abrir, o cliente digita os últimos 4 dígitos do próprio CPF —
+                    o mesmo código usado para desbloquear a assinatura. Não há código
+                    novo para enviar.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3 bg-amber-50 border-2 border-amber-300 rounded-lg">
+                  <p className="text-xs font-bold text-amber-900 mb-1">🔐 Código de Acesso:</p>
+                  <p className="text-lg font-black text-amber-700 font-mono tracking-widest">
+                    {contract.comprador?.cpfCnpj?.replace(/\D/g, '').slice(-4) || '****'}
+                  </p>
+                  <p className="text-[10px] text-amber-700 mt-1">
+                    ↑ Os últimos 4 dígitos do CPF do cliente
+                  </p>
+                </div>
+              )}
 
               <div className="bg-slate-50 rounded-lg p-3 space-y-2">
                 <p className="text-xs font-bold text-slate-700">Link para Compartilhar:</p>
@@ -207,6 +257,11 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
                     )}
                   </button>
                 </div>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  {isFullySigned
+                    ? 'ℹ️ Ao copiar, apenas o link é incluído — nenhum código é gerado'
+                    : 'ℹ️ O código de acesso será incluído automaticamente ao copiar'}
+                </p>
               </div>
 
               <button

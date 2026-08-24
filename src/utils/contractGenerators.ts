@@ -10,6 +10,19 @@ import { numeroPorExtensoReais, numeroPorExtensoInteiro, percentualPorExtenso } 
 import jsPDF from 'jspdf';
 import { drawDigitalSignatureStamp, STAMP_HEIGHT } from './pdfSignatureStamp';
 
+// Formata CPF/CNPJ no mesmo padrão exibido na prévia em tela (DigitalSignatureStamp.tsx),
+// para que o selo/texto no PDF baixado mostre exatamente o mesmo formato.
+function formatCpfCnpjDoc(doc: string): string {
+  const clean = (doc || '').replace(/\D/g, '');
+  if (clean.length === 11) {
+    return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}-${clean.slice(9, 11)}`;
+  }
+  if (clean.length === 14) {
+    return `${clean.slice(0, 2)}.${clean.slice(2, 5)}.${clean.slice(5, 8)}/${clean.slice(8, 12)}-${clean.slice(12, 14)}`;
+  }
+  return doc || '';
+}
+
 // Formatação de Moeda
 export function formatCurrency(value: number): string {
   if (isNaN(value)) return 'R$ 0,00';
@@ -1418,7 +1431,7 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
     // Carimbo de assinatura digital (mesmo layout/paleta do CRM) — um por signatário,
     // empilhados verticalmente e centralizados na página.
     const drawPartyStamp = async (sig: typeof contract.assinaturas[number] | undefined, fallbackName: string, fallbackDoc: string, roleLabel: string) => {
-      const neededHeight = sig ? STAMP_HEIGHT + 8 : 14;
+      const neededHeight = sig ? STAMP_HEIGHT + 19 : 14;
       if (y > pageHeight - margin - neededHeight) {
         doc.addPage();
         y = margin + 10;
@@ -1428,13 +1441,26 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
         const signatureId = signatureIdFromHash(sig.hashAutenticacao);
         y = await drawDigitalSignatureStamp(doc, y, pageWidth, {
           signerName: sig.nomeSignatario,
-          cpfCnpj: `${roleLabel} — CPF/CNPJ: ${sig.documentoSignatario}`,
+          cpfCnpj: formatCpfCnpjDoc(sig.documentoSignatario),
           dateStr: dt.toLocaleDateString('pt-BR'),
           timeStr: dt.toLocaleTimeString('pt-BR'),
           signatureId,
           hash: sig.hashAutenticacao,
           validationUrl: buildValidationUrl(contract.numeroContrato, signatureId),
         });
+
+        // Nome e CPF legíveis abaixo do selo — mesmo bloco exibido na prévia em
+        // tela (ContractViewer.tsx), que antes não era replicado no PDF baixado.
+        doc.setFont('times', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(15, 23, 42);
+        doc.text(sig.nomeSignatario, pageWidth / 2, y, { align: 'center' });
+        y += 4.5;
+        doc.setFont('times', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(71, 85, 105);
+        doc.text(`CPF: ${formatCpfCnpjDoc(sig.documentoSignatario)}`, pageWidth / 2, y, { align: 'center' });
+        doc.setTextColor(30, 30, 30);
         y += 6;
       } else {
         doc.setFont('times', 'bold');
@@ -1552,18 +1578,6 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
     doc.setFontSize(7.5);
     doc.text(`1. Nome: ${contract.testemunha1?.nome || ''}    CPF: ${contract.testemunha1?.cpf || ''}    RG: ${contract.testemunha1?.rg || ''}`, margin, y);
     doc.text(`2. Nome: ${contract.testemunha2?.nome || ''}    CPF: ${contract.testemunha2?.cpf || ''}    RG: ${contract.testemunha2?.rg || ''}`, margin + colWidth + 10, y);
-    y += 10;
-
-    // Testemunha 3
-    if (y > pageHeight - margin - 20) {
-      doc.addPage();
-      y = margin + 10;
-    }
-    doc.line(margin, y, margin + colWidth, y);
-    y += 4;
-    doc.setFont('times', 'normal');
-    doc.setFontSize(7.5);
-    doc.text(`3. Nome: ${contract.testemunha3?.nome || ''}    CPF: ${contract.testemunha3?.cpf || ''}    RG: ${contract.testemunha3?.rg || ''}`, margin, y);
     y += 10;
   }
 

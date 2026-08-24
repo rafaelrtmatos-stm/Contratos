@@ -186,8 +186,7 @@ export const SignatureLink: React.FC = () => {
       console.error('Erro ao gerar PDF:', err);
     } finally {
       setDownloading(false);
-    }
-  };
+    }  };
 
   if (loadingPage) {
     return (

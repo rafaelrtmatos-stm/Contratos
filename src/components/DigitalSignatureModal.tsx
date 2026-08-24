@@ -424,14 +424,21 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                       Avançar para Assinatura do Contratante →
                     </button>
                   </div>
-                  <DigitalSignatureStamp
-                    signature={existingVendedorSig}
-                    signerName={existingVendedorSig.nomeSignatario}
-                    signerDoc={existingVendedorSig.documentoSignatario}
-                    roleLabel={labelContratado.toUpperCase()}
-                    contractNumber={contract.numeroContrato}
-                    contractId={contract.id}
-                  />
+                  <div className="space-y-3">
+                    <DigitalSignatureStamp
+                      signature={existingVendedorSig}
+                      signerName={existingVendedorSig.nomeSignatario}
+                      signerDoc={existingVendedorSig.documentoSignatario}
+                      roleLabel={labelContratado.toUpperCase()}
+                      contractNumber={contract.numeroContrato}
+                      contractId={contract.id}
+                    />
+                    {/* Nome e CPF abaixo do selo */}
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-slate-900">{existingVendedorSig.nomeSignatario}</p>
+                      <p className="text-xs text-slate-600">CPF: {existingVendedorSig.documentoSignatario}</p>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">

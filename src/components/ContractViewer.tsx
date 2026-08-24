@@ -367,6 +367,12 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
   const isDigital = currentModality === 'digital';
   const isFullySigned = contract.modalidadeAssinatura === 'digital' && (contract.assinaturas?.length || 0) >= 2;
+  // Corretor (vendedor/"usuario") já assinou, mas o cliente ainda não -
+  // nesse ponto o botão de assinatura vira "etapa 2": gerar/enviar o
+  // link de assinatura pro cliente, em vez de reabrir o fluxo de
+  // assinatura do próprio corretor de novo.
+  const sigVendedor = contract.assinaturas?.find((a) => a.role === 'vendedor');
+  const vendedorJaAssinouAguardandoCliente = isDigital && !!sigVendedor && !isFullySigned;
 
   return (
     <div className="max-w-4xl mx-auto pb-16 space-y-6">
@@ -505,7 +511,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           <span className="text-xs text-slate-500">
             {isDigital
               ? '✨ 2 Partes (Sem Testemunhas) • Certificação Digital'
-              : '📄 2 Partes + 3 Testemunhas para Impressão'}
+              : '📄 2 Partes + 2 Testemunhas para Impressão'}
           </span>
         </div>
 
@@ -561,7 +567,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
                 Gera o documento para impressão e assinatura a próprio punho. 
-                <strong className="text-slate-900 block mt-0.5">Inclui Contratado, Contratante e 3 Testemunhas.</strong>
+                <strong className="text-slate-900 block mt-0.5">Inclui Contratado, Contratante e 2 Testemunhas.</strong>
               </p>
             </div>
           </label>
@@ -575,9 +581,9 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                 <span className="font-bold text-emerald-700 flex items-center gap-1">
                   <Check className="w-4 h-4" /> Ambas as partes já assinaram digitalmente!
                 </span>
-              ) : contract.assinaturas && contract.assinaturas.length === 1 ? (
+              ) : vendedorJaAssinouAguardandoCliente ? (
                 <span>
-                  1 de 2 assinaturas registradas ({contract.assinaturas[0].role === 'vendedor' ? 'Contratado' : 'Contratante'}).
+                  ✅ Sua assinatura está registrada. Agora gere o link e envie para o cliente assinar.
                 </span>
               ) : (
                 <span>
@@ -596,17 +602,28 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                 <span>Log de Evidências</span>
               </button>
 
-              <button
-                onClick={() => {
-                  setSignFlowParte('usuario');
-                  setIsDigitalSignFlowOpen(true);
-                }}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
-                title="Fluxo com OTP e carimbo digital"
-              >
-                <ShieldCheck className="w-4 h-4" />
-                <span>Assinatura Digital</span>
-              </button>
+              {vendedorJaAssinouAguardandoCliente ? (
+                <button
+                  onClick={() => setIsShareLinkOpen(true)}
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
+                  title="Gerar código e link de assinatura para o cliente"
+                >
+                  <LinkIcon className="w-4 h-4" />
+                  <span>Gerar Link para Cliente</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setSignFlowParte('usuario');
+                    setIsDigitalSignFlowOpen(true);
+                  }}
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
+                  title="Fluxo com OTP e carimbo digital"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Assinatura Digital</span>
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -719,6 +736,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           isOpen={isShareLinkOpen}
           onClose={() => setIsShareLinkOpen(false)}
           onCodeGenerated={() => {}}
+          isFullySigned={isFullySigned}
         />
       )}
     </div>
