@@ -214,7 +214,7 @@ function MainApp() {
       assinadoEm: auditStamp.dataAssinatura,
       hashAutenticacao: auditStamp.hashDocumento,
       ipAssinatura: auditStamp.ipAssinatura,
-      metadadosNavegador: auditStamp.userAgent || navigator.userAgent,
+      metadadosNavegador: `${auditStamp.userAgent || navigator.userAgent}${auditStamp.meioAutenticacao ? ` | ${auditStamp.meioAutenticacao}` : ''}`,
     };
 
     const filtered = quickSignContract.assinaturas.filter((a) => a.role !== signature.role);

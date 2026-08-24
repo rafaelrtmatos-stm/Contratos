@@ -189,6 +189,7 @@ export interface AuditStamp {
   hashDocumento: string; // SHA-256 do documento
   ipAssinatura: string;
   userAgent?: string;
+  meioAutenticacao?: string; // ex: "Login e senha (revalidados via Supabase Auth)"
 }
 
 /**
@@ -198,7 +199,9 @@ export async function createAuditStamp(
   nomeAssinante: string,
   cpfCnpj: string,
   documentText: string,
-  ipAssinatura?: string
+  ipAssinatura?: string,
+  userAgent?: string,
+  meioAutenticacao?: string
 ): Promise<AuditStamp> {
   const signatureId = generateSignatureId();
   const hashDocumento = await sha256Hex(documentText);
@@ -216,6 +219,8 @@ export async function createAuditStamp(
     }),
     hashDocumento,
     ipAssinatura: ipAssinatura || 'N/A',
+    userAgent: userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : undefined),
+    meioAutenticacao,
   };
 }
 
@@ -235,11 +240,13 @@ export async function getClientIpAddress(): Promise<string> {
 
 /**
  * Formata carimbo para texto exibível no DOCX
- * Exemplo: "Assinado digitalmente por: João Silva (CPF 123.456.789-00) em 24/08/2026 às 14:30:00 (IP: 192.168.1.1)"
+ * Exemplo: "Assinado digitalmente por: João Silva (CPF 123.456.789-00) em 24/08/2026 às
+ * 14:30:00 (IP: 192.168.1.1) via Login e senha (ID: ABCD-1234-EF56-7890)"
  */
 export function formatAuditStampText(stamp: AuditStamp): string {
   const dataFormatada = new Date(stamp.dataAssinatura).toLocaleDateString('pt-BR');
-  return `Assinado digitalmente por: ${stamp.nomeAssinante} (${stamp.cpfCnpj}) em ${dataFormatada} às ${stamp.horaAssinatura} (ID: ${stamp.signatureId})`;
+  const meio = stamp.meioAutenticacao ? ` via ${stamp.meioAutenticacao}` : '';
+  return `Assinado digitalmente por: ${stamp.nomeAssinante} (${stamp.cpfCnpj}) em ${dataFormatada} às ${stamp.horaAssinatura}${meio} (ID: ${stamp.signatureId})`;
 }
 
 export interface SignatureValidationResult {

@@ -27,6 +27,19 @@ export function maskCpfCnpj(formatted: string): string {
   return formatted.replace(/^(\d{3})\.\d{3}\.\d{3}(-\d{2})$/, '$1.***.***$2');
 }
 
+/**
+ * Nome do sistema exibido na declaração de autenticidade impressa no carimbo
+ * ("Assinado eletronicamente via ..."), mesmo padrão adotado no CRM irmão
+ * deste projeto (companyIdentity.ts / SIGNATURE_SYSTEM_NAME): usa o domínio
+ * público onde a aplicação está hospedada, resolvido em tempo de execução.
+ */
+export function getSignatureSystemName(): string {
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    return window.location.hostname;
+  }
+  return 'Sistema de Contratos Digitais';
+}
+
 const hexToRgb = (hex: string): [number, number, number] => {
   const n = parseInt(hex.replace('#', ''), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
@@ -103,9 +116,11 @@ async function generateQrDataUrl(text: string): Promise<string | null> {
   }
 }
 
-// 33% da largura de uma página A4 (210mm) e 7% da altura (297mm)
+// 33% da largura de uma página A4 (210mm) e ~8.2% da altura (297mm) — aumentado
+// em relação ao padrão original (7%) para caber a linha de declaração de
+// autenticidade ("Assinado eletronicamente via ...") no painel institucional.
 export const STAMP_WIDTH = 69.3;
-export const STAMP_HEIGHT = 20.79;
+export const STAMP_HEIGHT = 24.3;
 
 /** Desenha um carimbo digital completo centralizado na largura da página; retorna o novo Y. */
 export async function drawDigitalSignatureStamp(
@@ -160,6 +175,17 @@ export async function drawDigitalSignatureStamp(
   doc.text('MP 2.200-2/2001', painelCx, py, { align: 'center' });
   py += lineH(FONT_MIN);
   doc.text('LEI 14.063/2020', painelCx, py, { align: 'center' });
+  py += lineH(FONT_MIN) + 0.5;
+
+  // Declaração de autenticidade — identifica o sistema responsável pela
+  // assinatura eletrônica (requisito de transparência do ato de assinatura).
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(FONT_MIN);
+  const declaracao = doc.splitTextToSize(
+    `Assinado eletronicamente via ${getSignatureSystemName()}`,
+    painelW - pad * 2
+  );
+  doc.text(declaracao, painelCx, py, { align: 'center' });
 
   // ===== ÁREA DE CONTEÚDO (central) =====
   const qrW = w * 0.2;

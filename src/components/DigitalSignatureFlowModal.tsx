@@ -58,7 +58,14 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
       // de metadados arbitrária) - prova de integridade de verdade: se o
       // texto do contrato mudar depois, o hash não bate mais.
       const documentText = await renderContractDocumentPlainText(contract);
-      const stamp = await createAuditStamp(nomeAssinante, cpfAssinante, documentText, ip);
+      const stamp = await createAuditStamp(
+        nomeAssinante,
+        cpfAssinante,
+        documentText,
+        ip,
+        navigator.userAgent,
+        'Login e senha (revalidados via Supabase Auth)'
+      );
 
       setCarimbo(stamp);
       onSignatureRegistered(stamp);
