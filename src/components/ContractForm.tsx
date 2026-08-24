@@ -986,13 +986,21 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               </div>
             )}
 
-            <div className="flex justify-end pt-3">
+            <div className="flex justify-between pt-3">
               <button
                 type="button"
-                onClick={() => setActiveTab('comprador')}
-                className="flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-800 cursor-pointer"
+                onClick={() => setActiveTab('vendedor')}
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-sm transition-all cursor-pointer"
               >
-                Próximo: Preencher Vendedor e Comprador
+                <ArrowLeft className="w-4 h-4" />
+                Voltar: {tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('financeiro')}
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-white bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+              >
+                Próximo: Condições Financeiras
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -1176,6 +1184,25 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="flex justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab('comprador')}
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-sm transition-all cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Voltar: {tipo === 'exclusividade' ? 'Contratado' : 'Comprador'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('imovel')}
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-white bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+              >
+                Próximo: {subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? 'Bem / Veículo' : 'Imóvel'}
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
         )}
@@ -1370,21 +1397,13 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               </div>
             </div>
 
-            <div className="flex justify-between pt-2">
+            <div className="flex justify-end pt-2">
               <button
                 type="button"
-                onClick={() => setActiveTab('imovel')}
-                className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                onClick={() => setActiveTab('vendedor')}
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-white bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
               >
-                <ArrowLeft className="w-4 h-4" />
-                Voltar: Dados do Imóvel
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('financeiro')}
-                className="flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-800 cursor-pointer"
-              >
-                Próximo: Valores e Quitação
+                Próximo: {tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -1587,7 +1606,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('imovel')}
-                className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-sm transition-all cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Voltar: Imóvel
@@ -1595,7 +1614,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('foro')}
-                className="flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-800 cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-white bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
               >
                 Próximo: Foro e Datação
                 <ArrowRight className="w-4 h-4" />
@@ -1747,7 +1766,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('financeiro')}
-                className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-sm transition-all cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Voltar: Condições Financeiras
@@ -1755,7 +1774,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('revisao')}
-                className="flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-800 cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-white bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
               >
                 Avançar: Revisão dos Dados
                 <ArrowRight className="w-4 h-4" />

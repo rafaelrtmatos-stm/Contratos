@@ -7,7 +7,17 @@ import {
   removeCustomWordTemplate,
   downloadSampleDocxTemplate,
   CustomTemplateMeta,
+  CustomTemplateKey,
 } from '../utils/docxProcessor';
+
+// Mapeia o tipo de contrato exibido na UI para a chave de template granular
+// usada internamente (o modal ainda não distingue imóvel/outros bens, então
+// assume-se a variante "imóvel" como padrão para venda à vista/parcelada).
+function toTemplateKey(tipo: ContractType): CustomTemplateKey {
+  if (tipo === 'venda_vista') return 'venda_vista_imovel';
+  if (tipo === 'venda_parcelada') return 'venda_parcelada_imovel';
+  return 'exclusividade';
+}
 import { TEMPLATE_MAP, getAssinaturaTags } from '../utils/templateResolver';
 import { downloadTemplateWithCache } from '../utils/supabaseTemplateStorage';
 import JSZip from 'jszip';
@@ -134,9 +144,9 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
 
   const loadMetas = () => {
     setMetas({
-      venda_vista: getCustomWordTemplateMeta('venda_vista'),
-      venda_parcelada: getCustomWordTemplateMeta('venda_parcelada'),
-      exclusividade: getCustomWordTemplateMeta('exclusividade'),
+      venda_vista: getCustomWordTemplateMeta(toTemplateKey('venda_vista')),
+      venda_parcelada: getCustomWordTemplateMeta(toTemplateKey('venda_parcelada')),
+      exclusividade: getCustomWordTemplateMeta(toTemplateKey('exclusividade')),
     });
   };
 
@@ -162,7 +172,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
         throw new Error('O arquivo não possui a estrutura padrão de um documento Word (.docx).');
       }
 
-      saveCustomWordTemplate(activeType, arrayBuffer, file.name);
+      saveCustomWordTemplate(toTemplateKey(activeType), arrayBuffer, file.name);
       loadMetas();
       setUploadSuccess(
         `Modelo institucional "${file.name}" importado e ativado com sucesso para novos contratos.`
@@ -179,14 +189,14 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
 
   const handleRemoveTemplate = () => {
     if (confirm('Deseja restaurar o modelo Word padrão do sistema para esta modalidade de contrato?')) {
-      removeCustomWordTemplate(activeType);
+      removeCustomWordTemplate(toTemplateKey(activeType));
       loadMetas();
       setUploadSuccess('Modelo padrão do sistema restaurado com sucesso.');
     }
   };
 
   const handleDownloadActiveTemplate = () => {
-    downloadSampleDocxTemplate(activeType);
+    downloadSampleDocxTemplate(toTemplateKey(activeType));
   };
 
   const handleDownloadSupabaseTemplate = async (arquivo: string) => {

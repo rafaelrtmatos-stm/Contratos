@@ -9,6 +9,7 @@ import { DigitalSignatureFlowModal } from './components/DigitalSignatureFlowModa
 import { AuditStamp } from './utils/signatureOtpUtils';
 
 import { TemplateManagerModal } from './components/TemplateManagerModal';
+import { WordTemplateModal } from './components/WordTemplateModal';
 import { SettingsPanel } from './components/SettingsPanel';
 import { LoginScreen } from './components/LoginScreen';
 import { AdminUsersPanel } from './components/AdminUsersPanel';
@@ -65,6 +66,7 @@ function MainApp() {
   
   // Modal de gestão de templates
   const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
+  const [isWordTemplateModalOpen, setIsWordTemplateModalOpen] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
 
@@ -223,6 +225,7 @@ function MainApp() {
         onNewContract={handleCreateNewContract}
         onOpenTemplateManager={() => setIsTemplateManagerOpen(true)}
         onOpenSettings={() => setIsSettingsPanelOpen(true)}
+        onOpenWordTemplates={() => setIsWordTemplateModalOpen(true)}
         contractCount={contracts.length}
         isAdmin={profile?.role === 'admin'}
         onOpenAdminPanel={() => setIsAdminPanelOpen(true)}
@@ -292,6 +295,14 @@ function MainApp() {
         <TemplateManagerModal
           isOpen={isTemplateManagerOpen}
           onClose={() => setIsTemplateManagerOpen(false)}
+        />
+      )}
+
+      {/* Modal de Gerenciamento de Modelos Word (.docx) */}
+      {isWordTemplateModalOpen && (
+        <WordTemplateModal
+          isOpen={isWordTemplateModalOpen}
+          onClose={() => setIsWordTemplateModalOpen(false)}
         />
       )}
 

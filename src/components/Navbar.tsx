@@ -12,6 +12,7 @@ import {
   LogOut,
   Settings2,
   Sliders,
+  FileText,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -20,6 +21,7 @@ interface NavbarProps {
   onNewContract: (type: ContractType) => void;
   onOpenTemplateManager?: () => void;
   onOpenSettings?: () => void;
+  onOpenWordTemplates?: () => void;
   contractCount: number;
   isAdmin?: boolean;
   onOpenAdminPanel?: () => void;
@@ -32,6 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNewContract,
   onOpenTemplateManager,
   onOpenSettings,
+  onOpenWordTemplates,
   contractCount,
   isAdmin,
   onOpenAdminPanel,
@@ -190,18 +193,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </div>
                     </button>
 
-                    <div className="pt-1.5 border-t border-slate-100 mt-1">
-                      <button
-                        onClick={() => {
-                          setIsNewMenuOpen(false);
-                          onOpenWordTemplates();
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition-colors cursor-pointer"
-                      >
-                        <FileText className="w-4 h-4 text-green-600 shrink-0" />
-                        <span>Gerenciar Modelos Word (.docx)</span>
-                      </button>
-                    </div>
+                    {onOpenWordTemplates && (
+                      <div className="pt-1.5 border-t border-slate-100 mt-1">
+                        <button
+                          onClick={() => {
+                            setIsNewMenuOpen(false);
+                            onOpenWordTemplates();
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition-colors cursor-pointer"
+                        >
+                          <FileText className="w-4 h-4 text-green-600 shrink-0" />
+                          <span>Gerenciar Modelos Word (.docx)</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </>
               )}

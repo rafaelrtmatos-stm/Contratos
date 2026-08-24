@@ -63,13 +63,16 @@ export async function createVerificationCode(
   contractId: string,
   ttlMinutes: number = CODE_TTL_MINUTES
 ): Promise<GeneratedOtp> {
-  // Invalidar códigos anteriores não utilizados
-  await supabase
-    .from('verification_codes')
-    .update({ is_used: true, used_at: new Date().toISOString() })
-    .eq('contract_id', contractId)
-    .eq('is_used', false)
-    .catchError(() => {}); // Ignora se tabela não existe
+  // Invalidar códigos anteriores não utilizados (ignora se a tabela não existir)
+  try {
+    await supabase
+      .from('verification_codes')
+      .update({ is_used: true, used_at: new Date().toISOString() })
+      .eq('contract_id', contractId)
+      .eq('is_used', false);
+  } catch {
+    // Tabela pode não existir ainda - segue o fluxo mesmo assim
+  }
 
   const code = generateOtpCode();
   const codeHash = await sha256Hex(code);
@@ -77,19 +80,20 @@ export async function createVerificationCode(
   const expiresAt = new Date(Date.now() + safeTtl * 60 * 1000).toISOString();
 
   // Salvar hash do código (não o código em texto puro!)
-  const { error } = await supabase.from('verification_codes').insert({
-    contract_id: contractId,
-    code_hash: codeHash,
-    expires_at: expiresAt,
-    created_at: new Date().toISOString(),
-    is_used: false,
-    attempts: 0,
-  }).catchError(() => {
-    // Tabela pode não existir ainda - retornar mesmo assim
-    return { error: null };
-  });
+  try {
+    const { error } = await supabase.from('verification_codes').insert({
+      contract_id: contractId,
+      code_hash: codeHash,
+      expires_at: expiresAt,
+      created_at: new Date().toISOString(),
+      is_used: false,
+      attempts: 0,
+    });
 
-  if (error && error.code !== 'PGRST301') throw error; // Ignorar erro de tabela não existente
+    if (error && error.code !== 'PGRST301') throw error; // Ignorar erro de tabela não existente
+  } catch (err: any) {
+    if (err?.code && err.code !== 'PGRST301') throw err;
+  }
 
   return { code, expiresAt, contractId };
 }
@@ -104,15 +108,20 @@ export type OtpValidationResult =
  */
 export async function validateVerificationCode(contractId: string, inputCode: string): Promise<OtpValidationResult> {
   try {
-    const { data: pending } = await supabase
-      .from('verification_codes')
-      .select('*')
-      .eq('contract_id', contractId)
-      .eq('is_used', false)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .catchError(() => ({ data: null, error: null }));
+    let pending: any = null;
+    try {
+      const result = await supabase
+        .from('verification_codes')
+        .select('*')
+        .eq('contract_id', contractId)
+        .eq('is_used', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      pending = result.data;
+    } catch {
+      pending = null;
+    }
 
     if (!pending) return { ok: false, reason: 'not_found' };
 
@@ -126,20 +135,26 @@ export async function validateVerificationCode(contractId: string, inputCode: st
 
     const inputHash = await sha256Hex(inputCode);
     if (inputHash !== pending.code_hash) {
-      await supabase
-        .from('verification_codes')
-        .update({ attempts: (pending.attempts || 0) + 1 })
-        .eq('id', pending.id)
-        .catchError(() => {});
+      try {
+        await supabase
+          .from('verification_codes')
+          .update({ attempts: (pending.attempts || 0) + 1 })
+          .eq('id', pending.id);
+      } catch {
+        // Ignora falha ao registrar tentativa
+      }
       return { ok: false, reason: 'wrong_code' };
     }
 
     // Código correto - marcar como usado
-    await supabase
-      .from('verification_codes')
-      .update({ is_used: true, used_at: new Date().toISOString() })
-      .eq('id', pending.id)
-      .catchError(() => {});
+    try {
+      await supabase
+        .from('verification_codes')
+        .update({ is_used: true, used_at: new Date().toISOString() })
+        .eq('id', pending.id);
+    } catch {
+      // Ignora falha ao marcar como usado
+    }
 
     return { ok: true };
   } catch (error: any) {

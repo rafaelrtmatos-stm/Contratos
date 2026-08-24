@@ -32,7 +32,7 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({ contract, moda
 
         const templateResolved = resolveTemplate(
           contract.tipo,
-          'visualizar_preview',
+          'download_depois_assinar',
           estadoAssinatura,
           contract.tipo === 'exclusividade' ? (contract.varianteExclusividade || 'normal') : undefined
         );

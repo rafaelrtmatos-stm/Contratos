@@ -18,6 +18,7 @@ import {
   findSignatureTags,
   mapTagsToConfig,
   summarizeChanges,
+  PartySignatureInfo,
 } from '../utils/signatureTagProcessor';
 import {
   generateContractTags,
@@ -29,6 +30,7 @@ import { AuditStamp, formatAuditStampText } from '../utils/signatureOtpUtils';
 import { DigitalSignatureFlowModal } from './DigitalSignatureFlowModal';
 import { DigitalSignatureStamp } from './DigitalSignatureStamp';
 import { EvidenceLogModal } from './EvidenceLogModal';
+import { WordTemplateModal } from './WordTemplateModal';
 import {
   FileDown,
   FileText,
@@ -193,10 +195,12 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
     try {
       // 1. Decidir qual template usar
+      const sigVendedorAtual = contract.assinaturas?.find(a => a.role === 'vendedor');
+      const sigCompradorAtual = contract.assinaturas?.find(a => a.role === 'comprador');
       const estadoAssinatura = {
-        usuarioAssinou: contract.assinaturas?.some(a => a.role === 'vendedor') || false,
+        usuarioAssinou: !!sigVendedorAtual,
         usuarioModalidade: (contract.modalidadeAssinatura === 'digital' ? 'digital' : 'manual') as 'digital' | 'manual',
-        compradorAssinou: contract.assinaturas?.some(a => a.role === 'comprador') || false,
+        compradorAssinou: !!sigCompradorAtual,
         compradorModalidade: (contract.modalidadeAssinatura === 'digital' ? 'digital' : 'manual') as 'digital' | 'manual',
         testemunhaprecisa: contract.modalidadeAssinatura === 'manual',
       };
@@ -233,14 +237,25 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       
       if (tagsEncontradas.length > 0) {
         console.log('🏷️ Tags de assinatura encontradas:', tagsEncontradas);
-        
-        const tagsConfig = mapTagsToConfig(
-          tagsEncontradas,
-          estadoAssinatura.usuarioAssinou,
-          estadoAssinatura.compradorAssinou,
-          estadoAssinatura.usuarioModalidade,
-          estadoAssinatura.compradorModalidade
-        );
+
+        const usuarioInfo: PartySignatureInfo = {
+          assinou: estadoAssinatura.usuarioAssinou,
+          modalidade: estadoAssinatura.usuarioModalidade,
+          signature: sigVendedorAtual,
+          nome: contract.vendedor.nome,
+          documento: contract.vendedor.cpfCnpj,
+          roleLabel: vTermo,
+        };
+        const compradorInfo: PartySignatureInfo = {
+          assinou: estadoAssinatura.compradorAssinou,
+          modalidade: estadoAssinatura.compradorModalidade,
+          signature: sigCompradorAtual,
+          nome: contract.comprador.nome,
+          documento: contract.comprador.cpfCnpj,
+          roleLabel: cTermo,
+        };
+
+        const tagsConfig = mapTagsToConfig(tagsEncontradas, usuarioInfo, compradorInfo);
 
         const resumo = summarizeChanges(tagsConfig);
         console.log('📊 Resumo de mudanças:', resumo);

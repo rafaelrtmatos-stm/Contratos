@@ -57,18 +57,18 @@ export function generateContractTags(contract: ContractData): TagMapping {
     LOTE: contract.imovel?.numeroLote || '',
     QUADRA: contract.imovel?.numeroQuadra || '',
     LOCALIZACAO_IMOVEL: contract.imovel?.localizacaoImovel || '',
-    AREA_TOTAL: contract.imovel?.areaTotal || '',
-    AREA_TOTAL_M2: contract.imovel?.areaTotal || '',
+    AREA_TOTAL: contract.imovel?.areaTotalM2 || '',
+    AREA_TOTAL_M2: contract.imovel?.areaTotalM2 || '',
     CIDADE_IMOVEL: contract.imovel?.cidadeImovel || '',
     UF_IMOVEL: contract.imovel?.ufImovel || '',
 
     // FINANCEIRO
     VALOR_TOTAL: contract.valorTotal?.toString() || '',
-    VALOR_TOTAL_EXTENSO: contract.valorTotalExtensoPT || '',
-    VALOR_ENTRADA: contract.financeiro?.valorEntrada?.toString() || '',
-    VALOR_PARCELA: contract.financeiro?.valorParcela?.toString() || '',
-    QUANTIDADE_PARCELAS: contract.financeiro?.quantidadeParcelas?.toString() || '',
-    DATA_PRIMEIRA_PARCELA: contract.financeiro?.dataPrimeiraParcela || '',
+    VALOR_TOTAL_EXTENSO: contract.valorTotalExtenso || '',
+    VALOR_ENTRADA: contract.vendaParcelada?.valorEntrada?.toString() || '',
+    VALOR_PARCELA: contract.vendaParcelada?.valorParcela?.toString() || '',
+    QUANTIDADE_PARCELAS: contract.vendaParcelada?.numeroParcelas?.toString() || '',
+    DATA_PRIMEIRA_PARCELA: contract.vendaParcelada?.dataPrimeiroVencimento || '',
 
     // DATA/LOCAL
     DATA: contract.dataCriacao || new Date().toLocaleDateString('pt-BR'),
