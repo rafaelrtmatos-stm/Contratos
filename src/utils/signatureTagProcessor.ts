@@ -7,6 +7,54 @@
 
 import JSZip from 'jszip';
 import { DigitalSignature } from '../types/contract';
+import { renderSignatureStampPng } from './signatureStampImage';
+
+const EMU_PER_MM = 36000;
+const STAMP_WIDTH_MM = 69.3; // 33% da largura da página A4 (210mm)
+
+/** Adiciona um PNG ao pacote DOCX (media + relacionamento + content type) e retorna o rId. */
+async function addImageToDocx(zip: JSZip, pngBytes: Uint8Array): Promise<string> {
+  const mediaFiles = Object.keys(zip.files).filter((f) => f.startsWith('word/media/'));
+  let maxImgIdx = 0;
+  for (const f of mediaFiles) {
+    const m = f.match(/image(\d+)\./i);
+    if (m) maxImgIdx = Math.max(maxImgIdx, parseInt(m[1], 10));
+  }
+  const imgIdx = maxImgIdx + 1;
+  zip.file(`word/media/image${imgIdx}.png`, pngBytes);
+
+  const relsPath = 'word/_rels/document.xml.rels';
+  let relsXml = await zip.file(relsPath)?.async('string');
+  if (!relsXml) {
+    relsXml =
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>';
+  }
+  const existingIds = [...relsXml.matchAll(/Id="rId(\d+)"/g)].map((m) => parseInt(m[1], 10));
+  const nextRid = (existingIds.length ? Math.max(...existingIds) : 0) + 1;
+  const rId = `rId${nextRid}`;
+  const relEntry = `<Relationship Id="${rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image${imgIdx}.png"/>`;
+  relsXml = relsXml.replace('</Relationships>', `${relEntry}</Relationships>`);
+  zip.file(relsPath, relsXml);
+
+  const ctPath = '[Content_Types].xml';
+  const ctXml = await zip.file(ctPath)?.async('string');
+  if (ctXml && !/Extension="png"/i.test(ctXml)) {
+    zip.file(ctPath, ctXml.replace('</Types>', '<Default Extension="png" ContentType="image/png"/></Types>'));
+  }
+
+  return rId;
+}
+
+function signatureIdFromHash(hash?: string): string {
+  const h = (hash || '').toUpperCase();
+  if (h.length < 16) return (h || 'PENDENTE').padEnd(16, '0').replace(/(.{4})/g, '$1-').slice(0, 19);
+  return `${h.slice(0, 4)}-${h.slice(4, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}`;
+}
+
+function buildValidationUrl(signatureId: string): string {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  return `${origin}/assinatura-digital?sig=${encodeURIComponent(signatureId)}`;
+}
 
 export interface PartySignatureInfo {
   assinou: boolean;
@@ -35,6 +83,9 @@ export const SIGNATURE_TAGS = {
   // Contrato de Exclusividade: {{CONTRATANTE_ASSINATURA_DIGITAL}} é o selo do CONTRATANTE
   // (mapeado para o slot "comprador" internamente - ver mapTagsToConfig)
   CONTRATANTE_DIGITAL: '{{CONTRATANTE_ASSINATURA_DIGITAL}}',
+  // Contrato de Exclusividade (modalidade mista): {{CONTRATANTE_ASSINATURA_MANUAL}} é o
+  // espaço/linha de assinatura manuscrita do CONTRATANTE (mapeado para o slot "comprador")
+  CONTRATANTE_MANUAL: '{{CONTRATANTE_ASSINATURA_MANUAL}}',
 };
 
 function escapeXml(value: string): string {
@@ -69,8 +120,8 @@ export async function processSignatureTags(
     for (const config of tagsConfig) {
       if (config.tipo === 'digital') {
         if (config.info.assinou && config.info.signature) {
-          // DIGITAL + JÁ ASSINADO: insere o carimbo com os dados reais da assinatura
-          documentXml = insertDigitalSignatureStamp(documentXml, config.tag, config.info);
+          // DIGITAL + JÁ ASSINADO: insere o selo visual (imagem PNG) com os dados reais da assinatura
+          documentXml = await insertDigitalSignatureStampImage(zip, documentXml, config.tag, config.info);
         } else {
           // DIGITAL + AINDA NÃO ASSINADO: insere aviso de pendência (nunca deixa a tag "crua" no documento)
           documentXml = insertPendingSignatureNotice(documentXml, config.tag, config.info);
@@ -139,39 +190,58 @@ function replaceEnclosingParagraph(xml: string, tag: string, replacementBlock: s
   return result;
 }
 
+let stampPicSeq = 0;
+
 /**
- * Insere o carimbo de assinatura eletrônica com os dados reais de quem assinou
- * (nome, CPF/CNPJ, data/hora e hash de autenticação) no lugar da tag.
+ * Insere o selo de assinatura eletrônica como IMAGEM (mesmo layout visual da
+ * prévia em tela e do PDF gerado via jsPDF: painel azul, QR Code, ícones),
+ * no lugar da tag. Antes, essa função só inseria texto simples (nome, cargo,
+ * data e hash), por isso o carimbo aparecia "só em texto" nos contratos
+ * gerados a partir do DOCX.
+ *
+ * Dimensão: 33% da largura da página, altura proporcional ao próprio desenho.
  */
-function insertDigitalSignatureStamp(xml: string, tag: string, info: PartySignatureInfo): string {
+async function insertDigitalSignatureStampImage(
+  zip: JSZip,
+  xml: string,
+  tag: string,
+  info: PartySignatureInfo
+): Promise<string> {
   const sig = info.signature!;
   const dt = new Date(sig.assinadoEm);
   const dataStr = isNaN(dt.getTime()) ? sig.assinadoEm : dt.toLocaleDateString('pt-BR');
   const horaStr = isNaN(dt.getTime()) ? '' : dt.toLocaleTimeString('pt-BR');
   const hash = (sig.hashAutenticacao || '').toUpperCase();
+  const signatureId = signatureIdFromHash(sig.hashAutenticacao);
 
-  const nome = escapeXml(sig.nomeSignatario || info.nome || '');
-  const doc = escapeXml(sig.documentoSignatario || info.documento || '');
-  const role = escapeXml(info.roleLabel || '');
+  const rawDoc = (sig.documentoSignatario || info.documento || '').replace(/\D/g, '');
+  const cpfCnpj =
+    rawDoc.length === 11
+      ? `${rawDoc.slice(0, 3)}.${rawDoc.slice(3, 6)}.${rawDoc.slice(6, 9)}-${rawDoc.slice(9, 11)}`
+      : rawDoc.length === 14
+      ? `${rawDoc.slice(0, 2)}.${rawDoc.slice(2, 5)}.${rawDoc.slice(5, 8)}/${rawDoc.slice(8, 12)}-${rawDoc.slice(12, 14)}`
+      : sig.documentoSignatario || info.documento || '';
 
-  const block = `<w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:before="120" w:after="0"/></w:pPr>
-      <w:r><w:rPr><w:b/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr><w:t xml:space="preserve">${nome}</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>
-      <w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">${role}${doc ? ` — CPF/CNPJ: ${doc}` : ''}</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>
-      <w:r><w:rPr><w:i/><w:color w:val="15803D"/><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:t xml:space="preserve">Assinado eletronicamente em ${dataStr}${horaStr ? ` às ${horaStr}` : ''}</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="120"/></w:pPr>
-      <w:r><w:rPr><w:color w:val="64748B"/><w:sz w:val="14"/><w:szCs w:val="14"/></w:rPr><w:t xml:space="preserve">Código de autenticação: ${escapeXml(hash || 'N/A')}</w:t></w:r>
-    </w:p>`;
+  const { bytes, widthPx, heightPx } = await renderSignatureStampPng({
+    signerName: sig.nomeSignatario || info.nome || '',
+    cpfCnpj,
+    roleLabel: info.roleLabel || '',
+    dateStr: dataStr,
+    timeStr: horaStr,
+    signatureId,
+    hash: hash || 'N/A',
+    validationUrl: buildValidationUrl(signatureId),
+  });
 
-  return replaceEnclosingParagraph(xml, tag, block);
+  const rId = await addImageToDocx(zip, bytes);
+  const picId = ++stampPicSeq;
+
+  const cx = Math.round(STAMP_WIDTH_MM * EMU_PER_MM); // 33% da largura da página
+  const cy = Math.round(cx * (heightPx / widthPx)); // altura proporcional ao desenho
+
+  const drawing = `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="120" w:after="120"/></w:pPr><w:r><w:rPr><w:noProof/></w:rPr><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="${picId}" name="SeloAssinatura${picId}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${picId}" name="SeloAssinatura${picId}.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${rId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+
+  return replaceEnclosingParagraph(xml, tag, drawing);
 }
 
 /**
@@ -275,6 +345,9 @@ export function mapTagsToConfig(
     } else if (tag.includes('CONTRATANTE') && tag.includes('DIGITAL')) {
       // Exclusividade: CONTRATANTE_ASSINATURA_DIGITAL usa o mesmo slot de compradorInfo
       config.push({ tag, tipo: 'digital', parte: 'comprador', info: compradorInfo });
+    } else if (tag.includes('CONTRATANTE') && tag.includes('MANUAL')) {
+      // Exclusividade (mista): CONTRATANTE_ASSINATURA_MANUAL usa o mesmo slot de compradorInfo
+      config.push({ tag, tipo: 'manual', parte: 'comprador', info: compradorInfo });
     }
   }
 

@@ -102,8 +102,7 @@ const TEMPLATE_GROUPS: Record<ContractType | 'outros_bens', Array<{
     {
       modalidade: 'Sem Cônjuge',
       arquivo: 'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',
-      descricao: 'Variante SEM cônjuge - COM 2 testemunhas (usa o mesmo arquivo do Mista - confirmar com Rafael)',
-      testemunhas: true,
+      descricao: 'Variante SEM cônjuge - COM 2 testemunhas (usa o mesmo arquivo do Mista - confirmar com Rafael)',      testemunhas: true,
     },
   ],
   outros_bens: [
@@ -118,8 +117,7 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
   const [activeTab, setActiveTab] = useState<Tab>('venda_vista');
   const [preferences, setPreferences] = useState<TemplatePreferences>({
     venda_vista: 'venda_vista_assinatura_digital.docx',
-    venda_parcelada: 'parcelado_assinatura_digital_sem_testemunhas.docx',
-    exclusividade: 'exclusividade_digital_sem_testemunhas.docx',
+    venda_parcelada: 'parcelado_assinatura_digital_sem_testemunhas.docx',    exclusividade: 'exclusividade_digital_sem_testemunhas.docx',
     outros_bens: '', // Vazio até serem adicionados templates
   });
 

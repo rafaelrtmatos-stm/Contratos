@@ -56,10 +56,13 @@ const TEMPLATES: Record<string, TemplateResolved> = {
     testemunhas: true,
     tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}'],
   },
-  // ATENÇÃO: o arquivo "sem_conjuge" específico não existe mais no bucket
-  // (foi removido/consolidado por outra sessão). Usando o mesmo arquivo do
-  // "mista" por enquanto - PRECISA CONFIRMAR com o usuário se é essa a
-  // intenção ou se falta subir um arquivo dedicado pra essa variante.
+  // Os arquivos "mista" e "sem_conjuge_mista" têm conteúdo IDENTICO
+  // (confirmado comparando parágrafo a parágrafo - só uma tabulação
+  // de diferença numa linha em branco). "sem_conjuge_mista" precisa
+  // continuar sendo um arquivo MISTO (um digital, um manual) - a
+  // lógica de determinarModalidade() pra exclusividade nunca escolhe
+  // "totalmente manual", então nunca aponte esta chave pro arquivo
+  // "ambos_manuais".
   'exclusividade_sem_conjuge_mista': {
     arquivo: 'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',
     testemunhas: true,

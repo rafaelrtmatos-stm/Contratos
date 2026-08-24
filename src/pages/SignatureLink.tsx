@@ -146,22 +146,30 @@ export const SignatureLink: React.FC = () => {
       );
     }
 
+    const novasAssinaturas = [
+      ...(contract.assinaturas || []),
+      {
+        role: 'comprador' as const,
+        nomeSignatario: nome,
+        documentoSignatario: documento,
+        assinaturaDataUrl: '',
+        assinadoEm: new Date().toISOString(),
+        hashAutenticacao: hash,
+        ipAssinatura: ip,
+        metadadosNavegador: navigator.userAgent,
+      },
+    ];
+
+    const vendedorAssinou = novasAssinaturas.some((a) => a.role === 'vendedor' || a.role === 'ambos');
+    const compradorAssinou = novasAssinaturas.some(
+      (a) => a.role === 'comprador' || a.role === 'comprador_adicional' || a.role === 'ambos'
+    );
+    const isFullySigned = vendedorAssinou && compradorAssinou;
+
     const updatedContract: ContractData = {
       ...contract,
-      status: 'assinado_total',
-      assinaturas: [
-        ...(contract.assinaturas || []),
-        {
-          role: 'comprador',
-          nomeSignatario: nome,
-          documentoSignatario: documento,
-          assinaturaDataUrl: '',
-          assinadoEm: new Date().toISOString(),
-          hashAutenticacao: hash,
-          ipAssinatura: ip,
-          metadadosNavegador: navigator.userAgent,
-        },
-      ],
+      status: isFullySigned ? 'assinado_total' : 'assinado_parcial',
+      assinaturas: novasAssinaturas,
     };
 
     setSigned(true);
@@ -247,7 +255,7 @@ export const SignatureLink: React.FC = () => {
           </div>
           <p className="text-slate-600">
             Contrato nº {contract.numeroContrato}
-            {vendedorNome ? ` · Vendedor: ${vendedorNome}` : ''}
+            {vendedorNome ? ` · ${contract.tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}: ${vendedorNome}` : ''}
           </p>
         </div>
 
