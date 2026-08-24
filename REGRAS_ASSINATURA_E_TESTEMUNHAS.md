@@ -195,8 +195,10 @@ function resolveTemplate(
 
 ## Templates Disponíveis
 
+### VENDA À VISTA
+
 ```
-📁 templates/
+📁 templates/venda_vista/
 ├─ venda_vista_assinatura_digital.docx
 │  └─ SEM TESTEMUNHAS
 │  └─ Tags: {{USUARIO_ASSINATURA_DIGITAL}}, {{COMPRADOR_ASSINATURA_DIGITAL}}
@@ -206,6 +208,23 @@ function resolveTemplate(
 │  └─ Tags: {{USUARIO_ASSINATURA_MANUAL}}, {{COMPRADOR_ASSINATURA_MANUAL}}
 │
 └─ venda_vista_mista_2_testemunhas.docx
+   └─ COM 2 TESTEMUNHAS (Misto: Digital + Manual)
+   └─ Tags: {{USUARIO_ASSINATURA_DIGITAL}}, {{COMPRADOR_ASSINATURA_MANUAL}}
+```
+
+### VENDA PARCELADA
+
+```
+📁 templates/venda_parcelada/
+├─ venda_parcelada_assinatura_digital.docx
+│  └─ SEM TESTEMUNHAS
+│  └─ Tags: {{USUARIO_ASSINATURA_DIGITAL}}, {{COMPRADOR_ASSINATURA_DIGITAL}}
+│
+├─ venda_parcelada_assinatura_manual_2_testemunhas.docx
+│  └─ COM 2 TESTEMUNHAS
+│  └─ Tags: {{USUARIO_ASSINATURA_MANUAL}}, {{COMPRADOR_ASSINATURA_MANUAL}}
+│
+└─ venda_parcelada_mista_2_testemunhas.docx
    └─ COM 2 TESTEMUNHAS (Misto: Digital + Manual)
    └─ Tags: {{USUARIO_ASSINATURA_DIGITAL}}, {{COMPRADOR_ASSINATURA_MANUAL}}
 ```

@@ -16,21 +16,30 @@ Quando você gera um contrato:
 
 ## Tipos de Template
 
+### VENDA À VISTA
+
 ```
-venda_vista_imovel
-└─ Contrato de Venda à Vista (Imóvel)
+venda_vista_assinatura_digital.docx
+└─ Ambos assinam DIGITALMENTE (SEM testemunhas)
 
-venda_vista_outros
-└─ Contrato de Venda à Vista (Veículo/Bem Móvel)
+venda_vista_assinatura_manual_2_testemunhas.docx
+└─ Ambos assinam MANUALMENTE (COM 2 testemunhas)
 
-venda_parcelada_imovel
-└─ Contrato de Venda Parcelada (Imóvel)
+venda_vista_mista_2_testemunhas.docx
+└─ Você digital + Pessoa manual (COM 2 testemunhas)
+```
 
-venda_parcelada_outros
-└─ Contrato de Venda Parcelada (Veículo/Bem Móvel)
+### VENDA PARCELADA
 
-exclusividade
-└─ Contrato de Intermediação Imobiliária (Exclusividade)
+```
+venda_parcelada_assinatura_digital.docx
+└─ Ambos assinam DIGITALMENTE (SEM testemunhas)
+
+venda_parcelada_assinatura_manual_2_testemunhas.docx
+└─ Ambos assinam MANUALMENTE (COM 2 testemunhas)
+
+venda_parcelada_mista_2_testemunhas.docx
+└─ Você digital + Pessoa manual (COM 2 testemunhas)
 ```
 
 ---
