@@ -8,6 +8,8 @@ import {
   downloadSampleDocxTemplate,
   CustomTemplateMeta,
 } from '../utils/docxProcessor';
+import { TEMPLATE_MAP, getAssinaturaTags } from '../utils/templateResolver';
+import { downloadTemplateWithCache } from '../utils/supabaseTemplateStorage';
 import JSZip from 'jszip';
 import {
   FileText,
@@ -26,6 +28,9 @@ import {
   Scale,
   CalendarClock,
   Sparkles,
+  Users2,
+  Lock,
+  Lock as LockOpen,
 } from 'lucide-react';
 
 interface WordTemplateModalProps {
@@ -48,7 +53,78 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [downloadingTemplate, setDownloadingTemplate] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Mapa de templates disponíveis por tipo
+  const availableTemplates: Record<ContractType, Array<{
+    modalidade: 'digital' | 'manual' | 'mista';
+    arquivo: string;
+    testemunhas: boolean;
+    descricao: string;
+  }>> = {
+    venda_vista: [
+      {
+        modalidade: 'digital',
+        arquivo: 'venda_vista_assinatura_digital.docx',
+        testemunhas: false,
+        descricao: 'Ambos assinam digitalmente',
+      },
+      {
+        modalidade: 'manual',
+        arquivo: 'venda_vista_assinatura_manual_2_testemunhas.docx',
+        testemunhas: true,
+        descricao: 'Ambos assinam manualmente',
+      },
+      {
+        modalidade: 'mista',
+        arquivo: 'venda_vista_mista_2_testemunhas.docx',
+        testemunhas: true,
+        descricao: 'Você digital + Comprador manual',
+      },
+    ],
+    venda_parcelada: [
+      {
+        modalidade: 'digital',
+        arquivo: 'venda_parcelada_assinatura_digital.docx',
+        testemunhas: false,
+        descricao: 'Ambos assinam digitalmente',
+      },
+      {
+        modalidade: 'manual',
+        arquivo: 'venda_parcelada_assinatura_manual_2_testemunhas.docx',
+        testemunhas: true,
+        descricao: 'Ambos assinam manualmente',
+      },
+      {
+        modalidade: 'mista',
+        arquivo: 'venda_parcelada_mista_2_testemunhas.docx',
+        testemunhas: true,
+        descricao: 'Você digital + Comprador manual',
+      },
+    ],
+    exclusividade: [
+      {
+        modalidade: 'digital',
+        arquivo: 'exclusividade_assinatura_digital.docx',
+        testemunhas: false,
+        descricao: 'Ambos assinam digitalmente',
+      },
+      {
+        modalidade: 'mista',
+        arquivo: 'exclusividade_mista_2_testemunhas.docx',
+        testemunhas: true,
+        descricao: 'Você digital + Contratante manual',
+      },
+      {
+        modalidade: 'mista',
+        arquivo: 'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
+        testemunhas: true,
+        descricao: 'SEM CÔNJUGE - Você digital + Contratante manual',
+      },
+    ],
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -111,6 +187,34 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
 
   const handleDownloadActiveTemplate = () => {
     downloadSampleDocxTemplate(activeType);
+  };
+
+  const handleDownloadSupabaseTemplate = async (arquivo: string) => {
+    setDownloadingTemplate(arquivo);
+    setDownloadError(null);
+
+    try {
+      const { sucesso, blob, erro } = await downloadTemplateWithCache(arquivo);
+
+      if (!sucesso || !blob) {
+        throw new Error(erro || 'Erro ao baixar template');
+      }
+
+      // Criar URL e fazer download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = arquivo;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setDownloadError(err.message || 'Erro ao baixar template');
+      console.error('Erro ao baixar template:', err);
+    } finally {
+      setDownloadingTemplate(null);
+    }
   };
 
   if (!isOpen) return null;
@@ -403,8 +507,85 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
             </label>
           </div>
 
+          {/* Seção de Templates Disponíveis */}
+          <div className="border-t border-slate-200 pt-6 space-y-4">
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2 mb-3">
+                <Sparkles className="w-5 h-5 text-green-600" />
+                Templates Disponíveis do Sistema
+              </h4>
+              <p className="text-xs text-slate-500">
+                Modelos oficiais pré-configurados. Escolha a modalidade de assinatura que melhor se encaixa no seu caso.
+              </p>
+            </div>
+
+            {/* Grid de Templates */}
+            <div className="space-y-3">
+              {availableTemplates[activeType].map((template, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-slate-50/50 hover:border-green-300 hover:bg-green-50/30 transition-all"
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                          {template.modalidade === 'digital' && 'Assinatura Digital'}
+                          {template.modalidade === 'manual' && 'Assinatura Manual'}
+                          {template.modalidade === 'mista' && 'Assinatura Mista'}
+                        </span>
+                        {template.testemunhas && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded">
+                            <Lock className="w-3 h-3" />
+                            COM TESTEMUNHAS
+                          </span>
+                        )}
+                        {!template.testemunhas && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded">
+                            <LockOpen className="w-3 h-3" />
+                            SEM TESTEMUNHAS
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-600">{template.descricao}</p>
+                    </div>
+                  </div>
+
+                  {/* Filename e Ações */}
+                  <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-200">
+                    <div>
+                      <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-0.5">
+                        Arquivo
+                      </p>
+                      <p className="text-xs font-mono text-slate-700 break-all">
+                        {template.arquivo}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDownloadSupabaseTemplate(template.arquivo)}
+                      disabled={downloadingTemplate === template.arquivo}
+                      className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[38px] text-xs font-semibold bg-green-600 hover:bg-green-700 disabled:bg-slate-300 text-white rounded-lg transition-colors shadow-xs cursor-pointer whitespace-nowrap shrink-0"
+                      title="Baixar template para visualizar ou editar"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>{downloadingTemplate === template.arquivo ? 'Baixando...' : 'Baixar'}</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {downloadError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{downloadError}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Seção Informativa de Integração Jurídica */}
-          <div className="space-y-3">
+          <div className="border-t border-slate-200 pt-6 space-y-3">
             <div>
               <h4 className="text-sm font-bold text-slate-900">
                 Campos Automatizados pelo Sistema
