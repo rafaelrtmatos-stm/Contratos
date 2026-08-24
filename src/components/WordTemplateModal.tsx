@@ -603,7 +603,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                   <span>Qualificação das Partes</span>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-relaxed">
-                  Nome completo ou razão social, CPF/CNPJ, RG e órgão emissor, nacionalidade, estado civil, profissão, endereço residencial e contatos.
+                  Nome completo ou razão social, CPF/CNPJ, RG e órgão emissor, nacionalidade, estado civil, endereço residencial e contatos.
                 </p>
               </div>
 

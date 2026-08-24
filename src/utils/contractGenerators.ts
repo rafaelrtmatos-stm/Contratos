@@ -109,7 +109,6 @@ export function getContractTags(contract: ContractData): ContractTagsMapping {
     vendedor_nome: v.nome || '',
     vendedor_nacionalidade: v.nacionalidade || 'brasileiro(a)',
     vendedor_estado_civil: v.estadoCivil || 'casado(a)',
-    vendedor_profissao: v.profissao || 'autônomo(a)',
     vendedor_rg: v.rg || '',
     vendedor_rg_orgao: v.rgOrgao || 'SSP/PA',
     vendedor_cpf_cnpj: v.cpfCnpj || '',
@@ -125,7 +124,6 @@ export function getContractTags(contract: ContractData): ContractTagsMapping {
     comprador_nome: compradoresNomes || c.nome || '',
     comprador_nacionalidade: c.nacionalidade || 'brasileiro(a)',
     comprador_estado_civil: c.estadoCivil || 'solteiro(a)',
-    comprador_profissao: c.profissao || 'comerciante',
     comprador_rg: c.rg || '',
     comprador_rg_orgao: c.rgOrgao || 'SSP/PA',
     comprador_cpf: compradoresCpfs || c.cpfCnpj || '',
@@ -505,7 +503,6 @@ export function getContractExclusividadeTags(contract: ContractData): ContractEx
     // DADOS DO CONTRATANTE
     CONTRATANTE_NOME: v.nome || 'PROPRIETÁRIO(A) / CONTRATANTE',
     CONTRATANTE_ESTADO_CIVIL: v.estadoCivil || 'casado(a)',
-    CONTRATANTE_PROFISSAO: v.profissao || 'autônomo(a)',
     CONTRATANTE_CPF: v.cpfCnpj || '',
     CONTRATANTE_RG: `${v.rg || ''} ${v.rgOrgao || ''}`.trim() || 'Não informado',
     CONJUGE_NOME: conjuge?.nome || 'Não aplicável / Não informado',
@@ -560,10 +557,10 @@ INSTRUMENTO PARTICULAR DE COMPRA E VENDA DE IMÓVEL
 DAS PARTES CONTRATANTES
 
 PROMITENTE VENDEDOR(A):
-{vendedor_nome}, {vendedor_nacionalidade}, {vendedor_estado_civil}, {vendedor_profissao}, portador(a) do RG nº {vendedor_rg} {vendedor_rg_orgao}, inscrito(a) no CPF/CNPJ sob o nº {vendedor_cpf_cnpj}, residente e domiciliado(a) na {vendedor_endereco}, nº {vendedor_numero}, Bairro {vendedor_bairro}, CEP {vendedor_cep}, na cidade de {vendedor_cidade}/{vendedor_uf}, telefone {vendedor_telefone}.
+{vendedor_nome}, {vendedor_nacionalidade}, {vendedor_estado_civil}, portador(a) do RG nº {vendedor_rg} {vendedor_rg_orgao}, inscrito(a) no CPF/CNPJ sob o nº {vendedor_cpf_cnpj}, residente e domiciliado(a) na {vendedor_endereco}, nº {vendedor_numero}, Bairro {vendedor_bairro}, CEP {vendedor_cep}, na cidade de {vendedor_cidade}/{vendedor_uf}, telefone {vendedor_telefone}.
 
 PROMITENTE COMPRADOR(A):
-{comprador_nome}, {comprador_nacionalidade}, {comprador_estado_civil}, {comprador_profissao}, portador(a) do RG nº {comprador_rg} {comprador_rg_orgao}, inscrito(a) no CPF sob o nº {comprador_cpf}, residente e domiciliado(a) na {comprador_endereco}, nº {comprador_numero}, Bairro {comprador_bairro}, CEP {comprador_cep}, na cidade de {comprador_cidade}/{comprador_uf}, telefone {comprador_telefone}.
+{comprador_nome}, {comprador_nacionalidade}, {comprador_estado_civil}, portador(a) do RG nº {comprador_rg} {comprador_rg_orgao}, inscrito(a) no CPF sob o nº {comprador_cpf}, residente e domiciliado(a) na {comprador_endereco}, nº {comprador_numero}, Bairro {comprador_bairro}, CEP {comprador_cep}, na cidade de {comprador_cidade}/{comprador_uf}, telefone {comprador_telefone}.
 
 Têm entre si, justo e acertado, o presente INSTRUMENTO PARTICULAR DE COMPRA E VENDA DE IMÓVEL, que se regerá pelas seguintes cláusulas e condições:
 
@@ -692,7 +689,7 @@ CONTRATO DE CORRETAGEM DE VENDA DE BENS IMÓVEIS COM CLÁUSULA DE EXCLUSIVIDADE
 DAS PARTES CONTRATANTES
 
 DADOS DO CONTRATANTE:
-{{CONTRATANTE_NOME}}, {{CONTRATANTE_ESTADO_CIVIL}}, {{CONTRATANTE_PROFISSAO}}, inscrito(a) no CPF sob o nº {{CONTRATANTE_CPF}}, portador(a) do RG nº {{CONTRATANTE_RG}}, residente e domiciliado(a) no endereço: {{CONTRATANTE_ENDERECO}}, doravante denominado(a) simplesmente CONTRATANTE.
+{{CONTRATANTE_NOME}}, {{CONTRATANTE_ESTADO_CIVIL}}, inscrito(a) no CPF sob o nº {{CONTRATANTE_CPF}}, portador(a) do RG nº {{CONTRATANTE_RG}}, residente e domiciliado(a) no endereço: {{CONTRATANTE_ENDERECO}}, doravante denominado(a) simplesmente CONTRATANTE.
 [Dados do Cônjuge: {{CONJUGE_NOME}}, inscrito(a) no CPF sob o nº {{CONJUGE_CPF}}, portador(a) do RG nº {{CONJUGE_RG}}]
 
 DADOS DO CONTRATADO:
@@ -890,10 +887,10 @@ export function generateContractLegalText(contract: ContractData): {
 
     const compradoresPreambulo = allCompradores.length > 1
       ? `PROMITENTES COMPRADORES(AS):\n` + allCompradores.map((comp, idx) => 
-          `${idx + 1}º PROMITENTE COMPRADOR(A): ${comp.nome || '[NOME]'}, ${comp.nacionalidade || 'brasileiro(a)'}, ${comp.estadoCivil || 'solteiro(a)'}, ${comp.profissao || 'autônomo(a)'}, portador(a) do RG nº ${comp.rg || '[RG]'} ${comp.rgOrgao || 'SSP/PA'}, inscrito(a) no CPF sob o nº ${comp.cpfCnpj || '[CPF]'}, residente e domiciliado(a) na ${comp.endereco || '[ENDEREÇO]'}, nº ${comp.numero || 'S/N'}, Bairro ${comp.bairro || '[BAIRRO]'}, CEP ${comp.cep || '[CEP]'}, na cidade de ${comp.cidade || '[CIDADE]'}/${comp.uf || 'UF'}${comp.telefone ? `, telefone ${comp.telefone}` : ''}.`
+          `${idx + 1}º PROMITENTE COMPRADOR(A): ${comp.nome || '[NOME]'}, ${comp.nacionalidade || 'brasileiro(a)'}, ${comp.estadoCivil || 'solteiro(a)'}, portador(a) do RG nº ${comp.rg || '[RG]'} ${comp.rgOrgao || 'SSP/PA'}, inscrito(a) no CPF sob o nº ${comp.cpfCnpj || '[CPF]'}, residente e domiciliado(a) na ${comp.endereco || '[ENDEREÇO]'}, nº ${comp.numero || 'S/N'}, Bairro ${comp.bairro || '[BAIRRO]'}, CEP ${comp.cep || '[CEP]'}, na cidade de ${comp.cidade || '[CIDADE]'}/${comp.uf || 'UF'}${comp.telefone ? `, telefone ${comp.telefone}` : ''}.`
         ).join('\n\n')
       : `PROMITENTE COMPRADOR(A):
-${c.nome || '[NOME DO COMPRADOR]'}, ${c.nacionalidade || 'brasileiro(a)'}, ${c.estadoCivil || 'solteiro(a)'}, ${c.profissao || 'profissão'}, portador(a) do RG nº ${c.rg || '[RG]'} ${c.rgOrgao || 'SSP/PA'}, inscrito(a) no CPF sob o nº ${c.cpfCnpj || '[CPF]'}, residente e domiciliado(a) na ${c.endereco || '[ENDEREÇO]'}, nº ${c.numero || 'S/N'}, Bairro ${c.bairro || '[BAIRRO]'}, CEP ${c.cep || '[CEP]'}, na cidade de ${c.cidade || '[CIDADE]'}/${c.uf || 'UF'}, telefone ${c.telefone || '[TELEFONE]'}.`;
+${c.nome || '[NOME DO COMPRADOR]'}, ${c.nacionalidade || 'brasileiro(a)'}, ${c.estadoCivil || 'solteiro(a)'}, portador(a) do RG nº ${c.rg || '[RG]'} ${c.rgOrgao || 'SSP/PA'}, inscrito(a) no CPF sob o nº ${c.cpfCnpj || '[CPF]'}, residente e domiciliado(a) na ${c.endereco || '[ENDEREÇO]'}, nº ${c.numero || 'S/N'}, Bairro ${c.bairro || '[BAIRRO]'}, CEP ${c.cep || '[CEP]'}, na cidade de ${c.cidade || '[CIDADE]'}/${c.uf || 'UF'}, telefone ${c.telefone || '[TELEFONE]'}.`;
 
     const titulo = isOutrosBens
       ? 'INSTRUMENTO PARTICULAR DE COMPRA E VENDA DE BEM MÓVEL / VEÍCULO À VISTA'
@@ -903,7 +900,7 @@ ${c.nome || '[NOME DO COMPRADOR]'}, ${c.nacionalidade || 'brasileiro(a)'}, ${c.e
 DAS PARTES CONTRATANTES
 
 PROMITENTE VENDEDOR(A):
-${v.nome || '[NOME DO VENDEDOR]'}, ${v.nacionalidade || 'brasileiro(a)'}, ${v.estadoCivil || 'casado(a)'}, ${v.profissao || 'profissão'}, portador(a) do RG nº ${v.rg || '[RG]'} ${v.rgOrgao || 'SSP/PA'}, inscrito(a) no CPF/CNPJ sob o nº ${v.cpfCnpj || '[CPF/CNPJ]'}, residente e domiciliado(a) na ${v.endereco || '[ENDEREÇO]'}, nº ${v.numero || 'S/N'}, Bairro ${v.bairro || '[BAIRRO]'}, CEP ${v.cep || '[CEP]'}, na cidade de ${v.cidade || '[CIDADE]'}/${v.uf || 'UF'}, telefone ${v.telefone || '[TELEFONE]'}.
+${v.nome || '[NOME DO VENDEDOR]'}, ${v.nacionalidade || 'brasileiro(a)'}, ${v.estadoCivil || 'casado(a)'}, portador(a) do RG nº ${v.rg || '[RG]'} ${v.rgOrgao || 'SSP/PA'}, inscrito(a) no CPF/CNPJ sob o nº ${v.cpfCnpj || '[CPF/CNPJ]'}, residente e domiciliado(a) na ${v.endereco || '[ENDEREÇO]'}, nº ${v.numero || 'S/N'}, Bairro ${v.bairro || '[BAIRRO]'}, CEP ${v.cep || '[CEP]'}, na cidade de ${v.cidade || '[CIDADE]'}/${v.uf || 'UF'}, telefone ${v.telefone || '[TELEFONE]'}.
 
 ${compradoresPreambulo}
 
@@ -994,7 +991,7 @@ Têm entre si, justo e acertado, o presente ${titulo}, que se regerá pelas clá
 
     const compradoresPreambuloParcelado = allCompradores.length > 1
       ? `PROMITENTES COMPRADORES(AS):\n` + allCompradores.map((comp, idx) => 
-          `${idx + 1}º PROMITENTE COMPRADOR(A): ${comp.nome || '[NOME]'}, ${comp.nacionalidade || 'brasileiro(a)'}, ${comp.estadoCivil || 'solteiro(a)'}, ${comp.profissao || 'autônomo(a)'}, portador(a) do RG nº ${comp.rg || '[RG]'} ${comp.rgOrgao || 'SSP/PA'}, inscrito(a) no CPF sob o nº ${comp.cpfCnpj || '[CPF]'}, telefone/whatsapp ${comp.telefone || ''}, residente e domiciliado(a) na ${comp.endereco || '[ENDEREÇO]'}, nº ${comp.numero || 'S/N'}, Bairro ${comp.bairro || '[BAIRRO]'}, CEP ${comp.cep || '[CEP]'}, na cidade de ${comp.cidade || '[CIDADE]'}/${comp.uf || 'PA'}.`
+          `${idx + 1}º PROMITENTE COMPRADOR(A): ${comp.nome || '[NOME]'}, ${comp.nacionalidade || 'brasileiro(a)'}, ${comp.estadoCivil || 'solteiro(a)'}, portador(a) do RG nº ${comp.rg || '[RG]'} ${comp.rgOrgao || 'SSP/PA'}, inscrito(a) no CPF sob o nº ${comp.cpfCnpj || '[CPF]'}, telefone/whatsapp ${comp.telefone || ''}, residente e domiciliado(a) na ${comp.endereco || '[ENDEREÇO]'}, nº ${comp.numero || 'S/N'}, Bairro ${comp.bairro || '[BAIRRO]'}, CEP ${comp.cep || '[CEP]'}, na cidade de ${comp.cidade || '[CIDADE]'}/${comp.uf || 'PA'}.`
         ).join('\n\n')
       : `${parceladoTags.comprador_termo}:
 ${parceladoTags.artigo_comprador} ${parceladoTags.tratamento_comprador} ${parceladoTags.comprador}, ${parceladoTags.nacionalidade_comprador}, ${parceladoTags.estado_civil_comprador}, portador(a) do RG nº ${parceladoTags.rg_comprador} ${parceladoTags.emissao_rg_comprador}, inscrito(a) no CPF sob o nº ${parceladoTags.cpf_comprador}, telefone/whatsapp ${parceladoTags.telefone_comprador}, ${parceladoTags.concordancia_comprador} na ${parceladoTags.endereco_comprador}, nº ${parceladoTags.numero_comprador}, Bairro ${parceladoTags.bairro_comprador}, CEP ${parceladoTags.cep_comprador}, na cidade de ${parceladoTags.cidade_comprador}/${parceladoTags.estado_comprador}.`;
@@ -1105,7 +1102,7 @@ ${compradoresPreambuloParcelado}
 DAS PARTES CONTRATANTES
 
 DADOS DO CONTRATANTE:
-${exclTags.CONTRATANTE_NOME}, ${exclTags.CONTRATANTE_ESTADO_CIVIL}, ${exclTags.CONTRATANTE_PROFISSAO}, inscrito(a) no CPF sob o nº ${exclTags.CONTRATANTE_CPF}, portador(a) do RG nº ${exclTags.CONTRATANTE_RG}, residente e domiciliado(a) no endereço: ${exclTags.CONTRATANTE_ENDERECO}, doravante denominado(a) simplesmente CONTRATANTE.
+${exclTags.CONTRATANTE_NOME}, ${exclTags.CONTRATANTE_ESTADO_CIVIL}, inscrito(a) no CPF sob o nº ${exclTags.CONTRATANTE_CPF}, portador(a) do RG nº ${exclTags.CONTRATANTE_RG}, residente e domiciliado(a) no endereço: ${exclTags.CONTRATANTE_ENDERECO}, doravante denominado(a) simplesmente CONTRATANTE.
 [Dados do Cônjuge: ${exclTags.CONJUGE_NOME}, CPF nº ${exclTags.CONJUGE_CPF}, RG nº ${exclTags.CONJUGE_RG}]
 
 DADOS DO CONTRATADO:
@@ -1641,7 +1638,6 @@ export const INITIAL_SAMPLE_CONTRACTS: ContractData[] = [
       nome: 'José Maria Figueira de Alencar',
       nacionalidade: 'brasileiro',
       estadoCivil: 'casado',
-      profissao: 'Engenheiro Agrônomo',
       rg: '3456789',
       rgOrgao: 'SSP/PA',
       cpfCnpj: '234.567.890-12',
@@ -1658,7 +1654,6 @@ export const INITIAL_SAMPLE_CONTRACTS: ContractData[] = [
       nome: 'Cláudia Beatriz Menezes Silva',
       nacionalidade: 'brasileira',
       estadoCivil: 'solteira',
-      profissao: 'Cirurgiã-Dentista',
       rg: '4567890',
       rgOrgao: 'SSP/PA',
       cpfCnpj: '678.901.234-55',
@@ -1732,7 +1727,6 @@ export const INITIAL_SAMPLE_CONTRACTS: ContractData[] = [
       nome: 'Empreendimentos Imobiliários Tapajós Ltda',
       nacionalidade: 'brasileira',
       estadoCivil: 'Pessoa Jurídica',
-      profissao: 'Incorporadora & Loteadora',
       rg: 'IE 15.234.567-8',
       rgOrgao: 'SEFA/PA',
       cpfCnpj: '12.345.678/0001-90',
@@ -1748,7 +1742,6 @@ export const INITIAL_SAMPLE_CONTRACTS: ContractData[] = [
       nome: 'Marcos Vinícius Andrade',
       nacionalidade: 'brasileiro',
       estadoCivil: 'casado',
-      profissao: 'Comerciante',
       rg: '5678901',
       rgOrgao: 'SSP/PA',
       cpfCnpj: '345.678.901-23',
@@ -1819,7 +1812,6 @@ export const INITIAL_SAMPLE_CONTRACTS: ContractData[] = [
       nome: 'Roberto Mansur de Albuquerque',
       nacionalidade: 'brasileiro',
       estadoCivil: 'casado',
-      profissao: 'Empresário',
       rg: '1987654',
       rgOrgao: 'SSP/PA',
       cpfCnpj: '456.789.012-34',
@@ -1835,7 +1827,6 @@ export const INITIAL_SAMPLE_CONTRACTS: ContractData[] = [
       nome: 'Amazon Prime Imóveis & Consultoria Ltda',
       nacionalidade: 'brasileira',
       estadoCivil: 'Pessoa Jurídica',
-      profissao: 'Imobiliária & Intermediação',
       rg: 'CRECI 1234-J',
       rgOrgao: 'CRECI/PA',
       cpfCnpj: '44.333.222/0001-55',

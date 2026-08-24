@@ -24,7 +24,6 @@ export interface PartyDetailedInfo {
   genero?: string;
   nacionalidade: string;
   estadoCivil: string;
-  profissao: string;
   rg: string;
   rgOrgao: string;
   cpfCnpj: string;
@@ -207,7 +206,6 @@ export interface ContractTagsMapping {
   vendedor_nome: string;
   vendedor_nacionalidade: string;
   vendedor_estado_civil: string;
-  vendedor_profissao: string;
   vendedor_rg: string;
   vendedor_rg_orgao: string;
   vendedor_cpf_cnpj: string;
@@ -223,7 +221,6 @@ export interface ContractTagsMapping {
   comprador_nome: string;
   comprador_nacionalidade: string;
   comprador_estado_civil: string;
-  comprador_profissao: string;
   comprador_rg: string;
   comprador_rg_orgao: string;
   comprador_cpf: string;
@@ -353,7 +350,6 @@ export interface ContractExclusividadeTagsMapping {
   // DADOS DO CONTRATANTE
   CONTRATANTE_NOME: string;
   CONTRATANTE_ESTADO_CIVIL: string;
-  CONTRATANTE_PROFISSAO: string;
   CONTRATANTE_CPF: string;
   CONTRATANTE_RG: string;
   CONJUGE_NOME: string;

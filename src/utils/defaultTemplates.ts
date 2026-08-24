@@ -41,7 +41,7 @@ export function generateVendaVistaTemplate(): string {
   <h2>VENDEDOR(ES):</h2>
   <p>
     <strong>{{VENDEDOR_NOME}}</strong>, nacionalidade {{NACIONALIDADE_VENDEDOR}}, 
-    estado civil {{ESTADO_CIVIL_VENDEDOR}}, profissão {{PROFISSAO_VENDEDOR}}, 
+    estado civil {{ESTADO_CIVIL_VENDEDOR}}, 
     portador(a) do RG nº {{VENDEDOR_RG}} expedido por {{ORGAO_RG_VENDEDOR}}, 
     inscrito(a) no CPF nº {{CPF_VENDEDOR}}, 
     residente à {{ENDERECO_VENDEDOR}}, nº {{NUMERO_VENDEDOR}}, 
@@ -54,7 +54,7 @@ export function generateVendaVistaTemplate(): string {
   <h2>COMPRADOR(ES):</h2>
   <p>
     <strong>{{COMPRADOR_NOME}}</strong>, nacionalidade {{NACIONALIDADE_COMPRADOR}}, 
-    estado civil {{ESTADO_CIVIL_COMPRADOR}}, profissão {{PROFISSAO_COMPRADOR}}, 
+    estado civil {{ESTADO_CIVIL_COMPRADOR}}, 
     portador(a) do RG nº {{COMPRADOR_RG}} expedido por {{ORGAO_RG_COMPRADOR}}, 
     inscrito(a) no CPF nº {{CPF_COMPRADOR}}, 
     residente à {{ENDERECO_COMPRADOR}}, nº {{NUMERO_COMPRADOR}}, 
@@ -141,7 +141,6 @@ export const TEMPLATE_TAGS = {
     'VENDEDOR_NOME',
     'NACIONALIDADE_VENDEDOR',
     'ESTADO_CIVIL_VENDEDOR',
-    'PROFISSAO_VENDEDOR',
     'VENDEDOR_RG',
     'ORGAO_RG_VENDEDOR',
     'CPF_VENDEDOR',
@@ -157,7 +156,6 @@ export const TEMPLATE_TAGS = {
     'COMPRADOR_NOME',
     'NACIONALIDADE_COMPRADOR',
     'ESTADO_CIVIL_COMPRADOR',
-    'PROFISSAO_COMPRADOR',
     'COMPRADOR_RG',
     'ORGAO_RG_COMPRADOR',
     'CPF_COMPRADOR',

@@ -199,7 +199,7 @@ export function toUpperCaseObject<T extends Record<string, any>>(obj: T): T {
     'bairro', 'cidade', 'municipio',
     'nomeEmpreendimento', 'empreendimento',
     'nomeLote', 'nomeQuadra',
-    'profissao', 'nacionalidade',
+    'nacionalidade',
     'titulo',
   ];
 

@@ -46,7 +46,6 @@ const emptyParty: PartyDetailedInfo = {
   nome: '',
   nacionalidade: 'brasileiro(a)',
   estadoCivil: 'solteiro(a)',
-  profissao: 'autônomo(a)',
   rg: '',
   rgOrgao: 'SSP/PA',
   cpfCnpj: '',
@@ -283,7 +282,6 @@ export const ContractForm: React.FC<ContractFormProps> = ({
       nome: 'José Maria Figueira de Alencar',
       nacionalidade: 'brasileiro',
       estadoCivil: 'casado',
-      profissao: 'Engenheiro Agrônomo',
       rg: '3456789',
       rgOrgao: 'SSP/PA',
       cpfCnpj: '234.567.890-12',
@@ -301,7 +299,6 @@ export const ContractForm: React.FC<ContractFormProps> = ({
       nome: 'Cláudia Beatriz Menezes Silva',
       nacionalidade: 'brasileira',
       estadoCivil: 'solteira',
-      profissao: 'Cirurgiã-Dentista',
       rg: '4567890',
       rgOrgao: 'SSP/PA',
       cpfCnpj: '456.789.012-34',
@@ -1076,19 +1073,6 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Profissão
-                  </label>
-                  <input
-                    type="text"
-                    value={vendedor.profissao}
-                    onChange={(e) => setVendedor({ ...vendedor, profissao: e.target.value })}
-                    placeholder="Ex: Engenheiro Agrônomo"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                  />
-                </div>
-
-                <div>
                   <ValidatedInput
                     validationType="rg"
                     value={vendedor.rg}
@@ -1265,19 +1249,6 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={comprador.estadoCivil}
                     onChange={(val) => setComprador({ ...comprador, estadoCivil: val })}
                     genero={comprador.genero || ''}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Profissão
-                  </label>
-                  <input
-                    type="text"
-                    value={comprador.profissao}
-                    onChange={(e) => setComprador({ ...comprador, profissao: e.target.value })}
-                    placeholder="Ex: Cirurgiã-Dentista"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
 
