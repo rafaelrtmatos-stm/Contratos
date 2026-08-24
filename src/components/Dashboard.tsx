@@ -746,11 +746,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </button>
 
                       <button
-                        onClick={() => downloadDocxContract(contract)}
-                        className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
-                        title="Baixar Word (.docx)"
+                        onClick={() => !isFullySigned && downloadDocxContract(contract)}
+                        disabled={isFullySigned}
+                        className={`min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 rounded-xl text-[10px] font-bold transition-colors ${
+                          isFullySigned
+                            ? 'bg-slate-50 text-slate-300 cursor-not-allowed'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer'
+                        }`}
+                        title={isFullySigned ? 'Indisponível: contrato já assinado digitalmente (use o PDF)' : 'Baixar Word (.docx)'}
                       >
-                        <FileDown className="w-4 h-4 text-green-600" />
+                        <FileDown className={`w-4 h-4 ${isFullySigned ? 'text-slate-300' : 'text-green-600'}`} />
                         <span>Word</span>
                       </button>
 
@@ -897,9 +902,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             </button>
 
                             <button
-                              onClick={() => downloadDocxContract(contract)}
-                              className="p-2 text-slate-600 hover:text-green-700 hover:bg-green-50 rounded-xl transition-colors cursor-pointer"
-                              title="Baixar Word (.docx)"
+                              onClick={() => !isFullySigned && downloadDocxContract(contract)}
+                              disabled={isFullySigned}
+                              className={`p-2 rounded-xl transition-colors ${
+                                isFullySigned
+                                  ? 'text-slate-300 cursor-not-allowed'
+                                  : 'text-slate-600 hover:text-green-700 hover:bg-green-50 cursor-pointer'
+                              }`}
+                              title={isFullySigned ? 'Indisponível: contrato já assinado digitalmente (use o PDF)' : 'Baixar Word (.docx)'}
                             >
                               <FileDown className="w-4 h-4" />
                             </button>
