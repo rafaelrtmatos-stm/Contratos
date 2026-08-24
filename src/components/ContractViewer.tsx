@@ -23,6 +23,7 @@ import {
   generateContractTags,
   substituirTagsNoDocx,
 } from '../utils/dataTagsProcessor';
+import { saveContractDocumentToSupabase } from '../utils/contractDocumentsStorage';
 import { DigitalSignatureFlowModal } from './DigitalSignatureFlowModal';
 import { DigitalSignatureStamp } from './DigitalSignatureStamp';
 import {
@@ -164,6 +165,41 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const realizarDownloadESalvar = async (docxBuffer: ArrayBuffer, nomeArquivo: string) => {
+    // 1. Download local (navegador)
+    const blob = new Blob([docxBuffer], { 
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nomeArquivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // 2. Salvar no Supabase (background)
+    try {
+      console.log('💾 Salvando cópia no Supabase...');
+      await saveContractDocumentToSupabase(
+        contract.id,
+        nomeArquivo,
+        docxBuffer,
+        {
+          tipo: contract.tipo,
+          vendedor: contract.vendedor.nome,
+          comprador: contract.comprador.nome,
+          valor: contract.valorTotal,
+        }
+      );
+      console.log('✅ Cópia salva com sucesso no Supabase!');
+    } catch (error: any) {
+      console.warn('⚠️ Aviso: Arquivo baixado mas não salvo no Supabase:', error.message);
+      // Não bloqueia o download local se o Supabase falhar
+    }
+  };
+
   const handleDownloadDocx = async () => {
     setIsDownloadingDocx(true);
     setDownloadError(null);
@@ -225,29 +261,13 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
         // Processar tags de assinatura (sobre o DOCX com dados já substituídos)
         const docxProcessado = await processSignatureTags(docxComDados, tagsConfig);
 
-        // 4. Fazer download
-        const url = URL.createObjectURL(new Blob([docxProcessado], { 
-          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-        }));
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${contract.nomeLote || 'contrato'}_${new Date().getTime()}.docx`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        // 4. Fazer download + salvar no Supabase
+        const nomeArquivo = `${contract.nomeLote || 'contrato'}_${new Date().getTime()}.docx`;
+        await realizarDownloadESalvar(docxProcessado, nomeArquivo);
       } else {
         // Nenhuma tag de assinatura, fazer download direto com dados substituídos
-        const url = URL.createObjectURL(new Blob([docxComDados], { 
-          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-        }));
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${contract.nomeLote || 'contrato'}_${new Date().getTime()}.docx`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        const nomeArquivo = `${contract.nomeLote || 'contrato'}_${new Date().getTime()}.docx`;
+        await realizarDownloadESalvar(docxComDados, nomeArquivo);
       }
     } catch (error: any) {
       console.error('Erro ao baixar DOCX:', error);
