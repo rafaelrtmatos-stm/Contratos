@@ -1,14 +1,6 @@
-import React, { useState } from 'react';
-import { fetchAddressByCEP, formatCEP, isValidCEP, fetchAddressByStreet } from '../utils/validators';
-import { Search, AlertCircle, CheckCircle2, Loader, MapPin } from 'lucide-react';
-
-interface CEPData {
-  cep: string;
-  logradouro: string;
-  bairro: string;
-  localidade: string;
-  uf: string;
-}
+import React, { useState, useEffect } from 'react';
+import { fetchAddressByCEP, formatCEP, isValidCEP, fetchAddressByStreet, CEPData } from '../utils/validators';
+import { Search, AlertCircle, CheckCircle2, Loader, X, MapPin } from 'lucide-react';
 
 interface CEPSearchProps {
   initialCEP?: string;
@@ -22,53 +14,57 @@ interface CEPSearchProps {
 }
 
 export const CEPSearch: React.FC<CEPSearchProps> = ({ initialCEP = '', onAddressFound }) => {
-  const [mode, setMode] = useState<'cep' | 'street'>('cep');
-  
-  // Estado para modo CEP
   const [cep, setCEP] = useState(initialCEP);
-  
-  // Estado para modo Rua/Cidade
-  const [rua, setRua] = useState('');
-  const [cidade, setCidade] = useState('');
-  const [uf, setUF] = useState('');
-  const [results, setResults] = useState<CEPData[]>([]);
-  
-  // Estado comum
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const handleSearchByCEP = async () => {
+  // Modal para buscar por rua/cidade
+  const [showModal, setShowModal] = useState(false);
+  const [rua, setRua] = useState('');
+  const [cidade, setCidade] = useState('');
+  const [uf, setUF] = useState('');
+  const [results, setResults] = useState<CEPData[]>([]);
+  const [loadingStreet, setLoadingStreet] = useState(false);
+  const [errorStreet, setErrorStreet] = useState<string | null>(null);
+
+  // Busca automática quando CEP está completo
+  useEffect(() => {
+    if (cep && isValidCEP(cep)) {
+      handleSearchByCEP(cep);
+    }
+  }, [cep]);
+
+  const handleSearchByCEP = async (cepValue: string) => {
     setError(null);
     setSuccess(false);
 
-    if (!cep.trim()) {
-      setError('Digite um CEP');
-      return;
-    }
-
-    if (!isValidCEP(cep)) {
-      setError('CEP deve ter 8 dígitos');
+    const cleanCEP = cepValue.replace(/\D/g, '');
+    if (!isValidCEP(cleanCEP)) {
       return;
     }
 
     setLoading(true);
     try {
-      const result = await fetchAddressByCEP(cep);
+      console.log('🔍 Buscando CEP:', cleanCEP);
+      const result = await fetchAddressByCEP(cleanCEP);
+      
       if (result) {
+        console.log('✅ CEP encontrado:', result);
         onAddressFound({
           cep: result.cep,
-          logradouro: result.logradouro,
-          bairro: result.bairro,
-          localidade: result.localidade,
-          uf: result.uf,
+          logradouro: result.logradouro || '',
+          bairro: result.bairro || '',
+          localidade: result.localidade || '',
+          uf: result.uf || '',
         });
         setSuccess(true);
-        setTimeout(() => setSuccess(false), 3000);
+        setTimeout(() => setSuccess(false), 2000);
       } else {
         setError('CEP não encontrado');
       }
     } catch (err: any) {
+      console.error('❌ Erro ao buscar CEP:', err);
       setError(err.message || 'Erro ao buscar CEP');
     } finally {
       setLoading(false);
@@ -76,32 +72,36 @@ export const CEPSearch: React.FC<CEPSearchProps> = ({ initialCEP = '', onAddress
   };
 
   const handleSearchByStreet = async () => {
-    setError(null);
-    setSuccess(false);
+    setErrorStreet(null);
     setResults([]);
 
     if (!rua.trim() || !cidade.trim() || !uf.trim()) {
-      setError('Preencha rua, cidade e UF');
+      setErrorStreet('Preencha rua, cidade e UF');
       return;
     }
 
-    setLoading(true);
+    setLoadingStreet(true);
     try {
+      console.log('🔍 Buscando por rua/cidade:', rua, cidade, uf);
       const endericos = await fetchAddressByStreet(rua, cidade, uf);
+      
       if (endericos.length > 0) {
+        console.log('✅ Endereços encontrados:', endericos.length);
         setResults(endericos);
-        setSuccess(true);
       } else {
-        setError('Nenhum endereço encontrado para essa busca');
+        setErrorStreet('Nenhum endereço encontrado para essa busca');
       }
     } catch (err: any) {
-      setError(err.message || 'Erro ao buscar endereço');
+      console.error('❌ Erro ao buscar:', err);
+      setErrorStreet(err.message || 'Erro ao buscar endereço');
     } finally {
-      setLoading(false);
+      setLoadingStreet(false);
     }
   };
 
   const handleSelectAddress = (address: CEPData) => {
+    const cepFormatado = address.cep.replace(/(\d{5})(\d{3})/, '$1-$2');
+    setCEP(cepFormatado);
     onAddressFound({
       cep: address.cep,
       logradouro: address.logradouro,
@@ -109,188 +109,173 @@ export const CEPSearch: React.FC<CEPSearchProps> = ({ initialCEP = '', onAddress
       localidade: address.localidade,
       uf: address.uf,
     });
+    setShowModal(false);
     setResults([]);
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 3000);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      if (mode === 'cep') {
-        handleSearchByCEP();
-      } else {
-        handleSearchByStreet();
-      }
+      handleSearchByStreet();
     }
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 mb-2">
-        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-          🔍 Buscar Endereço
-        </label>
-        
-        {/* Toggle de modo */}
-        <div className="flex gap-1 ml-auto bg-slate-100 p-1 rounded-lg">
-          <button
-            type="button"
-            onClick={() => { setMode('cep'); setResults([]); setError(null); }}
-            className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
-              mode === 'cep'
-                ? 'bg-green-500 text-white'
-                : 'bg-transparent text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            CEP
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode('street'); setResults([]); setError(null); }}
-            className={`px-2.5 py-1 rounded text-xs font-bold transition-all flex items-center gap-1 ${
-              mode === 'street'
-                ? 'bg-green-500 text-white'
-                : 'bg-transparent text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <MapPin className="w-3 h-3" />
-            Rua/Cidade
-          </button>
-        </div>
+    <div className="space-y-2">
+      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+        CEP
+      </label>
+
+      {/* Input CEP + Botão discreto de busca por rua/cidade */}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={cep}
+          onChange={(e) => setCEP(formatCEP(e.target.value))}
+          placeholder="00000-000"
+          maxLength={9}
+          disabled={loading}
+          className="flex-1 px-3 py-2.5 border-2 border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 text-sm font-bold
+            focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500
+            disabled:bg-slate-100 disabled:cursor-not-allowed transition-all"
+        />
+
+        {/* Botão discreto para buscar por rua/cidade */}
+        <button
+          type="button"
+          onClick={() => setShowModal(true)}
+          className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 rounded-lg transition-colors"
+          title="Buscar CEP por rua/cidade"
+        >
+          {loading ? (
+            <Loader className="w-5 h-5 animate-spin" />
+          ) : (
+            <MapPin className="w-5 h-5" />
+          )}
+        </button>
       </div>
 
-      {/* Modo: Buscar por CEP */}
-      {mode === 'cep' && (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={cep}
-              onChange={(e) => setCEP(formatCEP(e.target.value))}
-              onKeyPress={handleKeyPress}
-              placeholder="00000-000"
-              maxLength={9}
-              disabled={loading}
-              className="flex-1 px-3 py-2.5 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 text-sm
-                focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent
-                disabled:bg-slate-100 disabled:cursor-not-allowed"
-            />
-
-            <button
-              type="button"
-              onClick={handleSearchByCEP}
-              disabled={loading}
-              className="px-4 py-2.5 bg-green-500 hover:bg-green-600 disabled:bg-slate-300 text-white text-sm font-semibold rounded-lg
-                transition-colors flex items-center gap-2 cursor-pointer"
-            >
-              {loading ? (
-                <>
-                  <Loader className="w-4 h-4 animate-spin" />
-                  <span className="hidden sm:inline">Buscando...</span>
-                </>
-              ) : (
-                <>
-                  <Search className="w-4 h-4" />
-                  <span className="hidden sm:inline">Buscar</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Modo: Buscar por Rua/Cidade */}
-      {mode === 'street' && (
-        <div className="space-y-2">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <input
-              type="text"
-              value={rua}
-              onChange={(e) => setRua(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Rua/Avenida"
-              disabled={loading}
-              className="px-3 py-2.5 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 text-sm
-                focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent
-                disabled:bg-slate-100 disabled:cursor-not-allowed"
-            />
-            
-            <input
-              type="text"
-              value={cidade}
-              onChange={(e) => setCidade(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Cidade"
-              disabled={loading}
-              className="px-3 py-2.5 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 text-sm
-                focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent
-                disabled:bg-slate-100 disabled:cursor-not-allowed"
-            />
-            
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={uf}
-                onChange={(e) => setUF(e.target.value.toUpperCase().slice(0, 2))}
-                onKeyPress={handleKeyPress}
-                placeholder="UF"
-                maxLength={2}
-                disabled={loading}
-                className="flex-1 px-3 py-2.5 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 text-sm uppercase
-                  focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent
-                  disabled:bg-slate-100 disabled:cursor-not-allowed"
-              />
-              
-              <button
-                type="button"
-                onClick={handleSearchByStreet}
-                disabled={loading}
-                className="px-3 py-2.5 bg-green-500 hover:bg-green-600 disabled:bg-slate-300 text-white text-sm font-semibold rounded-lg
-                  transition-colors flex items-center gap-2 cursor-pointer whitespace-nowrap"
-              >
-                {loading ? (
-                  <Loader className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Search className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mensagens de erro e sucesso */}
+      {/* Mensagens de feedback */}
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+        <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
           <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
           <p className="text-xs text-red-700">{error}</p>
         </div>
       )}
 
       {success && (
-        <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2">
+        <div className="p-2 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2">
           <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-green-700">Endereço encontrado e preenchido!</p>
+          <p className="text-xs text-green-700">CEP encontrado!</p>
         </div>
       )}
 
-      {/* Resultados da busca por rua/cidade */}
-      {results.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-bold text-slate-700">{results.length} resultado(s) encontrado(s):</p>
-          <div className="space-y-1.5 max-h-48 overflow-y-auto">
-            {results.map((address, index) => (
+      {/* MODAL: Buscar por rua/cidade */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-sm w-full shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 p-4">
+              <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-slate-600" />
+                Buscar CEP por Rua/Cidade
+              </h3>
               <button
-                key={index}
                 type="button"
-                onClick={() => handleSelectAddress(address)}
-                className="w-full text-left p-2.5 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
+                onClick={() => setShowModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
               >
-                <p className="text-xs font-bold text-blue-900">{address.logradouro}</p>
-                <p className="text-xs text-blue-700">{address.bairro} - {address.localidade}/{address.uf}</p>
-                <p className="text-xs text-blue-600 font-mono">{address.cep}</p>
+                <X className="w-5 h-5" />
               </button>
-            ))}
+            </div>
+
+            {/* Formulário */}
+            <div className="p-4 space-y-3">
+              <input
+                type="text"
+                value={rua}
+                onChange={(e) => setRua(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Rua/Avenida"
+                disabled={loadingStreet}
+                className="w-full px-3 py-2.5 border-2 border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500
+                  disabled:bg-slate-100 disabled:cursor-not-allowed"
+              />
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={cidade}
+                  onChange={(e) => setCidade(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Cidade"
+                  disabled={loadingStreet}
+                  className="flex-1 px-3 py-2.5 border-2 border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 text-sm
+                    focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500
+                    disabled:bg-slate-100 disabled:cursor-not-allowed"
+                />
+
+                <input
+                  type="text"
+                  value={uf}
+                  onChange={(e) => setUF(e.target.value.toUpperCase().slice(0, 2))}
+                  onKeyPress={handleKeyPress}
+                  placeholder="UF"
+                  maxLength={2}
+                  disabled={loadingStreet}
+                  className="w-16 px-3 py-2.5 border-2 border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 text-sm uppercase font-bold
+                    focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500
+                    disabled:bg-slate-100 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSearchByStreet}
+                disabled={loadingStreet}
+                className="w-full px-4 py-2.5 bg-green-500 hover:bg-green-600 disabled:bg-slate-300 text-white text-sm font-bold rounded-lg
+                  transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {loadingStreet ? (
+                  <>
+                    <Loader className="w-4 h-4 animate-spin" />
+                    Buscando...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4" />
+                    Buscar
+                  </>
+                )}
+              </button>
+
+              {errorStreet && (
+                <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-red-700">{errorStreet}</p>
+                </div>
+              )}
+
+              {/* Resultados */}
+              {results.length > 0 && (
+                <div className="space-y-1.5 max-h-60 overflow-y-auto border-t border-slate-200 pt-3">
+                  <p className="text-xs font-bold text-slate-700">{results.length} resultado(s):</p>
+                  {results.map((address, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => handleSelectAddress(address)}
+                      className="w-full text-left p-2.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <p className="text-xs font-bold text-blue-900">{address.logradouro}</p>
+                      <p className="text-xs text-blue-700">{address.bairro}</p>
+                      <p className="text-xs text-blue-600">{address.localidade}/{address.uf}</p>
+                      <p className="text-xs font-mono text-blue-500 mt-1">{address.cep}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
