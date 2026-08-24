@@ -1868,13 +1868,15 @@ export const ContractForm: React.FC<ContractFormProps> = ({
           >
             Cancelar
           </button>
-          <button
-            type="submit"
-            className="w-full sm:w-auto min-h-[44px] sm:min-h-[40px] flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 shadow-md rounded-lg transition-all cursor-pointer text-center"
-          >
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
-            <span>Salvar & Gerar Contrato</span>
-          </button>
+          {activeTab === 'revisao' && (
+            <button
+              type="submit"
+              className="w-full sm:w-auto min-h-[44px] sm:min-h-[40px] flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 shadow-md rounded-lg transition-all cursor-pointer text-center"
+            >
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>Salvar & Gerar Contrato</span>
+            </button>
+          )}
         </div>
       </form>
     </div>
