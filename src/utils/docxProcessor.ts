@@ -365,37 +365,6 @@ export async function generateFilledDocx(contract: ContractData): Promise<Uint8A
   return await processDocxWithTemplater(templateBuffer, tags);
 }
 
-// Processar DOCX com Docxtemplater - substitui {{TAG}} pelos dados
-async function processDocxWithTemplater(docxBuffer: ArrayBuffer, tags: Record<string, string>): Promise<Uint8Array> {
-  try {
-    const zip = new PizZip(docxBuffer);
-    const doc = new Docxtemplater(zip, {
-      paragraphLoop: true,      // Permite {{#ARRAY}}...{{/ARRAY}}
-      linebreaks: true,          // Preserva quebras de linha \n
-      delimiters: { 
-        start: '{{', 
-        end: '}}' 
-      },
-      nullGetter: () => '',     // Tags sem valor viram strings vazias
-    });
-
-    // Renderizar com os tags do contrato
-    doc.render(tags);
-
-    // Gerar novo DOCX preenchido
-    return doc.getZip().generate({
-      type: 'uint8array',
-      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      compression: 'DEFLATE',
-    });
-  } catch (error) {
-    console.error('Erro ao processar DOCX:', error);
-    throw new Error(
-      `Erro ao gerar documento: ${error instanceof Error ? error.message : 'Verifique o template enviado'}`
-    );
-  }
-}
-
 // Construtor do documento base .docx oficial nativo com formatação jurídica e tabelas OpenXML
 
 // Faz o download no navegador do arquivo .docx preenchido
