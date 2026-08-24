@@ -62,6 +62,18 @@ interface ContractViewerProps {
   onUpdateContract: (updated: ContractData) => void;
 }
 
+/** Nome de arquivo amigável a partir do nome do cliente (sem acentos/espaços/caracteres especiais). */
+function slugifyNomeArquivo(nome: string): string {
+  const semAcentos = nome
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  const limpo = semAcentos
+    .replace(/[^a-zA-Z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '_');
+  return limpo || 'contrato';
+}
+
 export const ContractViewer: React.FC<ContractViewerProps> = ({
   contract,
   onBack,
@@ -175,7 +187,9 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `contrato_${contract.numeroContrato || 'documento'}.pdf`;
+      const nomeClientePdf = (isExcl ? contract.vendedor?.nome : contract.comprador?.nome) || contract.nomeLote || 'documento';
+      const dataPdf = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+      a.download = `${slugifyNomeArquivo(nomeClientePdf)}_${dataPdf}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -273,12 +287,18 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
       const sigCorretorAtual = contract.assinaturas?.find(a => a.role === roleCorretor);
       const sigClienteAtual = contract.assinaturas?.find(a => a.role === roleCliente);
+      // Modalidade por PESSOA: quem já assinou digitalmente é 'digital', quem
+      // ainda não assinou é tratado como 'manual' (linha física + testemunhas).
+      // Evita que a assinatura digital de uma parte "contamine" a modalidade
+      // da outra parte que ainda não assinou.
+      const usuarioModalidadeDownload: 'digital' | 'manual' = sigCorretorAtual ? 'digital' : 'manual';
+      const compradorModalidadeDownload: 'digital' | 'manual' = sigClienteAtual ? 'digital' : 'manual';
       const estadoAssinatura = {
         usuarioAssinou: !!sigCorretorAtual,
-        usuarioModalidade: (contract.modalidadeAssinatura === 'digital' ? 'digital' : 'manual') as 'digital' | 'manual',
+        usuarioModalidade: usuarioModalidadeDownload,
         compradorAssinou: !!sigClienteAtual,
-        compradorModalidade: (contract.modalidadeAssinatura === 'digital' ? 'digital' : 'manual') as 'digital' | 'manual',
-        testemunhaprecisa: contract.modalidadeAssinatura === 'manual',
+        compradorModalidade: compradorModalidadeDownload,
+        testemunhaprecisa: usuarioModalidadeDownload === 'manual' || compradorModalidadeDownload === 'manual',
       };
 
       // Resolver qual template usar (download_depois_assinar = está baixando após ter preenchido dados)
@@ -343,7 +363,9 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       const docxComDados = await substituirTagsNoDocx(docxComSelos, tagsContrato);
 
       // 4. Fazer download + salvar no Supabase
-      const nomeArquivo = `${contract.nomeLote || 'contrato'}_${new Date().getTime()}.docx`;
+      const nomeClienteArquivo = dadosCliente.nome || contract.nomeLote || 'contrato';
+      const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+      const nomeArquivo = `${slugifyNomeArquivo(nomeClienteArquivo)}_${dataArquivo}.docx`;
       await realizarDownloadESalvar(docxComDados, nomeArquivo);
     } catch (error: any) {
       console.error('Erro ao baixar DOCX:', error);

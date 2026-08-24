@@ -54,7 +54,16 @@ const TEMPLATES: Record<string, TemplateResolved> = {
   'exclusividade_mista': {
     arquivo: 'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{CONTRATANTE_ASSINATURA_MANUAL}}'],
+  },
+  // Totalmente manual (nenhuma das partes assina digitalmente): só linhas,
+  // nome e CPF de cada parte + testemunhas. Arquivo já existia no bucket,
+  // mas nunca era referenciado aqui - por isso o download "manual" sempre
+  // caía no template misto (com o aviso de assinatura eletrônica pendente).
+  'exclusividade_manual': {
+    arquivo: 'exclusividade_manual_2_testemunhas.docx',
+    testemunhas: true,
+    tagsAssinatura: [],
   },
   // "sem_conjuge_mista" precisa ser um arquivo MISTO (um digital, um
   // manual) - a lógica de determinarModalidade() pra exclusividade nunca
@@ -93,7 +102,14 @@ function determinarModalidade(
       }
       return 'digital';
     }
-    return 'mista'; // Fallback
+    // usuarioModalidade === 'manual': se o contratante também é manual (ou
+    // ainda não definido), o contrato é totalmente manual - só linhas,
+    // nome e CPF de cada parte. Antes disso sempre caía em 'mista' aqui,
+    // usando por engano o template com o selo/pendência digital do usuário.
+    if (state.compradorModalidade === 'manual' || !state.compradorModalidade) {
+      return 'manual';
+    }
+    return 'mista'; // Corretor manual + contratante digital (caso raro)
   }
 
   // Venda (à vista ou parcelada)
@@ -181,9 +197,16 @@ export function resolveTemplate(
 
     // Caso geral: verifica se precisa testemunhas
     const modalidade = determinarModalidade(state, tipo);
-    const key = variante === 'sem_conjuge' && tipo === 'exclusividade'
+    let key = variante === 'sem_conjuge' && tipo === 'exclusividade'
       ? `exclusividade_sem_conjuge_${modalidade}`
       : `${tipo}_${modalidade}`;
+
+    // "sem_conjuge" não tem arquivo dedicado pra modalidade 'manual' (só
+    // pra 'mista') - cai no template manual genérico da exclusividade,
+    // que não depende de cláusula de cônjuge.
+    if (!TEMPLATES[key]) {
+      key = `exclusividade_${modalidade}`;
+    }
 
     return {
       ...TEMPLATES[key],
@@ -230,6 +253,7 @@ export const TEMPLATE_MAP = {
   },
   exclusividade: {
     digital: TEMPLATES['exclusividade_digital'],
+    manual: TEMPLATES['exclusividade_manual'],
     mista: TEMPLATES['exclusividade_mista'],
     sem_conjuge_mista: TEMPLATES['exclusividade_sem_conjuge_mista'],
   },

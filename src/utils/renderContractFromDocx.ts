@@ -45,15 +45,23 @@ async function buildFilledDocx(contract: ContractData): Promise<ArrayBuffer> {
   const sigCorretorAtual = contract.assinaturas?.find((a) => a.role === roleCorretor);
   const sigClienteAtual = contract.assinaturas?.find((a) => a.role === roleCliente);
 
-  const modalidadeContrato: 'digital' | 'manual' =
-    contract.modalidadeAssinatura === 'digital' ? 'digital' : 'manual';
+  // Modalidade por PESSOA, não por contrato: quem já tem uma assinatura
+  // digital registrada é 'digital'; quem ainda não assinou é tratado como
+  // 'manual' (pior caso - linha física + testemunhas), mesmo que o
+  // contrato como um todo já tenha modalidadeAssinatura = 'digital' por
+  // conta da assinatura da outra parte. Antes, as duas partes herdavam o
+  // mesmo campo único do contrato, então assim que o corretor assinava
+  // digital o cliente também virava "digital" - sumindo com a linha de
+  // assinatura manual e as testemunhas do cliente que ainda não assinou.
+  const usuarioModalidade: 'digital' | 'manual' = sigCorretorAtual ? 'digital' : 'manual';
+  const compradorModalidade: 'digital' | 'manual' = sigClienteAtual ? 'digital' : 'manual';
 
   const estadoAssinatura = {
     usuarioAssinou: !!sigCorretorAtual,
-    usuarioModalidade: modalidadeContrato,
+    usuarioModalidade,
     compradorAssinou: !!sigClienteAtual,
-    compradorModalidade: modalidadeContrato,
-    testemunhaprecisa: modalidadeContrato === 'manual',
+    compradorModalidade,
+    testemunhaprecisa: usuarioModalidade === 'manual' || compradorModalidade === 'manual',
   };
 
   const templateResolved = resolveTemplate(
@@ -77,7 +85,7 @@ async function buildFilledDocx(contract: ContractData): Promise<ArrayBuffer> {
   if (tagsEncontradas.length > 0) {
     const usuarioInfo: PartySignatureInfo = {
       assinou: !!sigCorretorAtual,
-      modalidade: modalidadeContrato,
+      modalidade: usuarioModalidade,
       signature: sigCorretorAtual,
       nome: dadosCorretor?.nome || '',
       documento: dadosCorretor?.cpfCnpj || '',
@@ -87,7 +95,7 @@ async function buildFilledDocx(contract: ContractData): Promise<ArrayBuffer> {
     };
     const compradorInfo: PartySignatureInfo = {
       assinou: !!sigClienteAtual,
-      modalidade: modalidadeContrato,
+      modalidade: compradorModalidade,
       signature: sigClienteAtual,
       nome: dadosCliente?.nome || '',
       documento: dadosCliente?.cpfCnpj || '',
