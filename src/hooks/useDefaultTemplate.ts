@@ -15,7 +15,7 @@ interface TemplatePreferences {
 const DEFAULT_TEMPLATES: TemplatePreferences = {
   venda_vista: 'venda_vista_assinatura_digital.docx',
   venda_parcelada: 'venda_parcelada_assinatura_digital.docx',
-  exclusividade: 'exclusividade_assinatura_digital.docx',
+  exclusividade: 'exclusividade_digital_sem_testemunhas.docx',
 };
 
 /**

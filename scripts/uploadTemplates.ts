@@ -46,9 +46,9 @@ const TEMPLATES = [
   'venda_parcelada_mista_2_testemunhas.docx',
 
   // EXCLUSIVIDADE
-  'exclusividade_assinatura_digital.docx',
-  'exclusividade_mista_2_testemunhas.docx',
-  'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
+  'exclusividade_digital_sem_testemunhas.docx',
+  'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',
+  'exclusividade_ambos_manuais_2_testemunhas.docx',
 ];
 
 /**

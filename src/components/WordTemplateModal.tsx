@@ -117,19 +117,19 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
     exclusividade: [
       {
         modalidade: 'digital',
-        arquivo: 'exclusividade_assinatura_digital.docx',
+        arquivo: 'exclusividade_digital_sem_testemunhas.docx',
         testemunhas: false,
         descricao: 'Ambos assinam digitalmente',
       },
       {
         modalidade: 'mista',
-        arquivo: 'exclusividade_mista_2_testemunhas.docx',
+        arquivo: 'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',
         testemunhas: true,
         descricao: 'Você digital + Contratante manual',
       },
       {
         modalidade: 'mista',
-        arquivo: 'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
+        arquivo: 'exclusividade_ambos_manuais_2_testemunhas.docx',
         testemunhas: true,
         descricao: 'SEM CÔNJUGE - Você digital + Contratante manual',
       },

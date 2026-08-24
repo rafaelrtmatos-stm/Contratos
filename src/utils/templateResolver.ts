@@ -47,17 +47,17 @@ const TEMPLATES: Record<string, TemplateResolved> = {
 
   // EXCLUSIVIDADE
   'exclusividade_digital': {
-    arquivo: 'exclusividade_assinatura_digital.docx',
+    arquivo: 'exclusividade_digital_sem_testemunhas.docx',
     testemunhas: false,
     tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}'],
   },
   'exclusividade_mista': {
-    arquivo: 'exclusividade_mista_2_testemunhas.docx',
+    arquivo: 'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',
     testemunhas: true,
     tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}'],
   },
   'exclusividade_sem_conjuge_mista': {
-    arquivo: 'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
+    arquivo: 'exclusividade_ambos_manuais_2_testemunhas.docx',
     testemunhas: true,
     tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}'],
   },
