@@ -157,7 +157,9 @@ export async function fetchContracts(): Promise<ContractData[]> {
           assinaturaDataUrl: row.assinatura_url,
           assinadoEm: row.assinado_em,
           hashAutenticacao: row.hash_autenticacao,
+          hashAutenticacaoDepois: row.hash_autenticacao_depois ?? undefined,
           ipAssinatura: row.ip_assinatura ?? undefined,
+          geolocalizacao: row.geolocalizacao ?? undefined,
           metadadosNavegador: row.metadados_navegador,
         };
         const list = byContract.get(row.contract_id) ?? [];
@@ -233,7 +235,9 @@ export async function saveSignature(contractId: string, signature: ContractData[
     documento_signatario: signature.documentoSignatario,
     assinatura_url: signature.assinaturaDataUrl, // recomendado migrar para Storage futuramente
     hash_autenticacao: signature.hashAutenticacao,
+    hash_autenticacao_depois: signature.hashAutenticacaoDepois ?? null,
     ip_assinatura: signature.ipAssinatura ?? null,
+    geolocalizacao: signature.geolocalizacao ?? null,
     metadados_navegador: signature.metadadosNavegador,
   });
   if (error) throw error;
@@ -257,7 +261,9 @@ export async function fetchSignatures(contractId: string): Promise<ContractData[
     assinaturaDataUrl: row.assinatura_url,
     assinadoEm: row.assinado_em,
     hashAutenticacao: row.hash_autenticacao,
+    hashAutenticacaoDepois: row.hash_autenticacao_depois ?? undefined,
     ipAssinatura: row.ip_assinatura ?? undefined,
+    geolocalizacao: row.geolocalizacao ?? undefined,
     metadadosNavegador: row.metadados_navegador,
   }));
 }

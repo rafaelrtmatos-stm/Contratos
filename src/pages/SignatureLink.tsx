@@ -10,7 +10,7 @@ import {
 } from '../utils/signatureLinksRepository';
 import { renderContractDocumentHtml, renderContractDocumentPdf, renderContractDocumentPlainText } from '../utils/renderContractFromDocx';
 import { getSignedDocumentUrl, saveClientSignedPdfToSupabase } from '../utils/contractDocumentsStorage';
-import { sha256Hex, getClientIpAddress } from '../utils/signatureOtpUtils';
+import { sha256Hex, getClientIpAddress, getClientGeolocation, formatGeoLocation } from '../utils/signatureOtpUtils';
 
 export const SignatureLink: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -123,10 +123,36 @@ export const SignatureLink: React.FC = () => {
     const documento = contract.comprador?.cpfCnpj || '';
     const nome = clientName || contract.comprador?.nome || 'Cliente';
     const ip = await getClientIpAddress();
+    const geo = await getClientGeolocation();
+    const geolocalizacao = formatGeoLocation(geo);
+
     // Hash do CONTEÚDO REAL do contrato preenchido (mesma lógica do lado
     // do corretor) - prova de integridade de verdade.
-    const documentText = await renderContractDocumentPlainText(contract);
-    const hash = await sha256Hex(documentText);
+    const documentTextAntes = await renderContractDocumentPlainText(contract);
+    const hash = await sha256Hex(documentTextAntes);
+
+    // Par antes/depois: prévia do contrato já COM esta assinatura embutida
+    // (mesmo hash que fica salvo - "hash"), pra permitir reconferir o
+    // documento final assinado contra hashDepois depois.
+    const contratoComEstaAssinatura: ContractData = {
+      ...contract,
+      assinaturas: [
+        ...(contract.assinaturas || []).filter((a) => a.role !== 'comprador'),
+        {
+          role: 'comprador',
+          nomeSignatario: nome,
+          documentoSignatario: documento,
+          assinaturaDataUrl: '',
+          assinadoEm: new Date().toISOString(),
+          hashAutenticacao: hash,
+          ipAssinatura: ip,
+          geolocalizacao,
+          metadadosNavegador: navigator.userAgent,
+        },
+      ],
+    };
+    const documentTextDepois = await renderContractDocumentPlainText(contratoComEstaAssinatura);
+    const hashDepois = await sha256Hex(documentTextDepois);
 
     const result = await signContractViaLink({
       token,
@@ -134,7 +160,9 @@ export const SignatureLink: React.FC = () => {
       nomeSignatario: nome,
       documentoSignatario: documento,
       hashAutenticacao: hash,
+      hashAutenticacaoDepois: hashDepois,
       ip,
+      geolocalizacao,
     });
 
     if (!result.sucesso) {
@@ -158,7 +186,9 @@ export const SignatureLink: React.FC = () => {
         assinaturaDataUrl: '',
         assinadoEm: new Date().toISOString(),
         hashAutenticacao: hash,
+        hashAutenticacaoDepois: hashDepois,
         ipAssinatura: ip,
+        geolocalizacao,
         metadadosNavegador: navigator.userAgent,
       },
     ];

@@ -87,8 +87,10 @@ export interface DigitalSignature {
   documentoSignatario: string;
   assinaturaDataUrl: string;
   assinadoEm: string; // ISO string
-  hashAutenticacao: string;
+  hashAutenticacao: string; // SHA-256 do documento ANTES desta assinatura (o que o signatário aceitou)
+  hashAutenticacaoDepois?: string; // SHA-256 do documento já COM esta assinatura embutida - par antes/depois, prova de integridade
   ipAssinatura?: string;
+  geolocalizacao?: string; // ex: "Santarém, PA, Brasil (-2.43810, -54.70830) — GPS", ou undefined se não capturada
   metadadosNavegador: string;
 }
 

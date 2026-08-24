@@ -213,7 +213,9 @@ function MainApp() {
       assinaturaDataUrl: auditStamp.signatureId,
       assinadoEm: auditStamp.dataAssinatura,
       hashAutenticacao: auditStamp.hashDocumento,
+      hashAutenticacaoDepois: auditStamp.hashDocumentoDepois,
       ipAssinatura: auditStamp.ipAssinatura,
+      geolocalizacao: auditStamp.geolocalizacao,
       metadadosNavegador: `${auditStamp.userAgent || navigator.userAgent}${auditStamp.meioAutenticacao ? ` | ${auditStamp.meioAutenticacao}` : ''}`,
     };
 

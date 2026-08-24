@@ -186,14 +186,19 @@ export interface AuditStamp {
   cpfCnpj: string;
   dataAssinatura: string; // ISO string
   horaAssinatura: string; // HH:mm:ss
-  hashDocumento: string; // SHA-256 do documento
+  hashDocumento: string; // SHA-256 do documento ANTES desta assinatura (conteúdo que o signatário leu/aceitou) - é este valor que fica salvo como hashAutenticacao
+  hashDocumentoDepois?: string; // SHA-256 do documento já COM esta assinatura embutida - permite reconferir o documento final baixado/assinado e provar que nada foi alterado depois
   ipAssinatura: string;
+  geolocalizacao?: string; // texto pronto pra exibir, ex: "Santarém, PA, Brasil (-2.43810, -54.70830) — aprox. por IP"
   userAgent?: string;
   meioAutenticacao?: string; // ex: "Login e senha (revalidados via Supabase Auth)"
 }
 
 /**
  * Cria um carimbo de auditoria com dados da assinatura
+ *
+ * @param documentText Texto do documento ANTES desta assinatura (o que o signatário está de fato aceitando) - vira hashDocumento
+ * @param documentTextDepois Opcional: texto do documento já COM esta assinatura embutida - vira hashDocumentoDepois (par antes/depois)
  */
 export async function createAuditStamp(
   nomeAssinante: string,
@@ -201,10 +206,13 @@ export async function createAuditStamp(
   documentText: string,
   ipAssinatura?: string,
   userAgent?: string,
-  meioAutenticacao?: string
+  meioAutenticacao?: string,
+  geolocalizacao?: string,
+  documentTextDepois?: string
 ): Promise<AuditStamp> {
   const signatureId = generateSignatureId();
   const hashDocumento = await sha256Hex(documentText);
+  const hashDocumentoDepois = documentTextDepois ? await sha256Hex(documentTextDepois) : undefined;
   const now = new Date();
 
   return {
@@ -218,7 +226,9 @@ export async function createAuditStamp(
       second: '2-digit' 
     }),
     hashDocumento,
+    hashDocumentoDepois,
     ipAssinatura: ipAssinatura || 'N/A',
+    geolocalizacao,
     userAgent: userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : undefined),
     meioAutenticacao,
   };
@@ -236,6 +246,119 @@ export async function getClientIpAddress(): Promise<string> {
     console.warn('Erro ao obter IP do cliente:', error);
     return 'N/A';
   }
+}
+
+/**
+ * Geolocalização capturada no momento da assinatura (melhor esforço)
+ */
+export interface GeoLocationInfo {
+  latitude?: number;
+  longitude?: number;
+  accuracyMeters?: number;
+  cidade?: string;
+  regiao?: string;
+  pais?: string;
+  fonte: 'gps' | 'ip' | 'indisponivel';
+}
+
+/**
+ * Tenta o GPS do navegador (precisa de permissão do usuário). Nunca lança
+ * erro nem trava o fluxo de assinatura - se negar ou demorar, resolve null
+ * e quem chamou cai pro fallback por IP.
+ */
+function tryBrowserGeolocation(): Promise<GeoLocationInfo | null> {
+  return new Promise((resolve) => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      resolve(null);
+      return;
+    }
+    let settled = false;
+    const finish = (result: GeoLocationInfo | null) => {
+      if (settled) return;
+      settled = true;
+      resolve(result);
+    };
+    // Timeout curto pra não segurar a assinatura esperando o usuário
+    // decidir a permissão - se demorar, segue pro fallback por IP.
+    const timeoutId = setTimeout(() => finish(null), 4000);
+    try {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          clearTimeout(timeoutId);
+          finish({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            accuracyMeters: Number.isFinite(pos.coords.accuracy) ? Math.round(pos.coords.accuracy) : undefined,
+            fonte: 'gps',
+          });
+        },
+        () => {
+          clearTimeout(timeoutId);
+          finish(null); // permissão negada ou erro - segue pro fallback
+        },
+        { enableHighAccuracy: false, timeout: 4000, maximumAge: 60000 }
+      );
+    } catch {
+      clearTimeout(timeoutId);
+      finish(null);
+    }
+  });
+}
+
+/**
+ * Fallback: geolocalização aproximada a partir do IP público (sem precisar
+ * de permissão do usuário). Serviço gratuito, sem chave de API.
+ */
+async function tryIpGeolocation(): Promise<GeoLocationInfo> {
+  try {
+    const response = await fetch('https://ipapi.co/json/');
+    const data = await response.json();
+    if (data?.error) throw new Error(data.reason || 'Erro no serviço de geolocalização por IP');
+    return {
+      latitude: typeof data.latitude === 'number' ? data.latitude : undefined,
+      longitude: typeof data.longitude === 'number' ? data.longitude : undefined,
+      cidade: data.city || undefined,
+      regiao: data.region || undefined,
+      pais: data.country_name || undefined,
+      fonte: 'ip',
+    };
+  } catch (error) {
+    console.warn('Erro ao obter geolocalização por IP:', error);
+    return { fonte: 'indisponivel' };
+  }
+}
+
+/**
+ * Geolocalização da assinatura: tenta GPS do navegador primeiro (mais
+ * preciso, requer permissão), e cai pra geolocalização aproximada por IP
+ * se o usuário negar/não responder. Nunca lança erro - pior caso, retorna
+ * fonte: 'indisponivel'.
+ */
+export async function getClientGeolocation(): Promise<GeoLocationInfo> {
+  const gps = await tryBrowserGeolocation();
+  if (gps) return gps;
+  return tryIpGeolocation();
+}
+
+/**
+ * Formata a geolocalização pra exibição no Log de Evidências / carimbo.
+ * Ex: "Santarém, PA, Brasil (-2.43810, -54.70830) — GPS"
+ */
+export function formatGeoLocation(geo: GeoLocationInfo | null | undefined): string {
+  if (!geo || geo.fonte === 'indisponivel') return 'Localização não capturada';
+
+  const partesLocal = [geo.cidade, geo.regiao, geo.pais].filter(Boolean);
+  const local = partesLocal.length > 0 ? partesLocal.join(', ') : null;
+  const coords =
+    geo.latitude != null && geo.longitude != null
+      ? `${geo.latitude.toFixed(5)}, ${geo.longitude.toFixed(5)}`
+      : null;
+  const origem = geo.fonte === 'gps' ? 'GPS' : 'aprox. por IP';
+
+  if (local && coords) return `${local} (${coords}) — ${origem}`;
+  if (coords) return `${coords} — ${origem}`;
+  if (local) return `${local} — ${origem}`;
+  return 'Localização não capturada';
 }
 
 /**

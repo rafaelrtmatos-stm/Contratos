@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ContractData } from '../types/contract';
 import { useAuth } from '../utils/authContext';
 import { supabase } from '../utils/supabaseClient';
-import { createAuditStamp, getClientIpAddress, AuditStamp } from '../utils/signatureOtpUtils';
+import { createAuditStamp, getClientIpAddress, getClientGeolocation, formatGeoLocation, sha256Hex, AuditStamp } from '../utils/signatureOtpUtils';
 import { renderContractDocumentPdf, renderContractDocumentPlainText } from '../utils/renderContractFromDocx';
 import { GenerateSignatureCodeModal } from './GenerateSignatureCodeModal';
 import { Lock, CheckCircle2, AlertCircle, Loader, X, FileDown, KeyRound } from 'lucide-react';
@@ -54,17 +54,48 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
       const nomeAssinante = profile?.nome || contract.vendedor.nome;
       const cpfAssinante = contract.vendedor.cpfCnpj;
       const ip = await getClientIpAddress();
+      const geo = await getClientGeolocation();
+      const geolocalizacao = formatGeoLocation(geo);
+
       // Hash do CONTEÚDO REAL do contrato preenchido (não mais uma string
       // de metadados arbitrária) - prova de integridade de verdade: se o
       // texto do contrato mudar depois, o hash não bate mais.
-      const documentText = await renderContractDocumentPlainText(contract);
+      const documentTextAntes = await renderContractDocumentPlainText(contract);
+      const hashAntes = await sha256Hex(documentTextAntes);
+
+      // Par antes/depois: monta uma prévia do contrato já COM esta
+      // assinatura embutida (usando o MESMO hash que efetivamente fica
+      // salvo como hashAutenticacao - hashAntes) e re-renderiza. O hash
+      // desse resultado (hashDepois) serve pra reconferir mais tarde o
+      // documento final assinado e provar que nada foi alterado depois.
+      const contratoComEstaAssinatura: ContractData = {
+        ...contract,
+        assinaturas: [
+          ...(contract.assinaturas || []).filter((a) => a.role !== 'vendedor'),
+          {
+            role: 'vendedor',
+            nomeSignatario: nomeAssinante,
+            documentoSignatario: cpfAssinante,
+            assinaturaDataUrl: '',
+            assinadoEm: new Date().toISOString(),
+            hashAutenticacao: hashAntes,
+            ipAssinatura: ip,
+            geolocalizacao,
+            metadadosNavegador: navigator.userAgent,
+          },
+        ],
+      };
+      const documentTextDepois = await renderContractDocumentPlainText(contratoComEstaAssinatura);
+
       const stamp = await createAuditStamp(
         nomeAssinante,
         cpfAssinante,
-        documentText,
+        documentTextAntes,
         ip,
         navigator.userAgent,
-        'Login e senha (revalidados via Supabase Auth)'
+        'Login e senha (revalidados via Supabase Auth)',
+        geolocalizacao,
+        documentTextDepois
       );
 
       setCarimbo(stamp);

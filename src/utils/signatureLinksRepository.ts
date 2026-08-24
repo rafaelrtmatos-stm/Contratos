@@ -160,7 +160,9 @@ export async function signContractViaLink(params: {
   nomeSignatario: string;
   documentoSignatario: string;
   hashAutenticacao: string;
+  hashAutenticacaoDepois?: string;
   ip: string;
+  geolocalizacao?: string;
 }): Promise<{ sucesso: boolean; contractId?: string; erro?: string }> {
   const { data, error } = await supabase.rpc('sign_contract_via_link', {
     p_token: params.token,
@@ -169,6 +171,8 @@ export async function signContractViaLink(params: {
     p_documento_signatario: params.documentoSignatario,
     p_hash_autenticacao: params.hashAutenticacao,
     p_ip: params.ip,
+    p_hash_autenticacao_depois: params.hashAutenticacaoDepois ?? null,
+    p_geolocalizacao: params.geolocalizacao ?? null,
   });
 
   if (error) throw error;

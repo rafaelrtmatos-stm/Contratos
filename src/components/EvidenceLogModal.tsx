@@ -1,6 +1,6 @@
 import React from 'react';
 import { ContractData, DigitalSignature } from '../types/contract';
-import { X, ShieldCheck, Fingerprint, Globe, Monitor, Clock } from 'lucide-react';
+import { X, ShieldCheck, Fingerprint, Globe, Monitor, Clock, MapPin } from 'lucide-react';
 
 interface EvidenceLogModalProps {
   contract: ContractData;
@@ -72,10 +72,20 @@ export const EvidenceLogModal: React.FC<EvidenceLogModalProps> = ({ contract, on
                     <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span>IP: {a.ipAssinatura || 'não capturado'}</span>
                   </div>
+                  <div className="flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="break-all">{a.geolocalizacao || 'Localização não capturada'}</span>
+                  </div>
                   <div className="flex items-center gap-1.5 sm:col-span-2">
                     <Fingerprint className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span className="break-all font-mono">{a.hashAutenticacao}</span>
+                    <span className="break-all font-mono">Hash (antes): {a.hashAutenticacao}</span>
                   </div>
+                  {a.hashAutenticacaoDepois && (
+                    <div className="flex items-center gap-1.5 sm:col-span-2">
+                      <Fingerprint className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="break-all font-mono">Hash (depois): {a.hashAutenticacaoDepois}</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1.5 sm:col-span-2">
                     <Monitor className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span className="break-all">{a.metadadosNavegador}</span>
