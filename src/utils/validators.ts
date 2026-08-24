@@ -192,15 +192,23 @@ export function toUpperCase(value: string | undefined | null): string {
 export function toUpperCaseObject<T extends Record<string, any>>(obj: T): T {
   const result: Record<string, any> = { ...obj };
   
-  // Lista de campos de texto que devem ser maiúsculos
+  // Lista de campos de texto "personalizados" que devem ser sempre
+  // maiúsculos em todo o sistema: nomes de clientes/vendedores,
+  // empreendimentos, ruas, quadras, lotes, localização, etc.
   const textFields = [
     'nome', 'sobrenome', 'nomeCompleto',
-    'rua', 'avenida', 'logradouro', 'endereco',
-    'bairro', 'cidade', 'municipio',
+    'rua', 'avenida', 'logradouro', 'endereco', 'enderecoLote',
+    'bairro', 'cidade', 'cidadeImovel', 'municipio',
     'nomeEmpreendimento', 'empreendimento',
-    'nomeLote', 'nomeQuadra',
+    'numeroLote', 'numeroQuadra', 'nomeLote', 'nomeQuadra',
+    'localizacaoImovel',
     'nacionalidade',
     'titulo',
+    'tipoImovel', 'documentoPropriedade', 'matricula',
+    'inscricaoPrefeitura', 'outrosDadosImovel', 'condicoesPagamento',
+    'marca', 'modelo', 'cor', 'descricao',
+    'acessoriosInclusos', 'documentacaoSituacao', 'estadoConservacao',
+    'quilometragemOuUso',
   ];
 
   Object.keys(result).forEach((key) => {

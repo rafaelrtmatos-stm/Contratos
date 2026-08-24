@@ -72,15 +72,11 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
     try {
       let mensagem = generatedLink;
 
-      // Contrato ainda não assinado: inclui o código de acesso (últimos 4
-      // dígitos do CPF/CNPJ) junto no texto copiado, para o cliente
-      // desbloquear o fluxo de assinatura.
+      // Contrato ainda não assinado: inclui a instrução de acesso junto no
+      // texto copiado. Não revela o número em si (o cliente já sabe seu
+      // próprio CPF) - só diz a regra: 4 últimos dígitos do CPF dele.
       if (!isFullySigned) {
-        const dadosCliente = contract.tipo === 'exclusividade' ? contract.vendedor : contract.comprador;
-        const cpfCnpj = dadosCliente?.cpfCnpj || '';
-        const digitos = cpfCnpj.replace(/\D/g, '');
-        const codigoAcesso = digitos.slice(-4);
-        mensagem = `${generatedLink}\n\n💡 Código de acesso: ${codigoAcesso}`;
+        mensagem = `${generatedLink}\n\n💡 Código de acesso: 4 últimos dígitos do seu CPF`;
       }
       // Contrato já assinado: só o link. O cliente já sabe o próprio CPF
       // e usa os últimos 4 dígitos para abrir - não precisa reenviar nada.
@@ -222,11 +218,11 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
               ) : (
                 <div className="p-3 bg-amber-50/80 border-2 border-amber-300 rounded-lg">
                   <p className="text-xs font-bold text-amber-900 mb-1">🔐 Código de Acesso:</p>
-                  <p className="text-lg font-black text-amber-800 font-mono tracking-widest">
-                    {(contract.tipo === 'exclusividade' ? contract.vendedor : contract.comprador)?.cpfCnpj?.replace(/\D/g, '').slice(-4) || '****'}
+                  <p className="text-sm font-bold text-amber-800">
+                    4 últimos dígitos do CPF do cliente
                   </p>
                   <p className="text-[10px] text-amber-700 mt-1">
-                    ↑ Os últimos 4 dígitos do CPF do cliente
+                    O próprio cliente digita esses dígitos pra abrir o link - não precisa reenviar nada.
                   </p>
                 </div>
               )}

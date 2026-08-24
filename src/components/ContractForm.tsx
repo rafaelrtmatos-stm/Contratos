@@ -9,7 +9,7 @@ import {
 } from '../types/contract';
 import { formatDecimalNumber, MONTH_NAMES_PT } from '../utils/contractGenerators';
 import { numeroPorExtensoReais } from '../utils/numberToWords';
-import { generateUUID, toUpperCaseObject } from '../utils/validators';
+import { generateUUID, toUpperCase, toUpperCaseObject } from '../utils/validators';
 import {
   Banknote,
   CalendarDays,
@@ -502,18 +502,18 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   const buildContractData = (): ContractData => ({
     id: contractId,
     numeroContrato,
-    titulo: titulo || (subcategoria === 'outros_bens' ? 'Contrato de Compra e Venda de Bem Móvel' : 'Contrato Imobiliário'),
+    titulo: toUpperCase(titulo) || (subcategoria === 'outros_bens' ? 'Contrato de Compra e Venda de Bem Móvel' : 'Contrato Imobiliário'),
     tipo,
     subcategoria: tipo === 'exclusividade' ? 'imovel' : subcategoria,
     dataCriacao: initialData?.dataCriacao || new Date().toISOString(),
     status: initialData?.status || 'rascunho',
-    vendedor,
-    comprador,
-    imovel: subcategoria === 'imovel' || tipo === 'exclusividade' ? imovel : undefined,
-    bemOutros: subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? bemOutros : undefined,
-    cidadeForo,
+    vendedor: toUpperCaseObject(vendedor),
+    comprador: toUpperCaseObject(comprador),
+    imovel: subcategoria === 'imovel' || tipo === 'exclusividade' ? toUpperCaseObject(imovel) : undefined,
+    bemOutros: subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? toUpperCaseObject(bemOutros) : undefined,
+    cidadeForo: toUpperCase(cidadeForo),
     ufForo,
-    cidadeAssinatura,
+    cidadeAssinatura: toUpperCase(cidadeAssinatura),
     ufAssinatura,
     diaAssinatura,
     mesExtensoAssinatura,
@@ -549,11 +549,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
       multaRescisaoOuQuebra: 10,
       renovacaoAutomatica: false,
       autorizaDivulgacaoPlacasRedes: true,
-      condicoesPagamento,
-      documentoPropriedade,
-      matricula,
-      inscricaoPrefeitura,
-      outrosDadosImovel,
+      condicoesPagamento: toUpperCase(condicoesPagamento),
+      documentoPropriedade: toUpperCase(documentoPropriedade),
+      matricula: toUpperCase(matricula),
+      inscricaoPrefeitura: toUpperCase(inscricaoPrefeitura),
+      outrosDadosImovel: toUpperCase(outrosDadosImovel),
     } : undefined,
     clausulasExtras,
     assinaturas: initialData?.assinaturas || [],

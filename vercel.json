@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/assinar/:token", "destination": "/api/assinar/:token" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
