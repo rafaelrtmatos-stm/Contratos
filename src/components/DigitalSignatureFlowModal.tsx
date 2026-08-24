@@ -3,7 +3,7 @@ import { ContractData } from '../types/contract';
 import { useAuth } from '../utils/authContext';
 import { supabase } from '../utils/supabaseClient';
 import { createAuditStamp, getClientIpAddress, AuditStamp } from '../utils/signatureOtpUtils';
-import { exportToPdf } from '../utils/contractGenerators';
+import { renderContractDocumentPdf } from '../utils/renderContractFromDocx';
 import { GenerateSignatureCodeModal } from './GenerateSignatureCodeModal';
 import { Lock, CheckCircle2, AlertCircle, Loader, X, FileDown, KeyRound } from 'lucide-react';
 
@@ -73,10 +73,20 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
     }
   };
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     setDownloading(true);
     try {
-      exportToPdf(contract);
+      const pdfBlob = await renderContractDocumentPdf(contract);
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `contrato_${contract.numeroContrato || 'assinado'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Erro ao gerar PDF:', err);
     } finally {
       setDownloading(false);
     }
