@@ -202,7 +202,15 @@ export async function saveContract(contract: ContractData): Promise<ContractData
     );
   }
 
-  return fromRow(data);
+  const persisted = fromRow(data);
+  // BUG CORRIGIDO: fromRow() sempre devolve assinaturas: [] (são carregadas
+  // à parte, só em fetchContracts()). Sem isso, assim que alguém assinava
+  // digitalmente pelo app, o contrato em memória "esquecia" a assinatura
+  // recém-registrada (mesmo já salva em contract_signatures) até a página
+  // ser recarregada - por isso o PDF baixado logo em seguida mostrava
+  // "Pendente de Autenticação Digital" mesmo já assinado.
+  persisted.assinaturas = contract.assinaturas ?? [];
+  return persisted;
 }
 
 export async function deleteContract(contractId: string): Promise<void> {
