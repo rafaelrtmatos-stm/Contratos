@@ -90,8 +90,8 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
 
   const isExcl = contract.tipo === 'exclusividade';
-  const labelContratado = isExcl ? 'Contratante / Proprietário' : 'Contratado(a) / Vendedor';
-  const labelContratante = isExcl ? 'Contratada / Imobiliária' : 'Contratante / Comprador';
+  const labelContratado = isExcl ? 'Contratada / Imobiliária' : 'Contratado(a) / Vendedor';
+  const labelContratante = isExcl ? 'Contratante / Proprietário' : 'Contratante / Comprador';
 
   // Dynamic share link
   const portalLink = `${window.location.origin}/assinatura-digital?contrato=${contract.numeroContrato}&token=${btoa(contract.id).slice(0, 16)}`;
