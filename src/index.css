@@ -103,9 +103,29 @@ html, body {
     width: 100% !important;
   }
 
+  #digital-signature-stamp {
+    width: 33.333% !important;
+    max-width: 600px !important;
+    min-width: 280px !important;
+    margin: 20px auto !important;
+    page-break-inside: avoid !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+  }
+
   .print\:hidden {
     display: none !important;
   }
+}
+
+/* Estilos para PDF e visualização de impressão */
+@page {
+  margin: 20mm;
+}
+
+#digital-signature-stamp {
+  break-inside: avoid;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 

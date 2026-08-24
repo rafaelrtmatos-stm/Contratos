@@ -124,7 +124,12 @@ export const DigitalSignatureStamp: React.FC<DigitalSignatureStampProps> = ({
   return (
     <div
       id="digital-signature-stamp"
-      className="relative flex bg-white rounded-2xl border-2 border-[#0D376B] shadow-sm text-slate-900 font-sans overflow-hidden w-full max-w-4xl mx-auto"
+      className="relative flex bg-white rounded-2xl border-2 border-[#0D376B] shadow-sm text-slate-900 font-sans overflow-hidden w-1/3 mx-auto"
+      style={{
+        width: '33.333%',
+        minWidth: '280px',
+        maxWidth: '600px',
+      }}
     >
       {/* ================= PAINEL INSTITUCIONAL ESQUERDO (fundo azul sólido) ================= */}
       <div className="w-[20%] shrink-0 bg-[#0D376B] text-white flex flex-col items-center px-[2%] py-[2%] text-center">
