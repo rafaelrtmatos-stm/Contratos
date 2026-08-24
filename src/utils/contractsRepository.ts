@@ -11,7 +11,7 @@ function isNetworkError(err: unknown): boolean {
   return /failed to fetch|network|timed out|timeout|err_connection/i.test(msg);
 }
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 3, baseDelayMs = 800): Promise<T> {
+async function withRetry<T>(fn: () => PromiseLike<T>, retries = 3, baseDelayMs = 800): Promise<T> {
   let lastErr: unknown;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -134,7 +134,43 @@ export async function fetchContracts(): Promise<ContractData[]> {
   );
 
   if (error) throw error;
-  return (data ?? []).map(fromRow);
+  const contracts = (data ?? []).map(fromRow);
+
+  // Carrega as assinaturas reais de cada contrato (senão o selo digital
+  // fica sempre "pendente" ao recarregar/reabrir, mesmo já assinado).
+  if (contracts.length > 0) {
+    const { data: allSignatures, error: sigError } = await withRetry(() =>
+      supabase
+        .from('contract_signatures')
+        .select('*')
+        .in('contract_id', contracts.map((c) => c.id))
+        .order('assinado_em', { ascending: true })
+    );
+    if (!sigError && allSignatures) {
+      const byContract = new Map<string, ContractData['assinaturas']>();
+      for (const row of allSignatures as any[]) {
+        const sig = {
+          role: row.role,
+          signerIndex: row.signer_index ?? undefined,
+          nomeSignatario: row.nome_signatario,
+          documentoSignatario: row.documento_signatario,
+          assinaturaDataUrl: row.assinatura_url,
+          assinadoEm: row.assinado_em,
+          hashAutenticacao: row.hash_autenticacao,
+          ipAssinatura: row.ip_assinatura ?? undefined,
+          metadadosNavegador: row.metadados_navegador,
+        };
+        const list = byContract.get(row.contract_id) ?? [];
+        list.push(sig);
+        byContract.set(row.contract_id, list);
+      }
+      for (const c of contracts) {
+        c.assinaturas = byContract.get(c.id) ?? [];
+      }
+    }
+  }
+
+  return contracts;
 }
 
 export async function saveContract(contract: ContractData): Promise<ContractData> {
@@ -195,13 +231,25 @@ export async function saveSignature(contractId: string, signature: ContractData[
   if (error) throw error;
 }
 
-export async function fetchSignatures(contractId: string) {
+export async function fetchSignatures(contractId: string): Promise<ContractData['assinaturas']> {
   await getSession();
-  const { data, error } = await supabase
-    .from('contract_signatures')
-    .select('*')
-    .eq('contract_id', contractId)
-    .order('assinado_em', { ascending: true });
+  const { data, error } = await withRetry(() =>
+    supabase
+      .from('contract_signatures')
+      .select('*')
+      .eq('contract_id', contractId)
+      .order('assinado_em', { ascending: true })
+  );
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map((row: any) => ({
+    role: row.role,
+    signerIndex: row.signer_index ?? undefined,
+    nomeSignatario: row.nome_signatario,
+    documentoSignatario: row.documento_signatario,
+    assinaturaDataUrl: row.assinatura_url,
+    assinadoEm: row.assinado_em,
+    hashAutenticacao: row.hash_autenticacao,
+    ipAssinatura: row.ip_assinatura ?? undefined,
+    metadadosNavegador: row.metadados_navegador,
+  }));
 }

@@ -10,6 +10,7 @@ import {
   getContractParceladoTags,
   getContractExclusividadeTags,
 } from './contractGenerators';
+import { supabase } from './supabaseClient';
 
 // Chaves de armazenamento de templates Word personalizados por modalidade de contrato
 export type CustomTemplateKey =
@@ -35,6 +36,21 @@ const TEMPLATE_META_STORAGE_KEYS: Record<CustomTemplateKey, string> = {
   exclusividade: 'custom_word_template_meta_exclusividade',
 };
 
+const CUSTOM_TEMPLATES_BUCKET = 'contract-templates';
+
+async function getOwnerId(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user.id ?? null;
+}
+
+function customTemplateStoragePath(ownerId: string, templateKey: CustomTemplateKey): string {
+  return `custom/${ownerId}/${templateKey}.docx`;
+}
+
+function customTemplateMetaStoragePath(ownerId: string, templateKey: CustomTemplateKey): string {
+  return `custom/${ownerId}/${templateKey}.meta.json`;
+}
+
 export function resolveTemplateKey(tipo: ContractType, subcategoria?: string): CustomTemplateKey {
   if (tipo === 'exclusividade') return 'exclusividade';
   if (tipo === 'venda_vista') {
@@ -52,70 +68,102 @@ export interface CustomTemplateMeta {
   fileSize: number;
 }
 
-// Salvar template .docx enviado pelo usuário
-export function saveCustomWordTemplate(
+// Salvar template .docx enviado pelo usuário (Supabase Storage, com cache local)
+export async function saveCustomWordTemplate(
   templateKey: CustomTemplateKey,
   fileData: ArrayBuffer,
   fileName: string
-): void {
+): Promise<void> {
+  const ownerId = await getOwnerId();
+  if (!ownerId) {
+    throw new Error('Sessão expirada. Faça login novamente para salvar o modelo.');
+  }
+
+  const meta: CustomTemplateMeta = {
+    fileName,
+    uploadedAt: new Date().toISOString(),
+    fileSize: fileData.byteLength,
+  };
+
+  const { error: uploadError } = await supabase.storage
+    .from(CUSTOM_TEMPLATES_BUCKET)
+    .upload(customTemplateStoragePath(ownerId, templateKey), fileData, {
+      upsert: true,
+      contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
+  if (uploadError) {
+    throw new Error(`Falha ao salvar o modelo Word: ${uploadError.message}`);
+  }
+
+  const { error: metaError } = await supabase.storage
+    .from(CUSTOM_TEMPLATES_BUCKET)
+    .upload(customTemplateMetaStoragePath(ownerId, templateKey), JSON.stringify(meta), {
+      upsert: true,
+      contentType: 'application/json',
+    });
+  if (metaError) {
+    throw new Error(`Falha ao salvar metadados do modelo Word: ${metaError.message}`);
+  }
+
+  // Cache local (acelera leituras subsequentes no mesmo navegador)
   try {
     const bytes = new Uint8Array(fileData);
     let binary = '';
     for (let i = 0; i < bytes.byteLength; i++) {
       binary += String.fromCharCode(bytes[i]);
     }
-    const base64 = btoa(binary);
-
-    localStorage.setItem(TEMPLATE_STORAGE_KEYS[templateKey], base64);
-    const meta: CustomTemplateMeta = {
-      fileName,
-      uploadedAt: new Date().toISOString(),
-      fileSize: fileData.byteLength,
-    };
+    localStorage.setItem(TEMPLATE_STORAGE_KEYS[templateKey], btoa(binary));
     localStorage.setItem(TEMPLATE_META_STORAGE_KEYS[templateKey], JSON.stringify(meta));
-  } catch (error) {
-    console.error('Erro ao salvar template personalizado do Word:', error);
-    throw new Error('Falha ao salvar o modelo Word no armazenamento local.');
+  } catch {
+    // cache local é best-effort; falha aqui não é crítica
   }
 }
 
-// Obter metadados do template personalizado
-export function getCustomWordTemplateMeta(templateKey: CustomTemplateKey): CustomTemplateMeta | null {
+// Obter metadados do template personalizado (Supabase Storage, com fallback local)
+export async function getCustomWordTemplateMeta(templateKey: CustomTemplateKey): Promise<CustomTemplateMeta | null> {
+  const ownerId = await getOwnerId();
+  if (ownerId) {
+    try {
+      const { data, error } = await supabase.storage
+        .from(CUSTOM_TEMPLATES_BUCKET)
+        .download(customTemplateMetaStoragePath(ownerId, templateKey));
+      if (!error && data) {
+        const text = await data.text();
+        return JSON.parse(text);
+      }
+    } catch {
+      // segue para fallback local
+    }
+  }
+
   try {
-    // Tenta primeiro a chave específica
     const raw = localStorage.getItem(TEMPLATE_META_STORAGE_KEYS[templateKey]);
     if (raw) return JSON.parse(raw);
-
-    // Fallback retrocompatível para chaves legadas simples caso existam
-    if (templateKey === 'venda_vista_imovel') {
-      const legacy = localStorage.getItem('custom_word_template_meta_venda_vista');
-      if (legacy) return JSON.parse(legacy);
-    }
-    if (templateKey === 'venda_parcelada_imovel') {
-      const legacy = localStorage.getItem('custom_word_template_meta_venda_parcelada');
-      if (legacy) return JSON.parse(legacy);
-    }
-    return null;
   } catch {
-    return null;
+    // ignora
   }
+  return null;
 }
 
-// Obter dados binários do template personalizado (se existir)
-export function getCustomWordTemplate(templateKey: CustomTemplateKey): ArrayBuffer | null {
+// Obter dados binários do template personalizado (Supabase Storage, com fallback local)
+export async function getCustomWordTemplate(templateKey: CustomTemplateKey): Promise<ArrayBuffer | null> {
+  const ownerId = await getOwnerId();
+  if (ownerId) {
+    try {
+      const { data, error } = await supabase.storage
+        .from(CUSTOM_TEMPLATES_BUCKET)
+        .download(customTemplateStoragePath(ownerId, templateKey));
+      if (!error && data) {
+        return await data.arrayBuffer();
+      }
+    } catch {
+      // segue para fallback local
+    }
+  }
+
   try {
-    let base64 = localStorage.getItem(TEMPLATE_STORAGE_KEYS[templateKey]);
-    
-    // Fallback retrocompatível
-    if (!base64 && templateKey === 'venda_vista_imovel') {
-      base64 = localStorage.getItem('custom_word_template_venda_vista');
-    }
-    if (!base64 && templateKey === 'venda_parcelada_imovel') {
-      base64 = localStorage.getItem('custom_word_template_venda_parcelada');
-    }
-
+    const base64 = localStorage.getItem(TEMPLATE_STORAGE_KEYS[templateKey]);
     if (!base64) return null;
-
     const binary = atob(base64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
@@ -128,10 +176,20 @@ export function getCustomWordTemplate(templateKey: CustomTemplateKey): ArrayBuff
 }
 
 // Remover template personalizado
-export function removeCustomWordTemplate(templateKey: CustomTemplateKey): void {
+export async function removeCustomWordTemplate(templateKey: CustomTemplateKey): Promise<void> {
+  const ownerId = await getOwnerId();
+  if (ownerId) {
+    await supabase.storage
+      .from(CUSTOM_TEMPLATES_BUCKET)
+      .remove([
+        customTemplateStoragePath(ownerId, templateKey),
+        customTemplateMetaStoragePath(ownerId, templateKey),
+      ]);
+  }
+
   localStorage.removeItem(TEMPLATE_STORAGE_KEYS[templateKey]);
   localStorage.removeItem(TEMPLATE_META_STORAGE_KEYS[templateKey]);
-  
+
   if (templateKey === 'venda_vista_imovel') {
     localStorage.removeItem('custom_word_template_venda_vista');
     localStorage.removeItem('custom_word_template_meta_venda_vista');
@@ -353,7 +411,7 @@ export async function generateFilledDocx(contract: ContractData): Promise<Uint8A
   const templateKey = resolveTemplateKey(contract.tipo, contract.subcategoria);
   
   // Buscar template customizado salvo pelo usuário
-  let templateBuffer = getCustomWordTemplate(templateKey);
+  let templateBuffer = await getCustomWordTemplate(templateKey);
 
   if (!templateBuffer) {
     throw new Error(
@@ -389,7 +447,7 @@ export async function downloadDocxContract(contract: ContractData): Promise<void
 
 // Download do arquivo de modelo .docx enviado pelo usuário
 export async function downloadSampleDocxTemplate(templateKey: CustomTemplateKey): Promise<void> {
-  const templateBuffer = getCustomWordTemplate(templateKey);
+  const templateBuffer = await getCustomWordTemplate(templateKey);
   if (!templateBuffer) {
     throw new Error(
       `Nenhum modelo encontrado para ${templateKey}. Por favor, envie um documento DOCX formatado com as tags.`

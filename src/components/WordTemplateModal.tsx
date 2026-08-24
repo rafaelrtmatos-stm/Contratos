@@ -142,12 +142,13 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
     }
   }, [isOpen, activeType]);
 
-  const loadMetas = () => {
-    setMetas({
-      venda_vista: getCustomWordTemplateMeta(toTemplateKey('venda_vista')),
-      venda_parcelada: getCustomWordTemplateMeta(toTemplateKey('venda_parcelada')),
-      exclusividade: getCustomWordTemplateMeta(toTemplateKey('exclusividade')),
-    });
+  const loadMetas = async () => {
+    const [venda_vista, venda_parcelada, exclusividade] = await Promise.all([
+      getCustomWordTemplateMeta(toTemplateKey('venda_vista')),
+      getCustomWordTemplateMeta(toTemplateKey('venda_parcelada')),
+      getCustomWordTemplateMeta(toTemplateKey('exclusividade')),
+    ]);
+    setMetas({ venda_vista, venda_parcelada, exclusividade });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,8 +173,8 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
         throw new Error('O arquivo não possui a estrutura padrão de um documento Word (.docx).');
       }
 
-      saveCustomWordTemplate(toTemplateKey(activeType), arrayBuffer, file.name);
-      loadMetas();
+      await saveCustomWordTemplate(toTemplateKey(activeType), arrayBuffer, file.name);
+      await loadMetas();
       setUploadSuccess(
         `Modelo institucional "${file.name}" importado e ativado com sucesso para novos contratos.`
       );
@@ -187,10 +188,10 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
     }
   };
 
-  const handleRemoveTemplate = () => {
+  const handleRemoveTemplate = async () => {
     if (confirm('Deseja restaurar o modelo Word padrão do sistema para esta modalidade de contrato?')) {
-      removeCustomWordTemplate(toTemplateKey(activeType));
-      loadMetas();
+      await removeCustomWordTemplate(toTemplateKey(activeType));
+      await loadMetas();
       setUploadSuccess('Modelo padrão do sistema restaurado com sucesso.');
     }
   };

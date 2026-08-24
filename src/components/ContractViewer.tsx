@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ContractData, DigitalSignature } from '../types/contract';
 import {
   generateContractLegalText,
@@ -10,6 +10,8 @@ import {
 import {
   downloadDocxContract,
   getCustomWordTemplateMeta,
+  resolveTemplateKey,
+  CustomTemplateMeta,
 } from '../utils/docxProcessor';
 import { resolveTemplate } from '../utils/templateResolver';
 import { downloadTemplateWithCache } from '../utils/supabaseTemplateStorage';
@@ -84,7 +86,17 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   const legal = generateContractLegalText(contract);
   const exclusivityInfo = getExclusivityStatus(contract);
   const tags = legal.tagsMapping;
-  const customTemplateMeta = getCustomWordTemplateMeta(contract.tipo);
+  const [customTemplateMeta, setCustomTemplateMeta] = useState<CustomTemplateMeta | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCustomWordTemplateMeta(resolveTemplateKey(contract.tipo, contract.subcategoria)).then((meta) => {
+      if (!cancelled) setCustomTemplateMeta(meta);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [contract.tipo, contract.subcategoria]);
 
   const handleAddSignature = (signature: DigitalSignature) => {
     const filtered = contract.assinaturas.filter((a) => {
