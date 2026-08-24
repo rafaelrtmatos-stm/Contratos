@@ -493,8 +493,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             }`}
           >
             <User className="w-4 h-4 text-green-600 shrink-0" />
-            <span className="hidden sm:inline">1. Comprador</span>
-            <span className="sm:hidden">Comprador</span>
+            <span className="hidden sm:inline">1. {tipo === 'exclusividade' ? 'Contratado' : 'Comprador'}</span>
+            <span className="sm:hidden">{tipo === 'exclusividade' ? 'Contratado' : 'Comprador'}</span>
           </button>
 
           <button
@@ -507,8 +507,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             }`}
           >
             <User className="w-4 h-4 text-green-600 shrink-0" />
-            <span className="hidden sm:inline">2. Vendedor</span>
-            <span className="sm:hidden">Vendedor</span>
+            <span className="hidden sm:inline">2. {tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}</span>
+            <span className="sm:hidden">{tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}</span>
           </button>
 
           <button
@@ -989,7 +989,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             <div className="flex justify-end pt-3">
               <button
                 type="button"
-                onClick={() => setActiveTab('partes')}
+                onClick={() => setActiveTab('comprador')}
                 className="flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-800 cursor-pointer"
               >
                 Próximo: Preencher Vendedor e Comprador
@@ -1586,11 +1586,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             <div className="flex justify-between pt-2">
               <button
                 type="button"
-                onClick={() => setActiveTab('partes')}
+                onClick={() => setActiveTab('imovel')}
                 className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Voltar: Partes
+                Voltar: Imóvel
               </button>
               <button
                 type="button"
@@ -1783,8 +1783,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               {/* Vendedor Resumo */}
               <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center justify-between">
-                  <span>1. {tipo === 'exclusividade' ? 'Proprietário' : 'Vendedor'}</span>
-                  <span className="text-[10px] text-green-600 font-semibold">Transmitente</span>
+                  <span>1. {tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}</span>
+                  <span className="text-[10px] text-green-600 font-semibold">{tipo === 'exclusividade' ? 'Proprietário' : 'Transmitente'}</span>
                 </h3>
                 <div className="text-xs space-y-1.5 text-slate-700">
                   <p><span className="font-semibold text-slate-500">Nome:</span> {vendedor.nome || 'Não informado'}</p>
@@ -1797,8 +1797,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               {/* Comprador Resumo */}
               <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center justify-between">
-                  <span>2. {tipo === 'exclusividade' ? 'Corretor' : 'Comprador'}</span>
-                  <span className="text-[10px] text-emerald-600 font-semibold">Adquirente</span>
+                  <span>2. {tipo === 'exclusividade' ? 'Contratado' : 'Comprador'}</span>
+                  <span className="text-[10px] text-emerald-600 font-semibold">{tipo === 'exclusividade' ? 'Corretor' : 'Adquirente'}</span>
                 </h3>
                 <div className="text-xs space-y-1.5 text-slate-700">
                   <p><span className="font-semibold text-slate-500">Nome:</span> {comprador.nome || 'Não informado'}</p>
