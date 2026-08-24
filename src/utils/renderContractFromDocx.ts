@@ -113,7 +113,7 @@ export async function renderContractDocumentPdf(contract: ContractData): Promise
   container.style.zIndex = '-1';
   container.style.pointerEvents = 'none';
   container.style.backgroundColor = '#ffffff';
-  container.style.width = '190mm';
+  container.style.width = '750px';
   container.style.fontFamily = "'Times New Roman', Times, serif";
   container.style.fontSize = '11pt';
   container.style.lineHeight = '1.5';
@@ -135,7 +135,7 @@ export async function renderContractDocumentPdf(contract: ContractData): Promise
         margin: [15, 12, 15, 12],
         autoPaging: 'text',
         width: 186,
-        windowWidth: 794, // ~210mm a 96dpi
+        windowWidth: 750,
         callback: () => resolve(),
         html2canvas: { scale: 0.75 },
       });
