@@ -21,6 +21,7 @@ export interface VehicleOrGoodsDetails {
 
 export interface PartyDetailedInfo {
   nome: string;
+  genero?: string;
   nacionalidade: string;
   estadoCivil: string;
   profissao: string;
@@ -34,6 +35,7 @@ export interface PartyDetailedInfo {
   cidade: string;
   uf: string;
   telefone: string;
+  telefone2?: string;
   email?: string;
   creci?: string;
   conjuge?: {

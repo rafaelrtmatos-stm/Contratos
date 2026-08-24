@@ -28,6 +28,9 @@ import {
   Car,
   Package,
 } from 'lucide-react';
+import { ValidatedInput } from './ValidatedInput';
+import { CEPSearch } from './CEPSearch';
+import { GenderSelect } from './GenderSelect';
 
 interface ContractFormProps {
   initialData?: ContractData | null;
@@ -1109,15 +1112,20 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    CPF ou CNPJ
-                  </label>
-                  <input
-                    type="text"
+                  <GenderSelect
+                    value={vendedor.genero || ''}
+                    onChange={(val) => setVendedor({ ...vendedor, genero: val })}
+                    label="Gênero"
+                  />
+                </div>
+
+                <div>
+                  <ValidatedInput
+                    type="cpf"
                     value={vendedor.cpfCnpj}
-                    onChange={(e) => setVendedor({ ...vendedor, cpfCnpj: e.target.value })}
+                    onChange={(val) => setVendedor({ ...vendedor, cpfCnpj: val })}
+                    label="CPF"
                     placeholder="000.000.000-00"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
 
@@ -1161,15 +1169,12 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    RG nº
-                  </label>
-                  <input
-                    type="text"
+                  <ValidatedInput
+                    type="rg"
                     value={vendedor.rg}
-                    onChange={(e) => setVendedor({ ...vendedor, rg: e.target.value })}
+                    onChange={(val) => setVendedor({ ...vendedor, rg: val })}
+                    label="RG nº"
                     placeholder="Ex: 3456789"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
 
@@ -1187,15 +1192,12 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Telefone / WhatsApp
-                  </label>
-                  <input
-                    type="text"
+                  <ValidatedInput
+                    type="telefone"
                     value={vendedor.telefone}
-                    onChange={(e) => setVendedor({ ...vendedor, telefone: e.target.value })}
+                    onChange={(val) => setVendedor({ ...vendedor, telefone: val })}
+                    label="Telefone / WhatsApp"
                     placeholder="(93) 99122-3344"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
 
@@ -1239,15 +1241,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    CEP
-                  </label>
-                  <input
-                    type="text"
-                    value={vendedor.cep}
-                    onChange={(e) => setVendedor({ ...vendedor, cep: e.target.value })}
-                    placeholder="68040-050"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  <CEPSearch
+                    cep={vendedor.cep}
+                    onCEPChange={(val) => setVendedor({ ...vendedor, cep: val })}
+                    onAddressChange={(addr) => setVendedor({ ...vendedor, ...addr })}
+                    label="CEP"
                   />
                 </div>
 
@@ -1301,15 +1299,20 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    CPF
-                  </label>
-                  <input
-                    type="text"
+                  <GenderSelect
+                    value={comprador.genero || ''}
+                    onChange={(val) => setComprador({ ...comprador, genero: val })}
+                    label="Gênero"
+                  />
+                </div>
+
+                <div>
+                  <ValidatedInput
+                    type="cpf"
                     value={comprador.cpfCnpj}
-                    onChange={(e) => setComprador({ ...comprador, cpfCnpj: e.target.value })}
+                    onChange={(val) => setComprador({ ...comprador, cpfCnpj: val })}
+                    label="CPF"
                     placeholder="000.000.000-00"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
 
@@ -1353,15 +1356,12 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    RG nº
-                  </label>
-                  <input
-                    type="text"
+                  <ValidatedInput
+                    type="rg"
                     value={comprador.rg}
-                    onChange={(e) => setComprador({ ...comprador, rg: e.target.value })}
+                    onChange={(val) => setComprador({ ...comprador, rg: val })}
+                    label="RG nº"
                     placeholder="Ex: 4567890"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
 
@@ -1379,17 +1379,26 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Telefone / WhatsApp
-                  </label>
-                  <input
-                    type="text"
+                  <ValidatedInput
+                    type="telefone"
                     value={comprador.telefone}
-                    onChange={(e) => setComprador({ ...comprador, telefone: e.target.value })}
+                    onChange={(val) => setComprador({ ...comprador, telefone: val })}
+                    label="Telefone / WhatsApp"
                     placeholder="(93) 98400-5566"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
+
+                {tipo === 'venda_parcelada' && (
+                  <div>
+                    <ValidatedInput
+                      type="telefone"
+                      value={comprador.telefone2 || ''}
+                      onChange={(val) => setComprador({ ...comprador, telefone2: val })}
+                      label="Telefone Secundário"
+                      placeholder="(93) 98400-9999"
+                    />
+                  </div>
+                )}
 
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -1431,15 +1440,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    CEP
-                  </label>
-                  <input
-                    type="text"
-                    value={comprador.cep}
-                    onChange={(e) => setComprador({ ...comprador, cep: e.target.value })}
-                    placeholder="68005-090"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                  <CEPSearch
+                    cep={comprador.cep}
+                    onCEPChange={(val) => setComprador({ ...comprador, cep: val })}
+                    onAddressChange={(addr) => setComprador({ ...comprador, ...addr })}
+                    label="CEP"
                   />
                 </div>
 
