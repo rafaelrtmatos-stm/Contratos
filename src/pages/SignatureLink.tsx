@@ -347,7 +347,7 @@ export const SignatureLink: React.FC = () => {
                 )}
                 {!renderLoading && !renderError && renderedHtml && (
                   <div
-                    className="prose prose-sm text-slate-700 text-xs leading-relaxed [&_p]:mb-2 [&_p]:text-justify [&_strong]:font-bold"
+                    className="prose prose-sm text-slate-700 text-xs leading-relaxed [&_p]:mb-2 [&_p]:text-justify [&_strong]:font-bold [&_img]:w-[33%]! [&_img]:h-auto! [&_img]:max-w-[33%]!"
                     dangerouslySetInnerHTML={{ __html: renderedHtml }}
                   />
                 )}
