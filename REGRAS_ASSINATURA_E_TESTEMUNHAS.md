@@ -229,6 +229,23 @@ function resolveTemplate(
    └─ Tags: {{USUARIO_ASSINATURA_DIGITAL}}, {{COMPRADOR_ASSINATURA_MANUAL}}
 ```
 
+### EXCLUSIVIDADE
+
+```
+📁 templates/exclusividade/
+├─ exclusividade_assinatura_digital.docx
+│  └─ SEM TESTEMUNHAS (Ambos Digital)
+│  └─ Tags: {{USUARIO_ASSINATURA_DIGITAL}}
+│
+├─ exclusividade_mista_2_testemunhas.docx
+│  └─ COM 2 TESTEMUNHAS (Você Digital + Contratante Manual)
+│  └─ Tags: {{USUARIO_ASSINATURA_DIGITAL}}
+│
+└─ exclusividade_sem_conjuge_mista_2_testemunhas.docx
+   └─ COM 2 TESTEMUNHAS (Sem Cônjuge, Você Digital + Contratante Manual)
+   └─ Tags: {{USUARIO_ASSINATURA_DIGITAL}}
+```
+
 ---
 
 ## Resumo

@@ -42,6 +42,19 @@ venda_parcelada_mista_2_testemunhas.docx
 └─ Você digital + Pessoa manual (COM 2 testemunhas)
 ```
 
+### EXCLUSIVIDADE
+
+```
+exclusividade_assinatura_digital.docx
+└─ Ambos assinam DIGITALMENTE (SEM testemunhas)
+
+exclusividade_mista_2_testemunhas.docx
+└─ Você digital + Contratante manual (COM 2 testemunhas)
+
+exclusividade_sem_conjuge_mista_2_testemunhas.docx
+└─ Variante SEM CÔNJUGE (Você digital + Contratante manual, COM 2 testemunhas)
+```
+
 ---
 
 ## Como Enviar um Template

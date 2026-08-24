@@ -112,6 +112,39 @@ Se QUALQUER parte assina MANUAL      → COM 2 testemunhas
 
 ---
 
+## EXCLUSIVIDADE
+
+### 7️⃣ `exclusividade_assinatura_digital.docx`
+- **Testemunhas:** ❌ NÃO
+- **Tipo de Assinatura:** Ambos DIGITAL
+- **Tags de Assinatura:**
+  ```
+  {{USUARIO_ASSINATURA_DIGITAL}}
+  ```
+- **Nota:** Usuário assina digital; Contratante assina digital (sem tag = espaço em branco)
+
+### 8️⃣ `exclusividade_mista_2_testemunhas.docx`
+- **Testemunhas:** ✅ SIM (2)
+- **Tipo de Assinatura:** Você DIGITAL + Contratante MANUAL
+- **Tags de Assinatura:**
+  ```
+  {{USUARIO_ASSINATURA_DIGITAL}}
+  ```
+- **Nota:** Usuário assina digital; Contratante assina manual (sem tag = espaço em branco)
+- **Inclui:** 2 linhas para assinatura de testemunhas (manual)
+
+### 9️⃣ `exclusividade_sem_conjuge_mista_2_testemunhas.docx`
+- **Testemunhas:** ✅ SIM (2)
+- **Tipo de Assinatura:** Você DIGITAL + Contratante MANUAL
+- **Tags de Assinatura:**
+  ```
+  {{USUARIO_ASSINATURA_DIGITAL}}
+  ```
+- **Nota:** Variante SEM CÔNJUGE do contratante
+- **Inclui:** 2 linhas para assinatura de testemunhas (manual)
+
+---
+
 ## ⚠️ IMPORTANTE
 
 - **NUNCA** as tags de assinatura devem aparecer no PDF/Word final entregue ao usuário
