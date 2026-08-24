@@ -8,7 +8,7 @@ import {
   validateSignatureLinkCpf,
   signContractViaLink,
 } from '../utils/signatureLinksRepository';
-import { renderContractDocumentHtml, renderContractDocumentPdf } from '../utils/renderContractFromDocx';
+import { renderContractDocumentHtml, renderContractDocumentPdf, renderContractDocumentPlainText } from '../utils/renderContractFromDocx';
 import { getSignedDocumentUrl, saveClientSignedPdfToSupabase } from '../utils/contractDocumentsStorage';
 import { sha256Hex, getClientIpAddress } from '../utils/signatureOtpUtils';
 
@@ -123,7 +123,10 @@ export const SignatureLink: React.FC = () => {
     const documento = contract.comprador?.cpfCnpj || '';
     const nome = clientName || contract.comprador?.nome || 'Cliente';
     const ip = await getClientIpAddress();
-    const hash = await sha256Hex(`${contract.id}|${nome}|${documento}|${new Date().toISOString()}`);
+    // Hash do CONTEÚDO REAL do contrato preenchido (mesma lógica do lado
+    // do corretor) - prova de integridade de verdade.
+    const documentText = await renderContractDocumentPlainText(contract);
+    const hash = await sha256Hex(documentText);
 
     const result = await signContractViaLink({
       token,

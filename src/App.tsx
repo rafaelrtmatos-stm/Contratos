@@ -16,6 +16,7 @@ import { AuthProvider, useAuth } from './utils/authContext';
 import { fetchContracts, saveContract, deleteContract, saveSignature } from './utils/contractsRepository';
 import { deleteContractDocuments } from './utils/contractDocumentsStorage';
 import { SignatureLink } from './pages/SignatureLink';
+import { ValidatePage } from './pages/ValidatePage';
 
 export default function App() {
   return (
@@ -23,6 +24,8 @@ export default function App() {
       <Routes>
         {/* Rota pública: cliente assina o contrato sem precisar de login */}
         <Route path="/assinar/:token" element={<SignatureLink />} />
+        {/* Rota pública: qualquer um valida um código de assinatura (QR/selo) */}
+        <Route path="/validar" element={<ValidatePage />} />
         <Route
           path="*"
           element={

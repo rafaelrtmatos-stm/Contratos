@@ -53,7 +53,7 @@ function signatureIdFromHash(hash?: string): string {
 
 function buildValidationUrl(signatureId: string): string {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  return `${origin}/assinatura-digital?sig=${encodeURIComponent(signatureId)}`;
+  return `${origin}/validar?sig=${encodeURIComponent(signatureId)}`;
 }
 
 export interface PartySignatureInfo {

@@ -241,3 +241,32 @@ export function formatAuditStampText(stamp: AuditStamp): string {
   const dataFormatada = new Date(stamp.dataAssinatura).toLocaleDateString('pt-BR');
   return `Assinado digitalmente por: ${stamp.nomeAssinante} (${stamp.cpfCnpj}) em ${dataFormatada} às ${stamp.horaAssinatura} (ID: ${stamp.signatureId})`;
 }
+
+export interface SignatureValidationResult {
+  encontrado: boolean;
+  erro?: string;
+  nomeSignatario?: string;
+  papel?: string;
+  assinadoEm?: string;
+  numeroContrato?: string;
+  tipoContrato?: string;
+  hashCompleto?: string;
+}
+
+/**
+ * Valida publicamente um código de assinatura (o ID de 16 caracteres
+ * impresso no selo/QR Code do documento). Usado pela página pública
+ * /validar - qualquer pessoa com o código pode conferir autenticidade,
+ * sem precisar estar logada.
+ */
+export async function validateSignatureCode(code: string): Promise<SignatureValidationResult> {
+  try {
+    const { data, error } = await supabase.rpc('validate_signature_code', { p_code: code });
+    if (error || !data) {
+      return { encontrado: false, erro: 'erro_consulta' };
+    }
+    return data as SignatureValidationResult;
+  } catch {
+    return { encontrado: false, erro: 'erro_consulta' };
+  }
+}

@@ -3,7 +3,7 @@ import { ContractData } from '../types/contract';
 import { useAuth } from '../utils/authContext';
 import { supabase } from '../utils/supabaseClient';
 import { createAuditStamp, getClientIpAddress, AuditStamp } from '../utils/signatureOtpUtils';
-import { renderContractDocumentPdf } from '../utils/renderContractFromDocx';
+import { renderContractDocumentPdf, renderContractDocumentPlainText } from '../utils/renderContractFromDocx';
 import { GenerateSignatureCodeModal } from './GenerateSignatureCodeModal';
 import { Lock, CheckCircle2, AlertCircle, Loader, X, FileDown, KeyRound } from 'lucide-react';
 
@@ -54,7 +54,10 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
       const nomeAssinante = profile?.nome || contract.vendedor.nome;
       const cpfAssinante = contract.vendedor.cpfCnpj;
       const ip = await getClientIpAddress();
-      const documentText = `${contract.id}|${contract.numeroContrato}|${new Date().toISOString()}`;
+      // Hash do CONTEÚDO REAL do contrato preenchido (não mais uma string
+      // de metadados arbitrária) - prova de integridade de verdade: se o
+      // texto do contrato mudar depois, o hash não bate mais.
+      const documentText = await renderContractDocumentPlainText(contract);
       const stamp = await createAuditStamp(nomeAssinante, cpfAssinante, documentText, ip);
 
       setCarimbo(stamp);

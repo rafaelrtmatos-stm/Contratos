@@ -1311,7 +1311,7 @@ function signatureIdFromHash(hash?: string): string {
 
 function buildValidationUrl(numeroContrato: string, signatureId: string): string {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  return `${origin}/assinatura-digital?contrato=${encodeURIComponent(numeroContrato)}&sig=${encodeURIComponent(signatureId)}`;
+  return `${origin}/validar?contrato=${encodeURIComponent(numeroContrato)}&sig=${encodeURIComponent(signatureId)}`;
 }
 
 // Exportação para PDF via jsPDF
