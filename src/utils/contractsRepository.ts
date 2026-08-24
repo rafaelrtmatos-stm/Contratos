@@ -2,6 +2,32 @@ import { supabase } from './supabaseClient';
 import { ContractData } from '../types/contract';
 
 // ============================================================
+// Retry com backoff para falhas transitórias de rede
+// (ex.: ERR_CONNECTION_TIMED_OUT / "Failed to fetch")
+// ============================================================
+
+function isNetworkError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err ?? '');
+  return /failed to fetch|network|timed out|timeout|err_connection/i.test(msg);
+}
+
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, baseDelayMs = 800): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      const isLast = attempt === retries;
+      if (!isNetworkError(err) || isLast) throw err;
+      const delay = baseDelayMs * Math.pow(2, attempt);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw lastErr;
+}
+
+// ============================================================
 // Mapeamento ContractData (app) <-> linha da tabela `contracts`
 // ============================================================
 
@@ -100,10 +126,12 @@ export async function getSession() {
 
 export async function fetchContracts(): Promise<ContractData[]> {
   await getSession();
-  const { data, error } = await supabase
-    .from('contracts')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const { data, error } = await withRetry(() =>
+    supabase
+      .from('contracts')
+      .select('*')
+      .order('created_at', { ascending: false })
+  );
 
   if (error) throw error;
   return (data ?? []).map(fromRow);
@@ -113,24 +141,28 @@ export async function saveContract(contract: ContractData): Promise<ContractData
   const session = await getSession();
   const row = { ...toRow(contract), owner_id: session?.user.id };
 
-  const { data, error } = await supabase
-    .from('contracts')
-    .upsert(row, { onConflict: 'id' })
-    .select()
-    .single();
+  const { data, error } = await withRetry(() =>
+    supabase
+      .from('contracts')
+      .upsert(row, { onConflict: 'id' })
+      .select()
+      .single()
+  );
 
   if (error) throw error;
 
   // Sincroniza parcelas (venda parcelada)
   if (contract.vendaParcelada?.parcelas?.length) {
-    await supabase.from('contract_installments').delete().eq('contract_id', contract.id);
-    await supabase.from('contract_installments').insert(
-      contract.vendaParcelada.parcelas.map((p) => ({
-        contract_id: contract.id,
-        numero: p.numero,
-        valor: p.valor,
-        data_vencimento: p.dataVencimento,
-      }))
+    await withRetry(() => supabase.from('contract_installments').delete().eq('contract_id', contract.id));
+    await withRetry(() =>
+      supabase.from('contract_installments').insert(
+        contract.vendaParcelada!.parcelas.map((p) => ({
+          contract_id: contract.id,
+          numero: p.numero,
+          valor: p.valor,
+          data_vencimento: p.dataVencimento,
+        }))
+      )
     );
   }
 
@@ -139,7 +171,7 @@ export async function saveContract(contract: ContractData): Promise<ContractData
 
 export async function deleteContract(contractId: string): Promise<void> {
   await getSession();
-  const { error } = await supabase.from('contracts').delete().eq('id', contractId);
+  const { error } = await withRetry(() => supabase.from('contracts').delete().eq('id', contractId));
   if (error) throw error;
 }
 

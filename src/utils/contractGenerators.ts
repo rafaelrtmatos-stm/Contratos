@@ -1413,15 +1413,7 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
       y = margin + 10;
     }
 
-    doc.setDrawColor(200, 205, 215);
-    doc.setFillColor(248, 250, 252);
-    doc.roundedRect(margin, y, contentWidth, 10, 2, 2, 'FD');
-    doc.setFont('times', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(30, 58, 138);
-    doc.text('CERTIFICADO DE ASSINATURA ELETRÔNICA (MP Nº 2.200-2/2001 E LEI 14.063/2020)', margin + 4, y + 6.5);
-    doc.setTextColor(30, 30, 30);
-    y += 15;
+    y += 5;
 
     // Carimbo de assinatura digital (mesmo layout/paleta do CRM) — um por signatário,
     // empilhados verticalmente e centralizados na página.
