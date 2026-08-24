@@ -1,6 +1,6 @@
 {
-  "name": "Gerador de Contratos & Gestão de Vendas",
-  "description": "Sistema para geração e gestão de contratos imobiliários (Venda à Vista, Venda Parcelada e Exclusividade), processamento de modelos Word (.docx) originais com preservação de formatação, assinatura digital e monitoramento de prazos.",
+  "name": "Contratos",
+  "description": "Sistema para geração e gestão de contratos imobiliários com assinatura digital e controle de prazos.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

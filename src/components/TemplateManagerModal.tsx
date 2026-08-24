@@ -242,19 +242,19 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-green-50 to-blue-50 border-b border-slate-200 p-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-slate-900 border-b border-slate-800 p-6 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <FileText className="w-6 h-6 text-green-600" />
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <FileText className="w-6 h-6 text-amber-400" />
               Modelos Contratuais em Word (.docx)
             </h2>
-            <p className="text-xs text-slate-600 mt-1">
+            <p className="text-xs text-slate-300 mt-1">
               Gerencie arquivos matriz em Microsoft Word com total preservação do design, cabeçalhos e formatações.
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -262,16 +262,16 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
 
         {/* Tabs */}
         <div className="sticky top-[88px] bg-white border-b border-slate-200 p-4">
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto">
             {(['venda_vista', 'venda_parcelada', 'exclusividade', 'outros_bens'] as Tab[]).map((type) => {
               const templates = TEMPLATE_GROUPS[type];
               return (
               <button
                 key={type}
                 onClick={() => setActiveTab(type)}
-                className={`px-4 py-2.5 rounded-lg font-bold text-sm transition-all whitespace-nowrap ${
+                className={`px-4 py-2.5 rounded-lg font-bold text-sm transition-all whitespace-nowrap cursor-pointer ${
                   activeTab === type
-                    ? 'bg-green-600 text-white shadow-lg'
+                    ? 'bg-amber-500 text-slate-950 shadow-xs'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 } ${templates.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={templates.length === 0}
@@ -294,12 +294,12 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
             <div
               className={`p-3 rounded-lg flex gap-2 text-sm ${
                 message.type === 'success'
-                  ? 'bg-green-50 border border-green-200 text-green-700'
+                  ? 'bg-amber-50 border border-amber-200 text-amber-950'
                   : 'bg-red-50 border border-red-200 text-red-700'
               }`}
             >
               {message.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
               ) : (
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               )}
@@ -321,17 +321,17 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
                   key={idx}
                   className={`p-4 rounded-xl border-2 transition-all ${
                     isDefault
-                      ? 'border-green-500 bg-green-50 shadow-md'
+                      ? 'border-amber-400 bg-amber-50/50 shadow-xs'
                       : 'border-slate-200 bg-white hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg">{template.modalidade}</span>
+                        <span className="text-lg font-bold text-slate-900">{template.modalidade}</span>
                         {isDefault && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-600 text-white text-[10px] font-bold rounded-full">
-                            <Star className="w-3 h-3" /> PADRÃO
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500 text-slate-950 text-[10px] font-black rounded-full">
+                            <Star className="w-3 h-3 fill-slate-950" /> PADRÃO
                           </span>
                         )}
                       </div>
@@ -340,7 +340,7 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
                         arquivo: {template.arquivo}
                       </p>
                       {template.testemunhas && (
-                        <p className="text-xs text-blue-600 mt-1">Inclui 2 espaços para testemunhas</p>
+                        <p className="text-xs text-amber-800 font-medium mt-1">Inclui 2 espaços para testemunhas</p>
                       )}
                     </div>
 
@@ -349,21 +349,21 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
                       <button
                         onClick={() => handleSetAsDefault(template.arquivo, activeTab)}
                         disabled={isDefault}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                           isDefault
-                            ? 'bg-green-100 text-green-700 cursor-default'
+                            ? 'bg-amber-100 text-amber-900 cursor-default'
                             : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                         }`}
                         title="Usar este como padrão"
                       >
-                        <Star className="w-3.5 h-3.5 inline mr-1" />
+                        <Star className={`w-3.5 h-3.5 inline mr-1 ${isDefault ? 'fill-amber-900' : ''}`} />
                         {isDefault ? 'Padrão' : 'Usar'}
                       </button>
 
                       <button
                         onClick={() => handleDownloadTemplate(template.arquivo)}
                         disabled={downloadingFile === template.arquivo}
-                        className="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                        className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
                         title="Baixar este template"
                       >
                         {downloadingFile === template.arquivo ? (
@@ -403,7 +403,7 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={loading}
-              className="px-6 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-slate-300 text-white font-bold text-sm rounded-lg transition-colors flex items-center gap-2 justify-center mx-auto"
+              className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:bg-slate-300 text-slate-950 font-bold text-sm rounded-lg transition-colors flex items-center gap-2 justify-center mx-auto cursor-pointer shadow-xs"
             >
               {loading ? (
                 <>
@@ -412,7 +412,7 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
                 </>
               ) : (
                 <>
-                  <Upload className="w-4 h-4" />
+                  <Upload className="w-4 h-4 text-slate-950" />
                   Selecionar Arquivo Word (.docx)
                 </>
               )}
@@ -420,7 +420,7 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
           </div>
 
           {/* Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
+          <div className="bg-amber-50/60 border border-amber-200 rounded-lg p-3 text-xs text-amber-950">
             <p>
               Informação: <strong>Compatibilidade com Microsoft Word (.docx) e OpenXML.</strong> Todos os templates padrão
               incluem campos para assinatura automática com carimbo digital.

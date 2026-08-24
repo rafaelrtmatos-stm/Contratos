@@ -439,10 +439,10 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             <button
               onClick={handleDownloadDocx}
               disabled={isDownloadingDocx}
-              className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-bold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors shadow-2xs cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
               title="Gera o arquivo Word (.docx) original substituindo apenas as TAGs com 100% de preservação de formatação"
             >
-              <FileDown className="w-4 h-4 text-green-600 shrink-0" />
+              <FileDown className="w-4 h-4 text-amber-600 shrink-0" />
               <span>{isDownloadingDocx ? 'Gerando...' : 'Word (.docx)'}</span>
             </button>
           )}
@@ -465,14 +465,14 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       {/* Some por completo quando o contrato digital já está 100% assinado        */}
       {/* ========================================================================= */}
       {isFullySigned ? (
-        <div className="bg-emerald-50 p-4 sm:p-5 rounded-2xl border border-emerald-200 shadow-sm print:hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="bg-amber-50/70 p-4 sm:p-5 rounded-2xl border border-amber-200 shadow-sm print:hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <ShieldCheck className="w-6 h-6 text-emerald-600 shrink-0" />
+            <ShieldCheck className="w-6 h-6 text-amber-600 shrink-0" />
             <div>
-              <span className="text-sm font-bold text-emerald-900 block">
+              <span className="text-sm font-bold text-amber-950 block">
                 Contrato assinado — somente visualização
               </span>
-              <p className="text-xs text-emerald-700 mt-0.5">
+              <p className="text-xs text-amber-800 mt-0.5">
                 Ambas as partes já assinaram digitalmente. Não é mais possível reabrir o fluxo de assinatura.
               </p>
             </div>
@@ -481,18 +481,18 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setIsEvidenceLogOpen(true)}
-              className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-800 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
+              className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-amber-200 hover:bg-amber-50 text-amber-900 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
               title="Ver log de evidências das assinaturas"
             >
-              <FileSearch className="w-4 h-4" />
+              <FileSearch className="w-4 h-4 text-amber-600" />
               <span>Log de Evidências</span>
             </button>
             <button
               onClick={() => setIsShareLinkOpen(true)}
-              className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-800 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
+              className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-amber-200 hover:bg-amber-50 text-amber-900 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
               title="Gerar/compartilhar link para o cliente rever e baixar o contrato"
             >
-              <LinkIcon className="w-4 h-4" />
+              <LinkIcon className="w-4 h-4 text-amber-600" />
               <span>Compartilhar Link</span>
             </button>
           </div>
@@ -521,7 +521,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             onClick={() => handleModalityChange('digital')}
             className={`flex items-start gap-3.5 p-3.5 rounded-xl border-2 transition-all cursor-pointer select-none ${
               isDigital
-                ? 'border-green-600 bg-green-50/70 shadow-xs'
+                ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-xs'
                 : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/70'
             }`}
           >
@@ -530,16 +530,16 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               name="modalidadeAssinatura"
               checked={isDigital}
               onChange={() => handleModalityChange('digital')}
-              className="mt-1 w-4 h-4 text-green-600 focus:ring-green-500"
+              className="mt-1 w-4 h-4 text-amber-600 focus:ring-amber-500"
             />
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-green-600 shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
                 <strong className="text-sm font-bold text-slate-900">Assinatura digital</strong>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
                 Contratado e Contratante assinam eletronicamente via sistema com código de confirmação. 
-                <strong className="text-green-900 block mt-0.5">Sem campos ou linhas de testemunhas.</strong>
+                <strong className="text-amber-900 block mt-0.5">Sem campos ou linhas de testemunhas.</strong>
               </p>
             </div>
           </label>
@@ -549,7 +549,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             onClick={() => handleModalityChange('manual')}
             className={`flex items-start gap-3.5 p-3.5 rounded-xl border-2 transition-all cursor-pointer select-none ${
               !isDigital
-                ? 'border-green-600 bg-green-50/70 shadow-xs'
+                ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-xs'
                 : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/70'
             }`}
           >
@@ -558,7 +558,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               name="modalidadeAssinatura"
               checked={!isDigital}
               onChange={() => handleModalityChange('manual')}
-              className="mt-1 w-4 h-4 text-green-600 focus:ring-green-500"
+              className="mt-1 w-4 h-4 text-amber-600 focus:ring-amber-500"
             />
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -575,11 +575,11 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
         {/* Ação Rápida de Assinatura se for Modalidade Digital */}
         {isDigital && (
-          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-green-50/60 p-3 rounded-xl border border-green-100">
-            <div className="text-xs text-green-900">
+          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50/60 p-3 rounded-xl border border-amber-200/70">
+            <div className="text-xs text-amber-950">
               {contract.assinaturas && contract.assinaturas.length === 2 ? (
-                <span className="font-bold text-emerald-700 flex items-center gap-1">
-                  <Check className="w-4 h-4" /> Ambas as partes já assinaram digitalmente!
+                <span className="font-bold text-amber-800 flex items-center gap-1">
+                  <Check className="w-4 h-4 text-amber-600" /> Ambas as partes já assinaram digitalmente!
                 </span>
               ) : vendedorJaAssinouAguardandoCliente ? (
                 <span>
@@ -605,10 +605,10 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               {vendedorJaAssinouAguardandoCliente ? (
                 <button
                   onClick={() => setIsShareLinkOpen(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
                   title="Gerar código e link de assinatura para o cliente"
                 >
-                  <LinkIcon className="w-4 h-4" />
+                  <LinkIcon className="w-4 h-4 text-slate-950" />
                   <span>Gerar Link para Cliente</span>
                 </button>
               ) : (
@@ -617,10 +617,10 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                     setSignFlowParte('usuario');
                     setIsDigitalSignFlowOpen(true);
                   }}
-                  className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
                   title="Fluxo com OTP e carimbo digital"
                 >
-                  <ShieldCheck className="w-4 h-4" />
+                  <ShieldCheck className="w-4 h-4 text-slate-950" />
                   <span>Assinatura Digital</span>
                 </button>
               )}

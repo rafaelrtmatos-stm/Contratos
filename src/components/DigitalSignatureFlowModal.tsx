@@ -88,13 +88,13 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 p-4">
           <h3 className="font-bold text-slate-900 flex items-center gap-2">
-            <Lock className="w-5 h-5 text-green-600" />
+            <Lock className="w-5 h-5 text-amber-600" />
             Assinatura Digital
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -121,7 +121,7 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
                     placeholder="Digite sua senha"
                     disabled={loading}
                     className="w-full px-3 py-2.5 border-2 border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 text-sm
-                      focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500
+                      focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500
                       disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
@@ -137,8 +137,8 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
                   type="button"
                   onClick={handleConfirmPassword}
                   disabled={loading}
-                  className="w-full px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-slate-300 text-white text-sm font-bold rounded-lg
-                    transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full px-4 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:bg-slate-300 text-slate-950 text-sm font-bold rounded-lg
+                    transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                 >
                   {loading ? (
                     <>
@@ -158,17 +158,17 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
 
           {step === 'actions' && carimbo && (
             <div className="space-y-4">
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+              <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-bold text-green-900">Carimbo Gerado com Sucesso!</p>
-                  <p className="text-xs text-green-700 mt-1">
+                  <p className="text-sm font-bold text-amber-950">Carimbo Gerado com Sucesso!</p>
+                  <p className="text-xs text-amber-800 mt-1">
                     Seu carimbo digital foi criado e a assinatura já foi registrada.
                   </p>
                 </div>
               </div>
 
-              <div className="bg-slate-50 rounded-lg p-3 space-y-1">
+              <div className="bg-slate-50 rounded-lg p-3 space-y-1 border border-slate-200">
                 <p className="text-xs font-bold text-slate-700">ID da Assinatura:</p>
                 <p className="text-xs font-mono text-slate-600">{carimbo.signatureId}</p>
                 <p className="text-xs font-bold text-slate-700 mt-2">Data/Hora:</p>
@@ -182,7 +182,7 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
                   type="button"
                   onClick={handleDownloadPdf}
                   disabled={downloading}
-                  className="w-full px-4 py-2.5 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-300 text-white text-sm font-bold rounded-lg
+                  className="w-full px-4 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white text-sm font-bold rounded-lg
                     transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {downloading ? (
@@ -196,10 +196,10 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
                 <button
                   type="button"
                   onClick={() => setIsCodeModalOpen(true)}
-                  className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg
-                    transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full px-4 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-sm font-bold rounded-lg
+                    transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                 >
-                  <KeyRound className="w-4 h-4" />
+                  <KeyRound className="w-4 h-4 text-slate-950" />
                   Gerar Código para Cliente
                 </button>
               </div>

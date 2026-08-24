@@ -17,76 +17,78 @@ html, body {
   scrollbar-width: none;
 }
 
-/* Efeito Cromado Verde - Cor Primária */
-.btn-chrome-blue {
-  background: linear-gradient(180deg, #ffffff 0%, #dcfce7 30%, #86efac 70%, #22c55e 85%, #bbf7d0 100%);
-  border: 1px solid #86efac;
-  color: #145231;
-  box-shadow: 0 2px 5px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(20, 82, 49, 0.15);
+/* Efeito Dourado Metálico / Amarelo Ouro - Cor de Destaque */
+.bg-gold-gradient {
+  background: linear-gradient(135deg, #fff5a5 0%, #ffd700 30%, #eab308 70%, #ca8a04 100%);
+}
+
+.bg-gold-card {
+  background: linear-gradient(135deg, #fffde7 0%, #fef08a 25%, #facc15 60%, #eab308 85%, #ca8a04 100%);
+  border: 1px solid #d4af37;
+  box-shadow: 0 4px 15px rgba(202, 138, 4, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.btn-chrome-gold,
+.btn-gold {
+  background: linear-gradient(180deg, #ffffff 0%, #fff59d 25%, #facc15 60%, #eab308 85%, #ca8a04 100%);
+  border: 1px solid #d4af37;
+  color: #1a1500;
+  box-shadow: 0 2px 6px rgba(202, 138, 4, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(113, 63, 18, 0.2);
   transition: all 0.2s ease;
 }
-.btn-chrome-blue:hover {
-  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 25%, #bbf7d0 60%, #16a34a 88%, #86efac 100%);
-  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+
+.btn-chrome-gold:hover,
+.btn-gold:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #fffde7 20%, #fef08a 50%, #facc15 80%, #eab308 100%);
+  box-shadow: 0 4px 14px rgba(234, 179, 8, 0.45), inset 0 1px 0 rgba(255, 255, 255, 1);
   transform: translateY(-1px);
 }
-.btn-chrome-blue:active {
-  background: linear-gradient(180deg, #bbf7d0 0%, #86efac 40%, #4ade80 80%, #16a34a 100%);
-  box-shadow: inset 0 2px 4px rgba(20, 82, 49, 0.3);
+
+.btn-chrome-gold:active,
+.btn-gold:active {
+  background: linear-gradient(180deg, #fde047 0%, #eab308 40%, #ca8a04 80%, #a16207 100%);
+  box-shadow: inset 0 2px 5px rgba(113, 63, 18, 0.4);
   transform: translateY(0);
 }
 
-/* Cinza Grafite - Cor Secundária */
-.btn-chrome-emerald {
-  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 30%, #cbd5e1 70%, #475569 85%, #e2e8f0 100%);
-  border: 1px solid #cbd5e1;
-  color: #1e293b;
-  box-shadow: 0 2px 5px rgba(71, 85, 105, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(30, 41, 59, 0.15);
-  transition: all 0.2s ease;
-}
-.btn-chrome-emerald:hover {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 25%, #e2e8f0 60%, #334155 88%, #cbd5e1 100%);
-  box-shadow: 0 4px 10px rgba(71, 85, 105, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  transform: translateY(-1px);
-}
-.btn-chrome-emerald:active {
-  background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 40%, #94a3b8 80%, #334155 100%);
-  box-shadow: inset 0 2px 4px rgba(30, 41, 59, 0.3);
-  transform: translateY(0);
+.gold-badge {
+  background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
+  border: 1px solid #facc15;
+  color: #713f12;
 }
 
-/* Atalhos para cores da paleta */
+.gold-shine-text {
+  background: linear-gradient(90deg, #ca8a04 0%, #eab308 30%, #ffd700 50%, #eab308 70%, #ca8a04 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Cinza Grafite Escuro & Preto - Ações Secundárias / Estruturais */
+.btn-chrome-graphite,
+.btn-chrome-emerald,
+.btn-chrome-silver,
 .btn-chrome-purple {
-  /* Fallback para Chrome Azul (Verde primário) */
-  background: linear-gradient(180deg, #ffffff 0%, #dcfce7 30%, #86efac 70%, #22c55e 85%, #bbf7d0 100%);
-  border: 1px solid #86efac;
-  color: #145231;
-  box-shadow: 0 2px 5px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(20, 82, 49, 0.15);
+  background: linear-gradient(180deg, #334155 0%, #1e293b 40%, #0f172a 85%, #020617 100%);
+  border: 1px solid #475569;
+  color: #f8fafc;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
   transition: all 0.2s ease;
 }
+.btn-chrome-graphite:hover,
+.btn-chrome-emerald:hover,
+.btn-chrome-silver:hover,
 .btn-chrome-purple:hover {
-  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 25%, #bbf7d0 60%, #16a34a 88%, #86efac 100%);
-  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  background: linear-gradient(180deg, #475569 0%, #334155 35%, #1e293b 85%, #0f172a 100%);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
+.btn-chrome-graphite:active,
+.btn-chrome-emerald:active,
+.btn-chrome-silver:active,
 .btn-chrome-purple:active {
-  background: linear-gradient(180deg, #bbf7d0 0%, #86efac 40%, #4ade80 80%, #16a34a 100%);
-  box-shadow: inset 0 2px 4px rgba(20, 82, 49, 0.3);
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
   transform: translateY(0);
-}
-
-/* Atalho para Chrome Cinza (Cor secundária) */
-.btn-chrome-silver {
-  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 30%, #cbd5e1 70%, #475569 85%, #e2e8f0 100%);
-  border: 1px solid #cbd5e1;
-  color: #1e293b;
-  box-shadow: 0 2px 5px rgba(71, 85, 105, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(30, 41, 59, 0.15);
-  transition: all 0.2s ease;
-}
-.btn-chrome-silver:hover {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 25%, #e2e8f0 60%, #334155 88%, #cbd5e1 100%);
-  box-shadow: 0 4px 10px rgba(71, 85, 105, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  transform: translateY(-1px);
 }
 
 @media print {

@@ -452,7 +452,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
         <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
             <div>
-              <span className="text-xs font-bold tracking-wider text-green-600 uppercase">
+              <span className="text-xs font-bold tracking-wider text-amber-600 uppercase">
                 {initialData ? 'Edição de Contrato' : 'Elaboração de Instrumento Contratual'}
               </span>
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
@@ -477,9 +477,9 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               </button>
               <button
                 type="submit"
-                className="flex items-center gap-2 px-5 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 shadow-sm rounded-lg transition-all cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2 text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 shadow-sm rounded-lg transition-all cursor-pointer"
               >
-                <CheckCircle2 className="w-4 h-4" />
+                <CheckCircle2 className="w-4 h-4 text-slate-950" />
                 <span>{initialData ? 'Atualizar Contrato' : 'Gerar Contrato'}</span>
               </button>
             </div>
@@ -487,7 +487,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
           {/* SELETOR DE SUBCATEGORIA (Imóvel vs Outros Bens) */}
             {tipo !== 'exclusividade' && (
-              <div className="pt-2 border-t border-slate-100">
+              <div className="pt-4 border-t border-slate-100">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
                   1. Subcategoria do Objeto Negociado:
                 </label>
@@ -497,11 +497,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     onClick={() => handleSubcategoriaChange('imovel')}
                     className={`p-3 rounded-lg border text-left transition-all flex items-center gap-3 cursor-pointer ${
                       subcategoria === 'imovel'
-                        ? 'border-green-600 bg-green-50/70 ring-2 ring-green-500/20 shadow-xs'
+                        ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-xs'
                         : 'border-slate-200 hover:border-slate-300 bg-slate-50/40'
                     }`}
                   >
-                    <div className={`p-2 rounded-lg ${subcategoria === 'imovel' ? 'bg-green-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                    <div className={`p-2 rounded-lg ${subcategoria === 'imovel' ? 'bg-amber-500 text-slate-950' : 'bg-slate-200 text-slate-600'}`}>
                       <Building2 className="w-4 h-4" />
                     </div>
                     <div>
@@ -517,11 +517,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     onClick={() => handleSubcategoriaChange('outros_bens')}
                     className={`p-3 rounded-lg border text-left transition-all flex items-center gap-3 cursor-pointer ${
                       subcategoria === 'outros_bens'
-                        ? 'border-green-600 bg-green-50/70 ring-2 ring-green-500/20 shadow-xs'
+                        ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-xs'
                         : 'border-slate-200 hover:border-slate-300 bg-slate-50/40'
                     }`}
                   >
-                    <div className={`p-2 rounded-lg ${subcategoria === 'outros_bens' ? 'bg-green-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                    <div className={`p-2 rounded-lg ${subcategoria === 'outros_bens' ? 'bg-amber-500 text-slate-950' : 'bg-slate-200 text-slate-600'}`}>
                       <Car className="w-4 h-4" />
                     </div>
                     <div>
@@ -543,11 +543,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             onClick={() => setActiveTab('comprador')}
             className={`flex items-center gap-2 py-3 px-2 sm:px-3 min-h-[44px] text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === 'comprador'
-                ? 'border-green-600 text-green-600'
+                ? 'border-amber-500 text-amber-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <User className="w-4 h-4 text-green-600 shrink-0" />
+            <User className={`w-4 h-4 shrink-0 ${activeTab === 'comprador' ? 'text-amber-600' : 'text-slate-400'}`} />
             <span className="hidden sm:inline">1. {tipo === 'exclusividade' ? 'Contratado' : 'Comprador'}</span>
             <span className="sm:hidden">{tipo === 'exclusividade' ? 'Contratado' : 'Comprador'}</span>
           </button>
@@ -557,11 +557,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             onClick={() => setActiveTab('vendedor')}
             className={`flex items-center gap-2 py-3 px-2 sm:px-3 min-h-[44px] text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === 'vendedor'
-                ? 'border-green-600 text-green-600'
+                ? 'border-amber-500 text-amber-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <User className="w-4 h-4 text-green-600 shrink-0" />
+            <User className={`w-4 h-4 shrink-0 ${activeTab === 'vendedor' ? 'text-amber-600' : 'text-slate-400'}`} />
             <span className="hidden sm:inline">2. {tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}</span>
             <span className="sm:hidden">{tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}</span>
           </button>
@@ -571,14 +571,14 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             onClick={() => setActiveTab('imovel')}
             className={`flex items-center gap-2 py-3 px-2 sm:px-3 min-h-[44px] text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === 'imovel'
-                ? 'border-green-600 text-green-600'
+                ? 'border-amber-500 text-amber-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             {subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? (
-              <Car className="w-4 h-4 text-green-600 shrink-0" />
+              <Car className={`w-4 h-4 shrink-0 ${activeTab === 'imovel' ? 'text-amber-600' : 'text-slate-400'}`} />
             ) : (
-              <Building2 className="w-4 h-4 text-green-600 shrink-0" />
+              <Building2 className={`w-4 h-4 shrink-0 ${activeTab === 'imovel' ? 'text-amber-600' : 'text-slate-400'}`} />
             )}
             <span className="hidden sm:inline">3. {subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? 'Bem / Veículo' : 'Imóvel'}</span>
             <span className="sm:hidden">{subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? 'Bem' : 'Imóvel'}</span>
@@ -589,11 +589,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             onClick={() => setActiveTab('financeiro')}
             className={`flex items-center gap-2 py-3 px-2 sm:px-3 min-h-[44px] text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === 'financeiro'
-                ? 'border-green-600 text-green-600'
+                ? 'border-amber-500 text-amber-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Banknote className="w-4 h-4 text-green-600 shrink-0" />
+            <Banknote className={`w-4 h-4 shrink-0 ${activeTab === 'financeiro' ? 'text-amber-600' : 'text-slate-400'}`} />
             <span>3. Condições Financeiras</span>
           </button>
 
@@ -602,11 +602,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             onClick={() => setActiveTab('foro')}
             className={`flex items-center gap-2 py-3 px-3 min-h-[44px] text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === 'foro'
-                ? 'border-green-600 text-green-600'
+                ? 'border-amber-500 text-amber-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Scale className="w-4 h-4 text-green-600 shrink-0" />
+            <Scale className={`w-4 h-4 shrink-0 ${activeTab === 'foro' ? 'text-amber-600' : 'text-slate-400'}`} />
             <span>4. Foro e Datação</span>
           </button>
 
@@ -615,11 +615,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             onClick={() => setActiveTab('revisao')}
             className={`flex items-center gap-2 py-3 px-3 min-h-[44px] text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === 'revisao'
-                ? 'border-green-600 text-green-600'
+                ? 'border-amber-500 text-amber-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <ClipboardCheck className="w-4 h-4 text-green-600 shrink-0" />
+            <ClipboardCheck className={`w-4 h-4 shrink-0 ${activeTab === 'revisao' ? 'text-amber-600' : 'text-slate-400'}`} />
             <span>5. Resumo e Emissão</span>
           </button>
         </div>
@@ -1381,7 +1381,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('imovel')}
-                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-white bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
               >
                 Próximo: {subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? 'Bem / Veículo' : 'Imóvel'}
                 <ArrowRight className="w-4 h-4" />
@@ -1396,7 +1396,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center">2</span>
+                  <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold flex items-center justify-center">2</span>
                   {tipo === 'exclusividade' ? 'CORRETOR / CONTRATADO' : 'PROMITENTE COMPRADOR(A)'}
                 </h2>
                 <span className="text-[11px] font-medium text-slate-500">Dados do Adquirente / Beneficiário</span>
@@ -1607,7 +1607,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('vendedor')}
-                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-white bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
               >
                 Próximo: {tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}
                 <ArrowRight className="w-4 h-4" />
@@ -1621,7 +1621,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
           <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-xs space-y-6">
             <div>
               <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Banknote className="w-5 h-5 text-green-600" />
+                <Banknote className="w-5 h-5 text-amber-600" />
                 3. Condições Financeiras e Pagamento
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -1642,11 +1642,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     step="100"
                     value={valorTotal}
                     onChange={(e) => handleValorTotalChange(parseFloat(e.target.value) || 0)}
-                    className="w-full pl-9 pr-3 py-2 text-sm font-bold text-slate-900 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-9 pr-3 py-2 text-sm font-bold text-slate-900 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
                 <span className="text-[11px] text-slate-500 mt-1 block">
-                  Exibição formatada: <strong className="text-green-700">R$ {formatDecimalNumber(valorTotal)}</strong>
+                  Exibição formatada: <strong className="text-amber-700">R$ {formatDecimalNumber(valorTotal)}</strong>
                 </span>
               </div>
 
@@ -1659,7 +1659,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   value={valorTotalExtenso}
                   onChange={(e) => setValorTotalExtenso(e.target.value)}
                   placeholder="cento e oitenta mil reais"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                 />
                 <span className="text-[11px] text-slate-500 mt-1 block">
                   Formatado automaticamente em conformidade jurídica.
@@ -1669,8 +1669,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
             {/* Condições Específicas: Venda à Vista */}
             {tipo === 'venda_vista' && (
-              <div className="p-4 bg-green-50/50 border border-green-100 rounded-lg space-y-3">
-                <h3 className="text-xs font-bold text-green-900 uppercase tracking-wider">
+              <div className="p-4 bg-amber-50/60 border border-amber-200/70 rounded-lg space-y-3">
+                <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider">
                   Detalhes do Pagamento à Vista & Quitação Plena
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1704,8 +1704,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
             {/* Condições Específicas: Venda Parcelada */}
             {tipo === 'venda_parcelada' && (
-              <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-lg space-y-3">
-                <h3 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">
+              <div className="p-4 bg-amber-50/60 border border-amber-200/70 rounded-lg space-y-3">
+                <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider">
                   Entrada & Condições de Parcelamento
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1749,7 +1749,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     id="reservaDominio"
                     checked={clausulaReservaDominio}
                     onChange={(e) => setClausulaReservaDominio(e.target.checked)}
-                    className="w-4 h-4 text-emerald-600 rounded"
+                    className="w-4 h-4 text-amber-600 rounded"
                   />
                   <label htmlFor="reservaDominio" className="text-xs font-bold text-slate-800">
                     Incluir Cláusula Expressa de Reserva de Domínio (Art. 521 do Código Civil)
@@ -1820,7 +1820,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('foro')}
-                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-white bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
               >
                 Próximo: Foro e Datação
                 <ArrowRight className="w-4 h-4" />
@@ -1834,7 +1834,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
           <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-xs space-y-6">
             <div>
               <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Scale className="w-5 h-5 text-green-600" />
+                <Scale className="w-5 h-5 text-amber-600" />
                 4. Foro de Eleição e Datação
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -1964,7 +1964,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 value={clausulasExtras}
                 onChange={(e) => setClausulasExtras(e.target.value)}
                 placeholder="Insira cláusulas particulares acordadas entre as partes..."
-                className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500"
               />
             </div>
 
@@ -1980,7 +1980,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('revisao')}
-                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-white bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
               >
                 Avançar: Revisão dos Dados
                 <ArrowRight className="w-4 h-4" />
@@ -1995,7 +1995,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <ClipboardCheck className="w-5 h-5 text-green-600" />
+                  <ClipboardCheck className="w-5 h-5 text-amber-600" />
                   Conferência e Emissão do Instrumento
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -2009,7 +2009,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center justify-between">
                   <span>1. {tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}</span>
-                  <span className="text-[10px] text-green-600 font-semibold">{tipo === 'exclusividade' ? 'Proprietário' : 'Transmitente'}</span>
+                  <span className="text-[10px] text-amber-600 font-semibold">{tipo === 'exclusividade' ? 'Proprietário' : 'Transmitente'}</span>
                 </h3>
                 <div className="text-xs space-y-1.5 text-slate-700">
                   <p><span className="font-semibold text-slate-500">Nome:</span> {vendedor.nome || 'Não informado'}</p>
@@ -2023,7 +2023,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center justify-between">
                   <span>2. {tipo === 'exclusividade' ? 'Contratado' : 'Comprador'}</span>
-                  <span className="text-[10px] text-emerald-600 font-semibold">{tipo === 'exclusividade' ? 'Corretor' : 'Adquirente'}</span>
+                  <span className="text-[10px] text-amber-600 font-semibold">{tipo === 'exclusividade' ? 'Corretor' : 'Adquirente'}</span>
                 </h3>
                 <div className="text-xs space-y-1.5 text-slate-700">
                   <p><span className="font-semibold text-slate-500">Nome:</span> {comprador.nome || 'Não informado'}</p>
@@ -2064,7 +2064,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   4. Condições e Assinatura
                 </h3>
                 <div className="text-xs space-y-1.5 text-slate-700">
-                  <p><span className="font-semibold text-slate-500">Valor Negociado:</span> <strong className="text-green-700">R$ {formatDecimalNumber(valorTotal)}</strong></p>
+                  <p><span className="font-semibold text-slate-500">Valor Negociado:</span> <strong className="text-amber-700">R$ {formatDecimalNumber(valorTotal)}</strong></p>
                   <p className="text-[11px] text-slate-500">({valorTotalExtenso})</p>
                   <p><span className="font-semibold text-slate-500">Foro Eleito:</span> Comarca de {cidadeForo}/{ufForo}</p>
                   <p><span className="font-semibold text-slate-500">Datação:</span> {cidadeAssinatura}/{ufAssinatura}, {diaAssinatura} de {mesExtensoAssinatura} de {anoAssinatura}</p>
@@ -2072,8 +2072,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               </div>
             </div>
 
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-xs text-green-900 flex items-start gap-3">
-              <FileCheck className="w-5 h-5 text-green-700 shrink-0 mt-0.5" />
+            <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-lg text-xs text-amber-950 flex items-start gap-3">
+              <FileCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <strong className="block font-bold mb-0.5">Tudo pronto para a emissão do instrumento!</strong>
                 <p>
@@ -2096,9 +2096,9 @@ export const ContractForm: React.FC<ContractFormProps> = ({
           {activeTab === 'revisao' && (
             <button
               type="submit"
-              className="w-full sm:w-auto min-h-[44px] sm:min-h-[40px] flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 shadow-md rounded-lg transition-all cursor-pointer text-center"
+              className="w-full sm:w-auto min-h-[44px] sm:min-h-[40px] flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 shadow-md rounded-lg transition-all cursor-pointer text-center"
             >
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-slate-950" />
               <span>Salvar & Gerar Contrato</span>
             </button>
           )}

@@ -38,7 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
 
   return (
-    <header className="bg-slate-900 text-white border-b border-slate-800/80 sticky top-0 z-40 shadow-md print:hidden w-full">
+    <header className="bg-slate-950 text-white border-b border-slate-800 sticky top-0 z-40 shadow-lg print:hidden w-full">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-18 gap-3">
           {/* Logo e Nome do Sistema */}
@@ -47,19 +47,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2.5 sm:gap-3 cursor-pointer group select-none shrink-0"
             title="Ir para o Dashboard"
           >
-            {/* Ícone com fundo branco e cantos arredondados */}
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white flex items-center justify-center p-1.5 shadow-sm shrink-0">
-              <div className="w-full h-full rounded-xl bg-gradient-to-br from-green-600 to-slate-600 flex items-center justify-center text-white">
+            {/* Ícone com fundo preto/grafite e destaque dourado */}
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-slate-900 border border-slate-700/80 flex items-center justify-center p-1.5 shadow-md shrink-0 group-hover:border-yellow-400/60 transition-colors">
+              <div className="w-full h-full rounded-xl bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 flex items-center justify-center text-slate-950 font-bold shadow-xs">
                 <FileSignature className="w-5 h-5" />
               </div>
             </div>
             
             <div className="min-w-0">
-              <span className="font-extrabold text-base sm:text-lg text-white tracking-tight block leading-tight">
-                Contratos<span className="text-green-500">360</span>
+              <span className="font-extrabold text-lg sm:text-xl text-white tracking-tight block leading-tight">
+                Contratos
               </span>
-              <span className="text-[11px] sm:text-xs text-slate-300 font-medium truncate block max-w-[90px] sm:max-w-none">
-                Contratos de Venda de Imóveis
+              <span className="text-[11px] sm:text-xs text-yellow-400 font-semibold truncate block">
+                Gestão Imobiliária
               </span>
             </div>
           </div>
@@ -71,8 +71,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={onNavigateDashboard}
               className={`hidden sm:flex p-2.5 rounded-xl border transition-all cursor-pointer items-center justify-center ${
                 currentView === 'dashboard'
-                  ? 'bg-[#1e2c56] border-green-500/50 text-green-400 shadow-xs'
-                  : 'bg-[#101935] hover:bg-[#18254b] border-slate-700/60 text-slate-300 hover:text-white'
+                  ? 'bg-slate-800 border-yellow-400/60 text-yellow-400 shadow-xs'
+                  : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-white'
               }`}
               title="Dashboard de Contratos"
             >
@@ -82,7 +82,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Botão de Gestão de Templates (Padrões Supabase) - escondido no mobile pra caber Sair/Novo */}
             <button
               onClick={onOpenTemplateManager}
-              className="hidden sm:flex p-2.5 rounded-xl bg-[#101935] hover:bg-[#18254b] border border-slate-700/60 text-slate-300 hover:text-white transition-all cursor-pointer items-center justify-center"
+              className="hidden sm:flex p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer items-center justify-center hover:border-slate-700"
               title="Gerenciar Templates Padrão do Supabase"
             >
               <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -91,30 +91,28 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Botão de Configurações */}
             <button
               onClick={onOpenSettings}
-              className="p-2.5 rounded-xl bg-[#101935] hover:bg-[#18254b] border border-slate-700/60 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+              className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center hover:border-slate-700"
               title="Configurações (Backup, Reset, etc)"
             >
               <Sliders className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
-            {/* Botão de Adicionar Usuário foi movido para dentro de Configurações (aba Usuários) */}
-
             {/* Botão de Sair */}
             <button
               onClick={onSignOut}
-              className="shrink-0 p-2.5 rounded-xl bg-[#101935] hover:bg-[#18254b] border border-slate-700/60 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+              className="shrink-0 p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center hover:border-slate-700"
               title="Sair"
             >
               <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
-            {/* Botão "+ Novo" em Destaque com Dropdown */}
+            {/* Botão "+ Novo" em Destaque com Amarelo Ouro Efeito Dourado */}
             <div className="relative shrink-0">
               <button
                 onClick={() => setIsNewMenuOpen(!isNewMenuOpen)}
-                className="bg-green-600 hover:bg-green-500 active:bg-green-700 text-white font-bold text-xs sm:text-sm px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl flex items-center gap-1.5 shadow-md shadow-blue-900/40 transition-all cursor-pointer shrink-0"
+                className="btn-gold text-slate-950 font-extrabold text-xs sm:text-sm px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
               >
-                <Plus className="w-4 h-4 stroke-[2.5]" />
+                <Plus className="w-4 h-4 stroke-[2.8]" />
                 <span>Novo</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isNewMenuOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -136,9 +134,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsNewMenuOpen(false);
                         onNewContract('venda_vista');
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 hover:bg-green-50 hover:text-green-700 rounded-xl transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 hover:bg-yellow-50 hover:text-yellow-900 rounded-xl transition-colors cursor-pointer"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-green-100 text-green-600 flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-yellow-100 text-yellow-800 flex items-center justify-center shrink-0 border border-yellow-200">
                         <Banknote className="w-4 h-4" />
                       </div>
                       <div>
@@ -152,9 +150,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsNewMenuOpen(false);
                         onNewContract('venda_parcelada');
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 hover:bg-slate-100 hover:text-slate-900 rounded-xl transition-colors cursor-pointer"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-slate-200 text-slate-800 flex items-center justify-center shrink-0">
                         <CalendarClock className="w-4 h-4" />
                       </div>
                       <div>
@@ -168,9 +166,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsNewMenuOpen(false);
                         onNewContract('exclusividade');
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 hover:bg-slate-50 hover:text-slate-700 rounded-xl transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 hover:bg-slate-100 hover:text-slate-900 rounded-xl transition-colors cursor-pointer"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-slate-800 text-yellow-400 flex items-center justify-center shrink-0">
                         <ShieldCheck className="w-4 h-4" />
                       </div>
                       <div>
@@ -186,9 +184,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                             setIsNewMenuOpen(false);
                             onOpenWordTemplates();
                           }}
-                          className="w-full flex items-center gap-3 px-3 py-2 text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition-colors cursor-pointer"
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-yellow-50 hover:text-yellow-900 rounded-xl transition-colors cursor-pointer"
                         >
-                          <FileText className="w-4 h-4 text-green-600 shrink-0" />
+                          <FileText className="w-4 h-4 text-yellow-600 shrink-0" />
                           <span>Gerenciar Modelos Word (.docx)</span>
                         </button>
                       </div>
