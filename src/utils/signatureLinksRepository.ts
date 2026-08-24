@@ -20,12 +20,17 @@ function generateToken(): string {
  */
 export async function createSignatureLink(
   contract: ContractData,
-  validadeMs: number,
-  clienteCpfLast4: string
+  validadeMs: number
 ): Promise<CreatedSignatureLink> {
   const { data: sessionData } = await supabase.auth.getSession();
   const user = sessionData.session?.user;
   if (!user) throw new Error('Sessão expirada. Faça login novamente.');
+
+  const cpfCliente = (contract.comprador?.cpfCnpj || '').replace(/\D/g, '');
+  if (cpfCliente.length < 4) {
+    throw new Error('CPF/CNPJ do cliente não cadastrado no contrato.');
+  }
+  const clienteCpfLast4 = cpfCliente.slice(-4);
 
   const token = generateToken();
   const otpCode = generateOtpCode();

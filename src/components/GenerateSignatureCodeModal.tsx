@@ -18,7 +18,6 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
 }) => {
   const [validade, setValidade] = useState('24h');
   const [customDias, setCustomDias] = useState('');
-  const [cpfLast4, setCpfLast4] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
@@ -47,15 +46,10 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
       return;
     }
 
-    if (cpfLast4.length !== 4 || !/^\d{4}$/.test(cpfLast4)) {
-      setError('Digite os 4 últimos dígitos do CPF/CNPJ do cliente');
-      return;
-    }
-
     setLoading(true);
     try {
       const validadeMs = getValidadeMs();
-      const { token, link, otpCode } = await createSignatureLink(contract, validadeMs, cpfLast4);
+      const { token, link, otpCode } = await createSignatureLink(contract, validadeMs);
 
       setGeneratedLink(link);
       onCodeGenerated(token, link, validadeMs);
@@ -104,22 +98,8 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
           {!generatedLink ? (
             <>
               <p className="text-sm text-slate-600">
-                Escolha o tempo de validade e confirme os 4 últimos dígitos do CPF/CNPJ do cliente.
+                Escolha o tempo de validade do link de assinatura do cliente.
               </p>
-
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-700">
-                  4 últimos dígitos do CPF/CNPJ do cliente
-                </label>
-                <input
-                  type="text"
-                  value={cpfLast4}
-                  onChange={(e) => setCpfLast4(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                  placeholder="____"
-                  maxLength={4}
-                  className="w-full px-3 py-2.5 border-2 border-slate-300 rounded-lg text-sm tracking-widest text-center font-bold"
-                />
-              </div>
 
               <div className="space-y-3">
                 <label className="block text-xs font-bold text-slate-700">
