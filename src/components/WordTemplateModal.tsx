@@ -129,8 +129,9 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
       },
       {
         modalidade: 'mista',
-        arquivo: 'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',        testemunhas: true,
-        descricao: 'SEM CÔNJUGE - Você digital + Contratante manual (mesmo arquivo do Mista - confirmar com Rafael)',
+        arquivo: 'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
+        testemunhas: true,
+        descricao: 'SEM CÔNJUGE - Você digital + Contratante manual',
       },
     ],
   };

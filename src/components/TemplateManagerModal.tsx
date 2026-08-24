@@ -101,8 +101,9 @@ const TEMPLATE_GROUPS: Record<ContractType | 'outros_bens', Array<{
     },
     {
       modalidade: 'Sem Cônjuge',
-      arquivo: 'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',
-      descricao: 'Variante SEM cônjuge - COM 2 testemunhas (usa o mesmo arquivo do Mista - confirmar com Rafael)',      testemunhas: true,
+      arquivo: 'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
+      descricao: 'Variante SEM cônjuge - COM 2 testemunhas',
+      testemunhas: true,
     },
   ],
   outros_bens: [

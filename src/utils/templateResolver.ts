@@ -56,15 +56,12 @@ const TEMPLATES: Record<string, TemplateResolved> = {
     testemunhas: true,
     tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}'],
   },
-  // Os arquivos "mista" e "sem_conjuge_mista" têm conteúdo IDENTICO
-  // (confirmado comparando parágrafo a parágrafo - só uma tabulação
-  // de diferença numa linha em branco). "sem_conjuge_mista" precisa
-  // continuar sendo um arquivo MISTO (um digital, um manual) - a
-  // lógica de determinarModalidade() pra exclusividade nunca escolhe
-  // "totalmente manual", então nunca aponte esta chave pro arquivo
-  // "ambos_manuais".
+  // "sem_conjuge_mista" precisa ser um arquivo MISTO (um digital, um
+  // manual) - a lógica de determinarModalidade() pra exclusividade nunca
+  // escolhe "totalmente manual", então nunca aponte esta chave pro
+  // arquivo "ambos_manuais". Arquivo dedicado voltou a existir no bucket.
   'exclusividade_sem_conjuge_mista': {
-    arquivo: 'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',
+    arquivo: 'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
     testemunhas: true,
     tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}'],
   },
