@@ -19,7 +19,6 @@ import {
   mapTagsToConfig,
   summarizeChanges,
 } from '../utils/signatureTagProcessor';
-import { DigitalSignatureModal } from './DigitalSignatureModal';
 import { DigitalSignatureFlowModal } from './DigitalSignatureFlowModal';
 import { DigitalSignatureStamp } from './DigitalSignatureStamp';
 import {
@@ -53,7 +52,6 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   onEdit,
   onUpdateContract,
 }) => {
-  const [isSignModalOpen, setIsSignModalOpen] = useState(false);
   const [isWordTemplateModalOpen, setIsWordTemplateModalOpen] = useState(false);
   const [isDigitalSignFlowOpen, setIsDigitalSignFlowOpen] = useState(false);
   const [signFlowParte, setSignFlowParte] = useState<'usuario' | 'comprador'>('usuario');
@@ -440,13 +438,6 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                 </span>
               )}
             </div>
-            <button
-              onClick={() => setIsSignModalOpen(true)}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer shrink-0 min-h-[38px]"
-            >
-              <PenTool className="w-4 h-4" />
-              <span>Abrir Painel de Assinatura Digital</span>
-            </button>
 
             <button
               onClick={() => {
@@ -454,7 +445,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                 setIsDigitalSignFlowOpen(true);
               }}
               className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer shrink-0 min-h-[38px]"
-              title="Novo fluxo com OTP e carimbo digital"
+              title="Fluxo com OTP e carimbo digital"
             >
               <ShieldCheck className="w-4 h-4" />
               <span>Assinar com Carimbo Digital</span>
@@ -711,18 +702,6 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           isOpen={isWordTemplateModalOpen}
           initialType={contract.tipo}
           onClose={() => setIsWordTemplateModalOpen(false)}
-        />
-      )}
-
-      {/* Modal de Assinatura Digital */}
-      {isSignModalOpen && (
-        <DigitalSignatureModal
-          contract={contract}
-          isOpen={isSignModalOpen}
-          onClose={() => setIsSignModalOpen(false)}
-          onSign={(sig) => {
-            handleAddSignature(sig);
-          }}
         />
       )}
 
