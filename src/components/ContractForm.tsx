@@ -33,6 +33,7 @@ import { CEPSearch } from './CEPSearch';
 import { GenderSelect } from './GenderSelect';
 import { EstadoCivilSelect } from './EstadoCivilSelect';
 import { convertEstadoCivilToGenero } from '../utils/civilStatus';
+import { convertNacionalidadeToGenero } from '../utils/nacionalidade';
 
 interface ContractFormProps {
   initialData?: ContractData | null;
@@ -1036,6 +1037,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                         ...vendedor,
                         genero: val,
                         estadoCivil: convertEstadoCivilToGenero(vendedor.estadoCivil, val),
+                        nacionalidade: convertNacionalidadeToGenero(vendedor.nacionalidade, val),
                       })
                     }
                     label="Gênero"
@@ -1228,6 +1230,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                         ...comprador,
                         genero: val,
                         estadoCivil: convertEstadoCivilToGenero(comprador.estadoCivil, val),
+                        nacionalidade: convertNacionalidadeToGenero(comprador.nacionalidade, val),
                       })
                     }
                     label="Gênero"
