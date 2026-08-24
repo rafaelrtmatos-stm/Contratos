@@ -108,8 +108,11 @@ export async function renderContractDocumentPdf(contract: ContractData): Promise
   // Container temporário fora da tela, com largura/estilo compatíveis com A4
   const container = document.createElement('div');
   container.style.position = 'fixed';
-  container.style.left = '-9999px';
+  container.style.left = '0';
   container.style.top = '0';
+  container.style.opacity = '0';
+  container.style.pointerEvents = 'none';
+  container.style.zIndex = '-1';
   container.style.width = '190mm';
   container.style.fontFamily = "'Times New Roman', Times, serif";
   container.style.fontSize = '11pt';
