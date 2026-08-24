@@ -108,6 +108,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     initialData?.subcategoria || 'imovel'
   );
   const [activeTab, setActiveTab] = useState<'comprador' | 'vendedor' | 'imovel' | 'financeiro' | 'foro' | 'revisao'>('comprador');
+  type TabKey = 'comprador' | 'vendedor' | 'imovel' | 'financeiro' | 'foro' | 'revisao';
+  const [missingFields, setMissingFields] = useState<{ label: string; tab: TabKey }[]>([]);
   
   const [titulo, setTitulo] = useState(initialData?.titulo || '');
   const [numeroContrato, setNumeroContrato] = useState(
@@ -376,8 +378,132 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     setNumeroParcelas(subcategoria === 'outros_bens' ? 24 : 36);
   };
 
+  // Todos os campos que aparecem na tela (dado o tipo/subcategoria/variante
+  // escolhidos) são obrigatórios - exceto "Cláusulas Adicionais", que o
+  // próprio rótulo já marca como "(Opcional)".
+  const TAB_LABELS: Record<TabKey, string> = {
+    comprador: tipo === 'exclusividade' ? 'Contratado' : 'Comprador',
+    vendedor: tipo === 'exclusividade' ? 'Contratante' : 'Vendedor',
+    imovel: subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? 'Bem / Veículo' : 'Imóvel',
+    financeiro: 'Condições Financeiras',
+    foro: 'Foro e Datação',
+    revisao: 'Resumo e Emissão',
+  };
+
+  const getMissingFields = (): { label: string; tab: TabKey }[] => {
+    const missing: { label: string; tab: TabKey }[] = [];
+    const req = (val: string | undefined | null, label: string, tab: TabKey) => {
+      if (!val || !val.trim()) missing.push({ label, tab });
+    };
+
+    const vLabel = tipo === 'exclusividade' ? 'Contratante' : 'Vendedor';
+    req(vendedor.nome, `${vLabel}: Nome`, 'vendedor');
+    req(vendedor.genero, `${vLabel}: Gênero`, 'vendedor');
+    req(vendedor.cpfCnpj, `${vLabel}: CPF`, 'vendedor');
+    req(vendedor.nacionalidade, `${vLabel}: Nacionalidade`, 'vendedor');
+    req(vendedor.estadoCivil, `${vLabel}: Estado Civil`, 'vendedor');
+    req(vendedor.rg, `${vLabel}: RG`, 'vendedor');
+    req(vendedor.rgOrgao, `${vLabel}: Órgão Emissor`, 'vendedor');
+    req(vendedor.telefone, `${vLabel}: Telefone`, 'vendedor');
+    req(vendedor.endereco, `${vLabel}: Endereço`, 'vendedor');
+    req(vendedor.numero, `${vLabel}: Número`, 'vendedor');
+    req(vendedor.bairro, `${vLabel}: Bairro`, 'vendedor');
+    req(vendedor.cep, `${vLabel}: CEP`, 'vendedor');
+    req(vendedor.cidade, `${vLabel}: Cidade`, 'vendedor');
+    req(vendedor.uf, `${vLabel}: UF`, 'vendedor');
+
+    const cLabel = tipo === 'exclusividade' ? 'Contratado' : 'Comprador';
+    req(comprador.nome, `${cLabel}: Nome`, 'comprador');
+    req(comprador.genero, `${cLabel}: Gênero`, 'comprador');
+    req(comprador.cpfCnpj, `${cLabel}: CPF`, 'comprador');
+    if (tipo === 'exclusividade') req(comprador.creci, `${cLabel}: CRECI`, 'comprador');
+    req(comprador.nacionalidade, `${cLabel}: Nacionalidade`, 'comprador');
+    req(comprador.estadoCivil, `${cLabel}: Estado Civil`, 'comprador');
+    req(comprador.rg, `${cLabel}: RG`, 'comprador');
+    req(comprador.rgOrgao, `${cLabel}: Órgão Emissor`, 'comprador');
+    req(comprador.telefone, `${cLabel}: Telefone`, 'comprador');
+    if (tipo === 'venda_parcelada') req(comprador.telefone2, `${cLabel}: Telefone Secundário`, 'comprador');
+    req(comprador.endereco, `${cLabel}: Endereço`, 'comprador');
+    req(comprador.numero, `${cLabel}: Número`, 'comprador');
+    req(comprador.bairro, `${cLabel}: Bairro`, 'comprador');
+    req(comprador.cep, `${cLabel}: CEP`, 'comprador');
+    req(comprador.cidade, `${cLabel}: Cidade`, 'comprador');
+    req(comprador.uf, `${cLabel}: UF`, 'comprador');
+
+    req(titulo, 'Título de Identificação Interna', 'imovel');
+    if (tipo === 'exclusividade') {
+      req(imovel.tipoImovel, 'Tipo do Imóvel', 'imovel');
+      req(imovel.localizacaoImovel, 'Localização do Imóvel', 'imovel');
+      req(imovel.cidadeImovel, 'Cidade do Imóvel', 'imovel');
+      req(imovel.ufImovel, 'UF do Imóvel', 'imovel');
+      req(documentoPropriedade, 'Documento de Propriedade', 'imovel');
+      req(matricula, 'Matrícula', 'imovel');
+      req(inscricaoPrefeitura, 'Inscrição na Prefeitura', 'imovel');
+      req(outrosDadosImovel, 'Outros Dados do Imóvel', 'imovel');
+      req(condicoesPagamento, 'Condições de Pagamento', 'imovel');
+    } else if (subcategoria === 'outros_bens') {
+      req(bemOutros.descricao, 'Descrição Principal do Bem', 'imovel');
+      req(bemOutros.marca, 'Marca / Fabricante', 'imovel');
+      req(bemOutros.modelo, 'Modelo / Versão', 'imovel');
+      req(bemOutros.anoFabricacao, 'Ano Fabricação', 'imovel');
+      req(bemOutros.anoModelo, 'Ano Modelo', 'imovel');
+      req(bemOutros.cor, 'Cor Predominante', 'imovel');
+      req(bemOutros.placa, 'Placa / Identificação', 'imovel');
+      req(bemOutros.renavam, 'RENAVAM', 'imovel');
+      req(bemOutros.chassi, 'Chassi', 'imovel');
+      req(bemOutros.numeroSerie, 'Número de Série / Motor', 'imovel');
+      req(bemOutros.quilometragemOuUso, 'Quilometragem / Horímetro / Uso', 'imovel');
+      req(bemOutros.estadoConservacao, 'Estado de Conservação', 'imovel');
+      req(bemOutros.acessoriosInclusos, 'Acessórios e Itens Inclusos', 'imovel');
+      req(bemOutros.documentacaoSituacao, 'Situação Documental', 'imovel');
+    } else {
+      req(imovel.nomeEmpreendimento, 'Nome do Empreendimento / Loteamento', 'imovel');
+      req(imovel.localizacaoImovel, 'Localização do Imóvel', 'imovel');
+      req(imovel.cidadeImovel, 'Cidade do Imóvel', 'imovel');
+      req(imovel.ufImovel, 'UF do Imóvel', 'imovel');
+      req(imovel.numeroLote, 'Número do Lote', 'imovel');
+      req(imovel.numeroQuadra, 'Número da Quadra', 'imovel');
+      req(imovel.enderecoLote, 'Endereço Completo do Lote', 'imovel');
+    }
+    if (subcategoria === 'imovel' || tipo === 'exclusividade') {
+      req(imovel.metragemFrente, 'Metragem Frente', 'imovel');
+      req(imovel.metragemLateralDireita, 'Metragem Lateral Direita', 'imovel');
+      req(imovel.metragemLateralEsquerda, 'Metragem Lateral Esquerda', 'imovel');
+      req(imovel.metragemFundos, 'Metragem Fundos', 'imovel');
+      req(imovel.areaTotalM2, 'Área Total (m²)', 'imovel');
+    }
+
+    if (!valorTotal || valorTotal <= 0) missing.push({ label: 'Valor Total da Negociação', tab: 'financeiro' });
+    req(valorTotalExtenso, 'Valor por Extenso', 'financeiro');
+    if (tipo === 'venda_vista') {
+      req(dadosBancariosRecebedor, 'Dados Bancários / Chave PIX', 'financeiro');
+    }
+    if (tipo === 'exclusividade') {
+      req(dataInicioExcl, 'Data Início da Exclusividade', 'financeiro');
+    }
+
+    req(cidadeForo, 'Cidade do Foro', 'foro');
+    req(ufForo, 'UF do Foro', 'foro');
+    req(cidadeAssinatura, 'Cidade da Assinatura', 'foro');
+    req(ufAssinatura, 'UF da Assinatura', 'foro');
+    req(diaAssinatura, 'Dia da Assinatura', 'foro');
+    req(mesExtensoAssinatura, 'Mês da Assinatura', 'foro');
+    req(anoAssinatura, 'Ano da Assinatura', 'foro');
+
+    return missing;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const missing = getMissingFields();
+    if (missing.length > 0) {
+      setMissingFields(missing);
+      setActiveTab(missing[0].tab);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    setMissingFields([]);
 
     const contractData: ContractData = {
       id: initialData?.id || generateUUID(),
@@ -623,6 +749,29 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             <span>5. Resumo e Emissão</span>
           </button>
         </div>
+
+        {/* Banner de campos obrigatórios faltando */}
+        {missingFields.length > 0 && (
+          <div className="bg-red-50 border border-red-300 rounded-lg p-4 space-y-2">
+            <p className="text-sm font-bold text-red-800">
+              Preencha os campos obrigatórios antes de gerar o contrato ({missingFields.length} pendente{missingFields.length > 1 ? 's' : ''}):
+            </p>
+            <ul className="text-xs text-red-700 space-y-1 list-disc list-inside">
+              {missingFields.map((f, i) => (
+                <li key={i}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab(f.tab)}
+                    className="underline hover:text-red-900 cursor-pointer"
+                  >
+                    {TAB_LABELS[f.tab]}
+                  </button>
+                  {' — '}{f.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* ABA: DADOS DO IMÓVEL OU DO BEM */}
         {activeTab === 'imovel' && (
