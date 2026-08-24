@@ -8,7 +8,6 @@ import {
   Banknote,
   CalendarClock,
   ShieldCheck,
-  UserPlus,
   LogOut,
   Settings2,
   Sliders,
@@ -23,8 +22,6 @@ interface NavbarProps {
   onOpenSettings?: () => void;
   onOpenWordTemplates?: () => void;
   contractCount: number;
-  isAdmin?: boolean;
-  onOpenAdminPanel?: () => void;
   onSignOut?: () => void;
 }
 
@@ -36,8 +33,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSettings,
   onOpenWordTemplates,
   contractCount,
-  isAdmin,
-  onOpenAdminPanel,
   onSignOut,
 }) => {
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
@@ -102,16 +97,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Sliders className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
-            {/* Botão de Adicionar Usuário (somente admin) */}
-            {isAdmin && (
-              <button
-                onClick={onOpenAdminPanel}
-                className="p-2.5 rounded-xl bg-[#101935] hover:bg-[#18254b] border border-slate-700/60 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
-                title="Adicionar Usuário"
-              >
-                <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            )}
+            {/* Botão de Adicionar Usuário foi movido para dentro de Configurações (aba Usuários) */}
 
             {/* Botão de Sair */}
             <button

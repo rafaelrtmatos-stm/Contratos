@@ -12,7 +12,6 @@ import { TemplateManagerModal } from './components/TemplateManagerModal';
 import { WordTemplateModal } from './components/WordTemplateModal';
 import { SettingsPanel } from './components/SettingsPanel';
 import { LoginScreen } from './components/LoginScreen';
-import { AdminUsersPanel } from './components/AdminUsersPanel';
 import { AuthProvider, useAuth } from './utils/authContext';
 import { fetchContracts, saveContract, deleteContract, saveSignature } from './utils/contractsRepository';
 import { SignatureLink } from './pages/SignatureLink';
@@ -68,7 +67,6 @@ function MainApp() {
   const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
   const [isWordTemplateModalOpen, setIsWordTemplateModalOpen] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
-  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
 
   // Modal de assinatura rápida acionada diretamente pelo dashboard
   const [quickSignContract, setQuickSignContract] = useState<ContractData | null>(null);
@@ -227,8 +225,6 @@ function MainApp() {
         onOpenSettings={() => setIsSettingsPanelOpen(true)}
         onOpenWordTemplates={() => setIsWordTemplateModalOpen(true)}
         contractCount={contracts.length}
-        isAdmin={profile?.role === 'admin'}
-        onOpenAdminPanel={() => setIsAdminPanelOpen(true)}
         onSignOut={signOut}
       />
 
@@ -287,9 +283,6 @@ function MainApp() {
         )}
       </main>
 
-      {/* Painel de Administração de Usuários */}
-      <AdminUsersPanel isOpen={isAdminPanelOpen} onClose={() => setIsAdminPanelOpen(false)} />
-
       {/* Modal de Gestão de Templates (Padrões do Supabase) */}
       {isTemplateManagerOpen && (
         <TemplateManagerModal
@@ -313,6 +306,7 @@ function MainApp() {
           onClose={() => setIsSettingsPanelOpen(false)}
           contracts={contracts}
           onDeleteAllContracts={handleDeleteAllContracts}
+          isAdmin={profile?.role === 'admin'}
         />
       )}
 

@@ -1,26 +1,36 @@
 import React, { useState } from 'react';
-import { X, Download, Trash2, RotateCcw, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { X, Download, Trash2, RotateCcw, AlertCircle, CheckCircle2, Loader2, UserPlus } from 'lucide-react';
 import { ContractData } from '../types/contract';
+import { supabase } from '../utils/supabaseClient';
 
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   contracts: ContractData[];
   onDeleteAllContracts: () => Promise<void>;
+  isAdmin?: boolean;
 }
 
-type Tab = 'backup' | 'danger';
+type Tab = 'backup' | 'usuarios' | 'danger';
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   isOpen,
   onClose,
   contracts,
   onDeleteAllContracts,
+  isAdmin,
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('backup');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // Formulário de criação de usuário (aba "Usuários", somente admin)
+  const [novoNome, setNovoNome] = useState('');
+  const [novoEmail, setNovoEmail] = useState('');
+  const [novaSenha, setNovaSenha] = useState('');
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [userFeedback, setUserFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   if (!isOpen) return null;
 
@@ -120,6 +130,33 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }
   };
 
+  // Criar novo usuário (via Edge Function admin-create-user, somente admin)
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreatingUser(true);
+    setUserFeedback(null);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+
+    const { data, error } = await supabase.functions.invoke('admin-create-user', {
+      body: { nome: novoNome, email: novoEmail, password: novaSenha },
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+
+    setIsCreatingUser(false);
+
+    if (error || data?.error) {
+      setUserFeedback({ type: 'error', message: data?.error || error?.message || 'Falha ao criar usuário.' });
+      return;
+    }
+
+    setUserFeedback({ type: 'success', message: `Usuário "${novoEmail}" criado com sucesso.` });
+    setNovoNome('');
+    setNovoEmail('');
+    setNovaSenha('');
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -149,6 +186,19 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           >
              Backup & Exportação
           </button>
+          {isAdmin && (
+            <button
+              onClick={() => setActiveTab('usuarios')}
+              className={`px-4 py-3 font-bold text-sm transition-all border-b-2 flex items-center gap-1.5 ${
+                activeTab === 'usuarios'
+                  ? 'border-green-600 text-green-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <UserPlus className="w-4 h-4" />
+              Usuários
+            </button>
+          )}
           <button
             onClick={() => setActiveTab('danger')}
             className={`px-4 py-3 font-bold text-sm transition-all border-b-2 ${
@@ -249,6 +299,80 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   )}
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* USUÁRIOS TAB (somente admin) */}
+          {activeTab === 'usuarios' && isAdmin && (
+            <div className="space-y-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-sm text-green-900">
+                  Crie novos acessos ao sistema para colaboradores ou parceiros.
+                </p>
+              </div>
+
+              <form onSubmit={handleCreateUser} className="border border-slate-200 rounded-lg p-4 space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1.5">Nome</label>
+                  <input
+                    type="text"
+                    required
+                    value={novoNome}
+                    onChange={(e) => setNovoNome(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1.5">E-mail</label>
+                  <input
+                    type="email"
+                    required
+                    value={novoEmail}
+                    onChange={(e) => setNovoEmail(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1.5">Senha provisória</label>
+                  <input
+                    type="text"
+                    required
+                    minLength={6}
+                    value={novaSenha}
+                    onChange={(e) => setNovaSenha(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500"
+                  />
+                </div>
+
+                {userFeedback && (
+                  <div
+                    className={`text-xs font-semibold rounded-lg px-3 py-2 flex items-center gap-2 ${
+                      userFeedback.type === 'success'
+                        ? 'text-emerald-700 bg-emerald-50 border border-emerald-100'
+                        : 'text-red-600 bg-red-50 border border-red-100'
+                    }`}
+                  >
+                    {userFeedback.type === 'success' ? (
+                      <CheckCircle2 className="w-4 h-4" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4" />
+                    )}
+                    {userFeedback.message}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isCreatingUser}
+                  className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-60 text-white font-bold text-sm py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
+                >
+                  {isCreatingUser && <Loader2 className="w-4 h-4 animate-spin" />}
+                  <UserPlus className="w-4 h-4" />
+                  Criar Usuário
+                </button>
+              </form>
             </div>
           )}
 
