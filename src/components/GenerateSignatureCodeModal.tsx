@@ -101,13 +101,13 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 p-4">
           <h3 className="font-bold text-slate-900 flex items-center gap-2">
-            <LinkIcon className="w-5 h-5 text-blue-600" />
+            <LinkIcon className="w-5 h-5 text-amber-600" />
             {isFullySigned ? 'Compartilhar Contrato Assinado' : 'Gerar Código para Cliente'}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -142,7 +142,7 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
                         value={option.value}
                         checked={validade === option.value}
                         onChange={(e) => setValidade(e.target.value)}
-                        className="w-4 h-4 accent-green-600"
+                        className="w-4 h-4 text-amber-600 accent-amber-600"
                       />
                       <span className="text-sm text-slate-700">{option.label}</span>
                     </label>
@@ -157,7 +157,7 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
                       onChange={(e) => setCustomDias(e.target.value)}
                       placeholder="Quantos dias?"
                       min="1"
-                      className="w-full px-3 py-2 border-2 border-slate-300 rounded-lg text-sm"
+                      className="w-full px-3 py-2 border-2 border-slate-300 rounded-lg text-sm focus:border-amber-500 focus:outline-none"
                     />
                   </div>
                 )}
@@ -174,8 +174,8 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
                 type="button"
                 onClick={handleGenerateCode}
                 disabled={loading}
-                className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-sm font-bold rounded-lg
-                  transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full px-4 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:bg-slate-300 text-slate-950 text-sm font-bold rounded-lg
+                  transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
               >
                 {loading ? (
                   <>
@@ -184,7 +184,7 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
                   </>
                 ) : (
                   <>
-                    <LinkIcon className="w-4 h-4" />
+                    <LinkIcon className="w-4 h-4 text-slate-950" />
                     {isFullySigned ? 'Gerar Link de Acesso' : 'Gerar Código e Link'}
                   </>
                 )}
@@ -192,13 +192,13 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
             </>
           ) : (
             <>
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
-                <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-bold text-blue-900">
+                  <p className="text-sm font-bold text-amber-950">
                     {isFullySigned ? 'Link Gerado!' : 'Código Gerado!'}
                   </p>
-                  <p className="text-xs text-blue-700 mt-1">
+                  <p className="text-xs text-amber-800 mt-1">
                     {isFullySigned
                       ? 'Compartilhe este link com seu cliente para ele rever e baixar o contrato assinado.'
                       : 'Compartilhe este link com seu cliente.'}
@@ -220,9 +220,9 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
                   </p>
                 </div>
               ) : (
-                <div className="p-3 bg-amber-50 border-2 border-amber-300 rounded-lg">
+                <div className="p-3 bg-amber-50/80 border-2 border-amber-300 rounded-lg">
                   <p className="text-xs font-bold text-amber-900 mb-1">🔐 Código de Acesso:</p>
-                  <p className="text-lg font-black text-amber-700 font-mono tracking-widest">
+                  <p className="text-lg font-black text-amber-800 font-mono tracking-widest">
                     {(contract.tipo === 'exclusividade' ? contract.vendedor : contract.comprador)?.cpfCnpj?.replace(/\D/g, '').slice(-4) || '****'}
                   </p>
                   <p className="text-[10px] text-amber-700 mt-1">
@@ -243,16 +243,16 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
                   <button
                     type="button"
                     onClick={handleCopyLink}
-                    className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-bold flex items-center gap-1"
+                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 rounded text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
                   >
                     {copied ? (
                       <>
-                        <CheckCircle2 className="w-3 h-3" />
+                        <CheckCircle2 className="w-3 h-3 text-slate-950" />
                         OK
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3 h-3" />
+                        <Copy className="w-3 h-3 text-slate-950" />
                         Copiar
                       </>
                     )}

@@ -91,17 +91,17 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
                   Código OTP:
                 </label>
                 <div className="flex gap-2">
-                  <div className="flex-1 px-4 py-3 bg-slate-100 border-2 border-slate-300 rounded-lg">
-                    <p className="text-center font-mono font-bold text-slate-900 text-lg tracking-wider">
+                  <div className="flex-1 px-4 py-3 bg-amber-50/70 border-2 border-amber-300 rounded-lg">
+                    <p className="text-center font-mono font-bold text-amber-950 text-lg tracking-wider">
                       {otp}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={handleCopyOTP}
-                    className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-1 transition-colors ${
+                    className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-1 transition-colors cursor-pointer ${
                       copied
-                        ? 'bg-green-600 text-white'
+                        ? 'bg-amber-500 text-slate-950 shadow-xs'
                         : 'bg-slate-200 text-slate-900 hover:bg-slate-300'
                     }`}
                   >
@@ -122,7 +122,7 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
                   onChange={(e) => setOtpInput(e.target.value)}
                   placeholder={otp}
                   className="w-full px-3 py-2.5 border-2 border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 text-sm font-mono
-                    focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500
+                    focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500
                     disabled:bg-slate-100 disabled:cursor-not-allowed"
                 />
               </div>
@@ -140,8 +140,8 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
                   <button
                     type="button"
                     onClick={handlePasteOTP}
-                    className="flex-1 px-3 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg
-                      transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 px-3 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-lg
+                      transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                   >
                     <Copy className="w-4 h-4" />
                     Colar
@@ -152,11 +152,11 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
                   type="button"
                   onClick={handleSign}
                   disabled={!otpInput || loading}
-                  className={`flex-1 px-3 py-2.5 text-white text-sm font-bold rounded-lg
-                    transition-colors flex items-center justify-center gap-2 ${
+                  className={`flex-1 px-3 py-2.5 text-slate-950 text-sm font-bold rounded-lg
+                    transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
                       !otpInput || loading
-                        ? 'bg-slate-300 cursor-not-allowed'
-                        : 'bg-green-600 hover:bg-green-700'
+                        ? 'bg-slate-300 !text-slate-500 cursor-not-allowed'
+                        : 'bg-amber-500 hover:bg-amber-400 active:bg-amber-600'
                     }`}
                 >
                   {loading ? (
@@ -178,11 +178,11 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
 
           {step === 'success' && (
             <div className="space-y-3">
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-bold text-green-900">Assinatura Confirmada!</p>
-                  <p className="text-xs text-green-700 mt-1">
+                  <p className="text-sm font-bold text-amber-950">Assinatura Confirmada!</p>
+                  <p className="text-xs text-amber-800 mt-1">
                     Seu contrato foi assinado com sucesso.
                   </p>
                 </div>
@@ -191,7 +191,7 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg"
+                className="w-full px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-lg cursor-pointer"
               >
                 Fechar
               </button>

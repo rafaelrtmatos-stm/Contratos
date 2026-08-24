@@ -163,37 +163,37 @@ export const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="space-y-5 sm:space-y-6 pb-24 md:pb-12 max-w-7xl mx-auto">
       {/* 1. CARD PRINCIPAL (PAINEL PRINCIPAL) */}
-      <section className="bg-white rounded-[2rem] p-6 sm:p-8 border border-slate-100 shadow-sm relative overflow-hidden">
+      <section className="bg-white rounded-[2rem] p-6 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           <div className="flex-1 space-y-2.5 max-w-xl text-left">
-            <span className="text-[11px] sm:text-xs font-extrabold text-green-600 uppercase tracking-wider block">
+            <span className="text-[11px] sm:text-xs font-extrabold text-yellow-600 uppercase tracking-wider block">
               PAINEL PRINCIPAL
             </span>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight leading-tight">
               Dashboard de Contratos & Vendas
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">
-              Gere contratos de venda, acompanhe suas vendas e gerencie prazos de exclusividade de forma simples e segura.
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+              Gere contratos de venda, acompanhe suas negociações e gerencie prazos de exclusividade de forma ágil, segura e profissional.
             </p>
           </div>
 
-          {/* Elemento Visual 3D de Contrato & Assinatura (Fiel à Referência) */}
+          {/* Elemento Visual 3D de Contrato & Assinatura */}
           <div className="relative w-44 h-40 sm:w-56 sm:h-44 flex items-center justify-center shrink-0">
             {/* Folha do Contrato com Linhas e Sombra Suave */}
-            <div className="relative w-32 sm:w-36 h-40 sm:h-44 bg-gradient-to-b from-white to-slate-50 rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-300/40 p-3.5 flex flex-col justify-between transform rotate-2 hover:rotate-0 transition-transform duration-300">
+            <div className="relative w-32 sm:w-36 h-40 sm:h-44 bg-gradient-to-b from-white to-slate-50 rounded-2xl border border-slate-200 shadow-xl shadow-slate-300/40 p-3.5 flex flex-col justify-between transform rotate-2 hover:rotate-0 transition-transform duration-300">
               <div className="space-y-2">
                 {/* Linhas de cabeçalho do documento */}
-                <div className="h-2 w-12 bg-green-100 rounded-full"></div>
+                <div className="h-2 w-12 bg-yellow-300 rounded-full"></div>
                 <div className="h-1.5 w-full bg-slate-200 rounded-full"></div>
                 <div className="h-1.5 w-4/5 bg-slate-200 rounded-full"></div>
                 <div className="h-1.5 w-full bg-slate-200 rounded-full"></div>
                 <div className="h-1.5 w-3/4 bg-slate-200 rounded-full"></div>
               </div>
 
-              {/* Linha de Assinatura com Tinta Azul */}
+              {/* Linha de Assinatura com Tinta Grafite */}
               <div className="pt-2 border-t border-slate-100">
                 <div className="h-5 flex items-center">
-                  <svg viewBox="0 0 100 25" className="w-20 h-5 text-green-600">
+                  <svg viewBox="0 0 100 25" className="w-20 h-5 text-yellow-600">
                     <path
                       d="M 5,18 Q 15,4 25,12 T 45,8 T 65,16 T 85,10"
                       fill="none"
@@ -207,16 +207,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </div>
 
-            {/* Escudo 3D Azul com Checkmark */}
-            <div className="absolute -bottom-1 -left-2 sm:-left-4 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-green-500 to-green-700 text-white flex items-center justify-center shadow-lg shadow-blue-500/40 border-2 border-white transform -rotate-6">
-              <ShieldCheck className="w-8 h-8 sm:w-9 sm:h-9 text-white stroke-[2.5]" />
+            {/* Escudo Amarelo Ouro Efeito Dourado com Checkmark */}
+            <div className="absolute -bottom-1 -left-2 sm:-left-4 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 text-slate-950 flex items-center justify-center shadow-lg shadow-yellow-500/30 border-2 border-white transform -rotate-6">
+              <ShieldCheck className="w-8 h-8 sm:w-9 sm:h-9 text-slate-950 stroke-[2.5]" />
             </div>
 
-            {/* Caneta 3D Inclinada */}
+            {/* Caneta Inclinada Grafite com Ponta Ouro */}
             <div className="absolute -top-1 -right-1 sm:right-1 transform rotate-45">
-              <div className="w-4 h-14 bg-gradient-to-b from-green-600 to-green-800 rounded-full shadow-md flex flex-col items-center justify-between p-0.5 border border-white">
-                <div className="w-2 h-3 bg-white/40 rounded-full"></div>
-                <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[6px] border-t-amber-400"></div>
+              <div className="w-4 h-14 bg-gradient-to-b from-slate-800 to-slate-950 rounded-full shadow-md flex flex-col items-center justify-between p-0.5 border border-white">
+                <div className="w-2 h-3 bg-white/30 rounded-full"></div>
+                <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[6px] border-t-yellow-400"></div>
               </div>
             </div>
           </div>
@@ -225,98 +225,98 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* 2. TRÊS AÇÕES PRINCIPAIS (EMPILHADOS VERTICALMENTE) */}
       <section className="space-y-3.5 sm:space-y-4">
-        {/* Card 1: Venda à Vista */}
+        {/* Card 1: Venda à Vista - Amarelo Ouro com Efeito Dourado */}
         <div
           onClick={() => onNewContract('venda_vista')}
-          className="w-full rounded-[1.75rem] p-4 sm:p-5 bg-gradient-to-r from-[#1e5ae6] via-[#2d6df6] to-[#407eff] text-white shadow-md shadow-blue-600/15 hover:shadow-lg hover:shadow-blue-600/25 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-between gap-4 group"
+          className="w-full rounded-[1.75rem] p-4 sm:p-5 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 text-slate-950 shadow-md shadow-yellow-500/20 hover:shadow-lg hover:shadow-yellow-500/30 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-between gap-4 group border border-yellow-400"
           role="button"
           title="Criar Contrato de Venda à Vista"
         >
           <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
-            {/* Ícone dentro de círculo branco */}
-            <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-white text-green-600 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform">
-              <Home className="w-7 h-7 sm:w-8 sm:h-8 text-green-600 stroke-[2]" />
+            {/* Ícone dentro de círculo grafite/preto */}
+            <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-slate-950 text-yellow-400 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform">
+              <Home className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
             </div>
             <div className="min-w-0 text-left">
-              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white leading-snug">
+              <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-950 leading-snug">
                 1. Venda à Vista
               </h2>
-              <p className="text-white/90 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
+              <p className="text-slate-900/90 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
                 Contratos à vista para Imóveis e Outros Bens (veículos, etc.)
               </p>
             </div>
           </div>
 
           {/* Botão de seta redonda à direita */}
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-green-600 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
-            <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-950 text-yellow-400 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
+            <ChevronRight className="w-5 h-5 stroke-[2.8]" />
           </div>
         </div>
 
-        {/* Card 2: Venda Parcelada */}
+        {/* Card 2: Venda Parcelada - Cinza Grafite Escuro */}
         <div
           onClick={() => onNewContract('venda_parcelada')}
-          className="w-full rounded-[1.75rem] p-4 sm:p-5 bg-gradient-to-r from-[#0da776] via-[#10b981] to-[#22c55e] text-white shadow-md shadow-emerald-600/15 hover:shadow-lg hover:shadow-emerald-600/25 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-between gap-4 group"
+          className="w-full rounded-[1.75rem] p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white shadow-md shadow-slate-900/20 hover:shadow-lg hover:shadow-slate-900/30 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-between gap-4 group border border-slate-800"
           role="button"
           title="Criar Contrato de Venda Parcelada"
         >
           <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
             {/* Ícone dentro de círculo branco */}
-            <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-white text-emerald-600 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform">
-              <CalendarDays className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600 stroke-[2]" />
+            <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-white text-slate-950 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform">
+              <CalendarDays className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
             </div>
             <div className="min-w-0 text-left">
-              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white leading-snug">
+              <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-snug">
                 2. Venda Parcelada
               </h2>
-              <p className="text-white/90 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
+              <p className="text-slate-300 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
                 Contratos parcelados com reserva de domínio (Imóveis e Bens Móveis)
               </p>
             </div>
           </div>
 
           {/* Botão de seta redonda à direita */}
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-emerald-600 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
-            <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-slate-950 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
+            <ChevronRight className="w-5 h-5 stroke-[2.8]" />
           </div>
         </div>
 
-        {/* Card 3: Exclusividade */}
+        {/* Card 3: Exclusividade - Preto / Grafite com Ouro */}
         <div
           onClick={() => onNewContract('exclusividade')}
-          className="w-full rounded-[1.75rem] p-4 sm:p-5 bg-gradient-to-r from-[#7c3aed] via-[#8b5cf6] to-[#a855f7] text-white shadow-md shadow-slate-600/15 hover:shadow-lg hover:shadow-slate-600/25 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-between gap-4 group"
+          className="w-full rounded-[1.75rem] p-4 sm:p-5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white shadow-md shadow-slate-950/25 hover:shadow-lg hover:shadow-slate-950/35 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-between gap-4 group border border-slate-800"
           role="button"
           title="Criar Contrato de Exclusividade com Monitor de Prazos"
         >
           <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
-            {/* Ícone dentro de círculo branco */}
-            <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-white text-slate-600 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform">
-              <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8 text-slate-600 stroke-[2]" />
+            {/* Ícone dentro de círculo amarelo ouro com efeito dourado */}
+            <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 text-slate-950 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform font-bold">
+              <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
             </div>
             <div className="min-w-0 text-left">
-              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white leading-snug">
+              <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-snug">
                 3. Exclusividade
               </h2>
-              <p className="text-white/90 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
-                Crie contratos de exclusividade e gerencie prazos.
+              <p className="text-slate-300 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
+                Crie contratos de exclusividade com corretor e gerencie prazos de vigência.
               </p>
             </div>
           </div>
 
           {/* Botão de seta redonda à direita */}
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-slate-600 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
-            <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-yellow-400 text-slate-950 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
+            <ChevronRight className="w-5 h-5 stroke-[2.8]" />
           </div>
         </div>
       </section>
 
       {/* 3. RESUMO GERAL */}
-      <section className="bg-white rounded-[1.75rem] p-5 sm:p-6 border border-slate-100 shadow-sm space-y-5">
+      <section className="bg-white rounded-[1.75rem] p-5 sm:p-6 border border-slate-200 shadow-sm space-y-5">
         {/* Cabeçalho do Resumo com Filtro */}
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
           <div className="flex items-center gap-2">
-            <BarChart2 className="w-4 h-4 text-green-600 stroke-[2.5]" />
-            <span className="text-xs font-extrabold text-green-600 uppercase tracking-wider">
+            <BarChart2 className="w-4 h-4 text-yellow-600 stroke-[2.5]" />
+            <span className="text-xs font-extrabold text-yellow-600 uppercase tracking-wider">
               RESUMO GERAL
             </span>
           </div>
@@ -325,7 +325,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="relative">
             <button
               onClick={() => setIsTimeFilterOpen(!isTimeFilterOpen)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-300 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
             >
               <Calendar className="w-3.5 h-3.5 text-slate-500" />
               <span>{timeFilterLabels[timeFilter]}</span>
@@ -348,12 +348,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       }}
                       className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center justify-between ${
                         timeFilter === key
-                          ? 'bg-green-50 text-green-700 font-bold'
+                          ? 'bg-yellow-50 text-yellow-900 font-bold'
                           : 'text-slate-700 hover:bg-slate-50'
                       }`}
                     >
                       <span>{timeFilterLabels[key]}</span>
-                      {timeFilter === key && <Check className="w-3.5 h-3.5 text-green-600" />}
+                      {timeFilter === key && <Check className="w-3.5 h-3.5 text-yellow-600 font-bold" />}
                     </button>
                   ))}
                 </div>
@@ -369,26 +369,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
               TOTAL EM VENDAS
             </span>
-            <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight">
               {formatCurrency(totalVendasGeral)}
             </div>
-            <p className="text-xs text-slate-500 font-medium">
-              <span className="font-bold text-green-600">{countTotalVendas}</span> contratos de venda gerados
+            <p className="text-xs text-slate-600 font-medium">
+              <span className="font-bold text-yellow-600">{countTotalVendas}</span> contratos de venda gerados
             </p>
           </div>
 
           {/* Divisor Vertical */}
-          <div className="hidden md:block md:col-span-1 h-20 border-r border-slate-100 justify-self-center"></div>
+          <div className="hidden md:block md:col-span-1 h-20 border-r border-slate-200 justify-self-center"></div>
 
           {/* Coluna Direita: Grade 2x2 de Indicadores */}
           <div className="md:col-span-6 grid grid-cols-2 gap-x-4 gap-y-4 sm:gap-x-6 sm:gap-y-4">
             {/* 1. Contratos Gerados */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-700 flex items-center justify-center shrink-0 border border-yellow-200">
                 <FileText className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-lg font-extrabold text-slate-900 leading-tight">
+                <div className="text-lg font-extrabold text-slate-950 leading-tight">
                   {contracts.length}
                 </div>
                 <div className="text-xs text-slate-500 font-medium leading-tight">
@@ -399,11 +399,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* 2. Vendas Concluídas */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center shrink-0">
                 <CheckCircle className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-lg font-extrabold text-slate-900 leading-tight">
+                <div className="text-lg font-extrabold text-slate-950 leading-tight">
                   {countVendasConcluidas}
                 </div>
                 <div className="text-xs text-slate-500 font-medium leading-tight">
@@ -414,11 +414,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* 3. Prazos de Exclusividade */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-700 flex items-center justify-center shrink-0 border border-yellow-200">
                 <Clock className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-lg font-extrabold text-slate-900 leading-tight">
+                <div className="text-lg font-extrabold text-slate-950 leading-tight">
                   {activeExclusivities.length}
                 </div>
                 <div className="text-xs text-slate-500 font-medium leading-tight">
@@ -429,11 +429,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* 4. Assinaturas Pendentes */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
                 <PenTool className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-lg font-extrabold text-slate-900 leading-tight">
+                <div className="text-lg font-extrabold text-slate-950 leading-tight">
                   {pendingSignaturesCount}
                 </div>
                 <div className="text-xs text-slate-500 font-medium leading-tight">
@@ -451,16 +451,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
           AÇÕES RÁPIDAS
         </span>
 
-        <div className="grid grid-cols-5 gap-2 sm:gap-3.5">
+        <div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-3.5">
           {/* Card 1: Meus Contratos */}
           <button
             onClick={scrollToContracts}
-            className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-100 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
+            className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-200 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-yellow-50 text-yellow-700 flex items-center justify-center group-hover:scale-105 transition-transform border border-yellow-200">
               <Folder className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <span className="text-[11px] sm:text-xs font-bold text-slate-700 leading-tight">
+            <span className="text-[11px] sm:text-xs font-bold text-slate-800 leading-tight">
               Meus Contratos
             </span>
           </button>
@@ -468,12 +468,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {/* Card 2: Clientes */}
           <button
             onClick={() => setIsClientsModalOpen(true)}
-            className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-100 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
+            className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-200 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center group-hover:scale-105 transition-transform">
               <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <span className="text-[11px] sm:text-xs font-bold text-slate-700 leading-tight">
+            <span className="text-[11px] sm:text-xs font-bold text-slate-800 leading-tight">
               Clientes
             </span>
           </button>
@@ -481,12 +481,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {/* Card 3: Imóveis */}
           <button
             onClick={() => setIsPropertiesModalOpen(true)}
-            className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-100 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
+            className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-200 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-yellow-50 text-yellow-700 flex items-center justify-center group-hover:scale-105 transition-transform border border-yellow-200">
               <Home className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <span className="text-[11px] sm:text-xs font-bold text-slate-700 leading-tight">
+            <span className="text-[11px] sm:text-xs font-bold text-slate-800 leading-tight">
               Imóveis
             </span>
           </button>
@@ -494,17 +494,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {/* Card 4: Relatórios */}
           <button
             onClick={() => setIsReportsModalOpen(true)}
-            className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-100 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
+            className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-200 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center group-hover:scale-105 transition-transform">
               <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <span className="text-[11px] sm:text-xs font-bold text-slate-700 leading-tight">
+            <span className="text-[11px] sm:text-xs font-bold text-slate-800 leading-tight">
               Relatórios
             </span>
           </button>
-
-          {/* Removido: Card de Modelos (agora gerenciado pelo TemplateManager) */}
         </div>
       </section>
 
@@ -527,8 +525,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {expiringExclusivities.length > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-300 text-amber-900 rounded-full text-xs font-bold">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 border border-yellow-300 text-yellow-900 rounded-full text-xs font-bold">
+                <AlertTriangle className="w-3.5 h-3.5 text-yellow-600 shrink-0" />
                 <span>{expiringExclusivities.length} contrato(s) vencendo em até 15 dias!</span>
               </div>
             )}
@@ -574,7 +572,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           statusInfo.status === 'vencido'
                             ? 'bg-rose-500'
                             : statusInfo.status === 'alerta'
-                            ? 'bg-amber-500'
+                            ? 'bg-yellow-500'
                             : 'bg-emerald-500'
                         }`}
                         style={{ width: `${statusInfo.progressoPercentual}%` }}
@@ -592,9 +590,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                     <button
                       onClick={() => onSelectContract(contract)}
-                      className="px-3 py-1 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 font-bold text-xs flex items-center gap-1 cursor-pointer"
+                      className="px-3 py-1 rounded-lg bg-white border border-slate-300 text-slate-800 hover:bg-slate-100 font-bold text-xs flex items-center gap-1 cursor-pointer"
                     >
-                      <Eye className="w-3.5 h-3.5 text-green-600" />
+                      <Eye className="w-3.5 h-3.5 text-yellow-600" />
                       <span>Ver</span>
                     </button>
                   </div>
@@ -606,11 +604,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
       )}
 
       {/* 6. LISTA COMPLETA DE CONTRATOS REGISTRADOS */}
-      <section id="contracts-list-section" className="bg-white rounded-[1.75rem] border border-slate-100 shadow-sm p-5 sm:p-6 space-y-4">
+      <section id="contracts-list-section" className="bg-white rounded-[1.75rem] border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Layers className="w-5 h-5 text-green-600 shrink-0" />
+            <h3 className="text-base sm:text-lg font-bold text-slate-950 flex items-center gap-2">
+              <Layers className="w-5 h-5 text-yellow-600 shrink-0" />
               Contratos Registrados ({filteredContracts.length})
             </h3>
             <p className="text-xs text-slate-500">
@@ -625,7 +623,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <button
                 onClick={() => setSelectedCategory('todos')}
                 className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === 'todos' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600'
+                  selectedCategory === 'todos' ? 'bg-white text-slate-950 shadow-xs font-bold' : 'text-slate-600'
                 }`}
               >
                 Todos
@@ -633,7 +631,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <button
                 onClick={() => setSelectedCategory('venda_vista')}
                 className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === 'venda_vista' ? 'bg-white text-green-700 shadow-xs font-bold' : 'text-slate-600'
+                  selectedCategory === 'venda_vista' ? 'bg-white text-yellow-800 shadow-xs font-bold' : 'text-slate-600'
                 }`}
               >
                 À Vista
@@ -641,7 +639,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <button
                 onClick={() => setSelectedCategory('venda_parcelada')}
                 className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === 'venda_parcelada' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600'
+                  selectedCategory === 'venda_parcelada' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600'
                 }`}
               >
                 Parcelada
@@ -649,7 +647,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <button
                 onClick={() => setSelectedCategory('exclusividade')}
                 className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === 'exclusividade' ? 'bg-white text-slate-700 shadow-xs font-bold' : 'text-slate-600'
+                  selectedCategory === 'exclusividade' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600'
                 }`}
               >
                 Exclusividade
@@ -664,7 +662,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 placeholder="Buscar contrato, cliente ou nº..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-green-500 outline-none"
+                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-yellow-400 outline-none"
               />
             </div>
           </div>
@@ -702,17 +700,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                       <div className="shrink-0">
                         {contract.tipo === 'venda_vista' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 font-bold text-[10px] border border-green-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-yellow-50 text-yellow-900 font-bold text-[10px] border border-yellow-300">
                             {contract.subcategoria === 'outros_bens' ? 'À Vista (Bens Móveis)' : 'À Vista (Imóvel)'}
                           </span>
                         )}
                         {contract.tipo === 'venda_parcelada' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[10px] border border-emerald-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 font-bold text-[10px] border border-slate-300">
                             {contract.subcategoria === 'outros_bens' ? 'Parcelada (Bens Móveis)' : 'Parcelada (Imóvel)'}
                           </span>
                         )}
                         {contract.tipo === 'exclusividade' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-50 text-slate-700 font-bold text-[10px] border border-slate-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 font-bold text-[10px] border border-slate-300">
                             Exclusividade
                           </span>
                         )}
@@ -745,12 +743,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div className="flex items-center justify-between text-xs">
                       <div>
                         {isFullySigned ? (
-                          <span className="inline-flex items-center gap-1 text-emerald-700 font-bold text-[11px] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                            <CheckCircle className="w-3 h-3" /> 100% Assinado
+                          <span className="inline-flex items-center gap-1 text-slate-900 font-bold text-[11px] bg-yellow-50 px-2 py-0.5 rounded-full border border-yellow-300">
+                            <CheckCircle className="w-3 h-3 text-yellow-600" /> 100% Assinado
                           </span>
                         ) : hasSignatures ? (
-                          <span className="inline-flex items-center gap-1 text-green-700 font-bold text-[11px] bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-                            <PenTool className="w-3 h-3" /> Parcialmente Assinado
+                          <span className="inline-flex items-center gap-1 text-slate-800 font-bold text-[11px] bg-slate-100 px-2 py-0.5 rounded-full border border-slate-300">
+                            <PenTool className="w-3 h-3 text-slate-700" /> Parcialmente Assinado
                           </span>
                         ) : (
                           <span className="text-slate-400 text-[11px] font-medium">Pendente de Assinatura</span>
@@ -762,7 +760,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div className="grid grid-cols-5 gap-1.5 pt-2 border-t border-slate-100">
                       <button
                         onClick={() => onSelectContract(contract)}
-                        className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
+                        className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-yellow-50 hover:bg-yellow-100 text-yellow-900 rounded-xl text-[10px] font-bold transition-colors cursor-pointer border border-yellow-200"
                         title="Ver Contrato"
                       >
                         <Eye className="w-4 h-4" />
@@ -779,7 +777,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         }`}
                         title={isFullySigned ? 'Indisponível: contrato já assinado digitalmente (use o PDF)' : 'Baixar Word (.docx)'}
                       >
-                        <FileDown className={`w-4 h-4 ${isFullySigned ? 'text-slate-300' : 'text-green-600'}`} />
+                        <FileDown className={`w-4 h-4 ${isFullySigned ? 'text-slate-300' : 'text-slate-700'}`} />
                         <span>Word</span>
                       </button>
 
@@ -788,17 +786,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
                         title="Baixar PDF"
                       >
-                        <FileText className="w-4 h-4 text-emerald-600" />
+                        <FileText className="w-4 h-4 text-slate-700" />
                         <span>PDF</span>
                       </button>
 
                       {isFullySigned ? (
                         <button
                           onClick={() => onSelectContract(contract)}
-                          className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-emerald-50 text-emerald-700 rounded-xl text-[10px] font-bold cursor-pointer"
+                          className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-yellow-50 text-yellow-900 rounded-xl text-[10px] font-bold cursor-pointer border border-yellow-200"
                           title="Contrato assinado — somente visualização"
                         >
-                          <ShieldCheck className="w-4 h-4" />
+                          <ShieldCheck className="w-4 h-4 text-yellow-600" />
                           <span>Assinado</span>
                         </button>
                       ) : (
@@ -807,7 +805,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
                           title="Assinar com Carimbo Digital"
                         >
-                          <ShieldCheck className="w-4 h-4" />
+                          <ShieldCheck className="w-4 h-4 text-slate-700" />
                           <span>Carimbo Digital</span>
                         </button>
                       )}
@@ -852,7 +850,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <tr key={contract.id} className="hover:bg-slate-50/80 transition-colors">
                         {/* Título & Número */}
                         <td className="py-3 px-3">
-                          <div className="font-bold text-slate-900 text-sm">{contract.titulo}</div>
+                          <div className="font-bold text-slate-950 text-sm">{contract.titulo}</div>
                           <div className="font-mono text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
                             <span>{contract.numeroContrato}</span>
                             <span>•</span>
@@ -863,34 +861,34 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         {/* Modalidade */}
                         <td className="py-3 px-3">
                           {contract.tipo === 'venda_vista' && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-50 text-green-700 font-bold border border-green-200">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-900 font-bold border border-yellow-300">
                               {contract.subcategoria === 'outros_bens' ? (
                                 <>
-                                  <Car className="w-3 h-3 text-green-600" /> Venda à Vista (Bens Móveis)
+                                  <Car className="w-3 h-3 text-yellow-700" /> Venda à Vista (Bens Móveis)
                                 </>
                               ) : (
                                 <>
-                                  <Home className="w-3 h-3" /> Venda à Vista (Imóvel)
+                                  <Home className="w-3 h-3 text-yellow-700" /> Venda à Vista (Imóvel)
                                 </>
                               )}
                             </span>
                           )}
                           {contract.tipo === 'venda_parcelada' && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 font-bold border border-slate-300">
                               {contract.subcategoria === 'outros_bens' ? (
                                 <>
-                                  <Car className="w-3 h-3 text-emerald-600" /> Venda Parcelada ({contract.vendaParcelada?.numeroParcelas}x)
+                                  <Car className="w-3 h-3 text-slate-700" /> Venda Parcelada ({contract.vendaParcelada?.numeroParcelas}x)
                                 </>
                               ) : (
                                 <>
-                                  <CalendarDays className="w-3 h-3" /> Venda Parcelada ({contract.vendaParcelada?.numeroParcelas}x)
+                                  <CalendarDays className="w-3 h-3 text-slate-700" /> Venda Parcelada ({contract.vendaParcelada?.numeroParcelas}x)
                                 </>
                               )}
                             </span>
                           )}
                           {contract.tipo === 'exclusividade' && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-50 text-slate-700 font-bold border border-slate-200">
-                              <ShieldCheck className="w-3 h-3" /> Exclusividade ({contract.exclusividade?.prazoMesesOuDias}d)
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 font-bold border border-slate-300">
+                              <ShieldCheck className="w-3 h-3 text-yellow-600" /> Exclusividade ({contract.exclusividade?.prazoMesesOuDias}d)
                             </span>
                           )}
                         </td>
@@ -908,19 +906,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         </td>
 
                         {/* Valor */}
-                        <td className="py-3 px-3 font-extrabold text-slate-900">
+                        <td className="py-3 px-3 font-extrabold text-slate-950">
                           {formatCurrency(contract.valorTotal)}
                         </td>
 
                         {/* Status de Assinatura */}
                         <td className="py-3 px-3">
                           {isFullySigned ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-700 font-bold text-[11px] bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                              <CheckCircle className="w-3 h-3" /> 100% Assinado
+                            <span className="inline-flex items-center gap-1 text-slate-900 font-bold text-[11px] bg-yellow-50 px-2.5 py-0.5 rounded-full border border-yellow-300">
+                              <CheckCircle className="w-3 h-3 text-yellow-600" /> 100% Assinado
                             </span>
                           ) : hasSignatures ? (
-                            <span className="inline-flex items-center gap-1 text-green-700 font-bold text-[11px] bg-green-50 px-2.5 py-0.5 rounded-full border border-green-200">
-                              <PenTool className="w-3 h-3" /> Parcial ({contract.assinaturas.length}/2)
+                            <span className="inline-flex items-center gap-1 text-slate-800 font-bold text-[11px] bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-300">
+                              <PenTool className="w-3 h-3 text-slate-700" /> Parcial ({contract.assinaturas.length}/2)
                             </span>
                           ) : (
                             <span className="text-slate-400 text-[11px]">Pendente</span>
@@ -932,7 +930,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => onSelectContract(contract)}
-                              className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-xl transition-colors cursor-pointer"
+                              className="p-2 text-yellow-700 hover:text-yellow-900 hover:bg-yellow-50 rounded-xl transition-colors cursor-pointer"
                               title="Visualizar Contrato"
                             >
                               <Eye className="w-4 h-4" />
@@ -944,7 +942,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                               className={`p-2 rounded-xl transition-colors ${
                                 isFullySigned
                                   ? 'text-slate-300 cursor-not-allowed'
-                                  : 'text-slate-600 hover:text-green-700 hover:bg-green-50 cursor-pointer'
+                                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer'
                               }`}
                               title={isFullySigned ? 'Indisponível: contrato já assinado digitalmente (use o PDF)' : 'Baixar Word (.docx)'}
                             >
@@ -953,7 +951,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                             <button
                               onClick={() => exportToPdf(contract)}
-                              className="p-2 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-colors cursor-pointer"
+                              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
                               title="Baixar PDF (.pdf)"
                             >
                               <FileText className="w-4 h-4" />
@@ -962,7 +960,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             {!isFullySigned && (
                               <button
                                 onClick={() => onSignContractDirect(contract)}
-                                className="p-2 text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
+                                className="p-2 text-slate-600 hover:text-yellow-700 hover:bg-yellow-50 rounded-xl transition-colors cursor-pointer"
                                 title="Assinar com Carimbo Digital"
                               >
                                 <ShieldCheck className="w-4 h-4" />
@@ -993,13 +991,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </section>
 
       {/* 7. BARRA DE NAVEGAÇÃO INFERIOR MOBILE FIXA (ESTILO APP) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-3 py-1.5 shadow-2xl flex items-center justify-around">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-1.5 shadow-2xl flex items-center justify-around">
         {/* Início */}
         <button
           onClick={() => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          className="flex flex-col items-center justify-center gap-0.5 p-1 text-green-600 min-w-[54px] cursor-pointer"
+          className="flex flex-col items-center justify-center gap-0.5 p-1 text-yellow-600 min-w-[54px] cursor-pointer"
         >
           <Home className="w-5 h-5 stroke-[2.5]" />
           <span className="text-[10px] font-bold">Início</span>
@@ -1008,28 +1006,28 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* Contratos */}
         <button
           onClick={scrollToContracts}
-          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-green-600 min-w-[54px] cursor-pointer"
+          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-yellow-600 min-w-[54px] cursor-pointer"
         >
           <FileText className="w-5 h-5" />
           <span className="text-[10px] font-medium">Contratos</span>
         </button>
 
-        {/* Botão Central Destacado "+ Novo" */}
+        {/* Botão Central Destacado "+ Novo" com Efeito Dourado */}
         <div className="relative -top-3 flex flex-col items-center">
           <button
             onClick={() => setIsMobileNewModalOpen(true)}
-            className="w-13 h-13 rounded-full bg-green-600 hover:bg-green-500 active:scale-95 text-white flex items-center justify-center shadow-lg shadow-blue-500/40 border-4 border-white transition-all cursor-pointer"
+            className="w-13 h-13 rounded-full btn-gold text-slate-950 flex items-center justify-center shadow-lg shadow-yellow-500/40 border-4 border-white transition-all cursor-pointer font-bold active:scale-95"
             title="Criar Novo Contrato"
           >
             <Plus className="w-6 h-6 stroke-[3]" />
           </button>
-          <span className="text-[10px] font-bold text-slate-700 mt-0.5">Novo</span>
+          <span className="text-[10px] font-bold text-slate-800 mt-0.5">Novo</span>
         </div>
 
         {/* Vendas */}
         <button
           onClick={() => setIsReportsModalOpen(true)}
-          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-green-600 min-w-[54px] cursor-pointer"
+          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-yellow-600 min-w-[54px] cursor-pointer"
         >
           <TrendingUp className="w-5 h-5" />
           <span className="text-[10px] font-medium">Vendas</span>
@@ -1038,7 +1036,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* Mais */}
         <button
           onClick={() => setIsMoreMenuOpen(true)}
-          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-green-600 min-w-[54px] cursor-pointer"
+          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-yellow-600 min-w-[54px] cursor-pointer"
         >
           <MoreHorizontal className="w-5 h-5" />
           <span className="text-[10px] font-medium">Mais</span>
@@ -1049,21 +1047,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Modal Clientes */}
       {isClientsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-slate-900 text-base">Clientes Registrados</h3>
+                  <h3 className="font-extrabold text-slate-950 text-base">Clientes Registrados</h3>
                   <p className="text-xs text-slate-500">Compradores e vendedores dos contratos</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsClientsModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1071,16 +1069,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             <div className="overflow-y-auto flex-1 space-y-2 pr-1">
               {contracts.map((c) => (
-                <div key={c.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5 text-xs">
+                <div key={c.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 text-xs">
                   <div className="flex justify-between font-bold text-slate-900">
-                    <span>{c.vendedor.nome} (Vendedor)</span>
+                    <span>{c.vendedor.nome} (1º Titular)</span>
                     <span className="font-mono text-[11px] text-slate-500">{c.vendedor.cpfCnpj}</span>
                   </div>
                   <div className="flex justify-between text-slate-700">
-                    <span>{c.comprador.nome} (Comprador)</span>
+                    <span>{c.comprador.nome} (2º Titular)</span>
                     <span className="font-mono text-[11px] text-slate-500">{c.comprador.cpfCnpj}</span>
                   </div>
-                  <div className="text-[10px] text-green-600 font-semibold pt-1 border-t border-slate-200 flex justify-between">
+                  <div className="text-[10px] text-yellow-700 font-semibold pt-1 border-t border-slate-200 flex justify-between">
                     <span>Ref: {c.numeroContrato} - {c.titulo}</span>
                     <span>{formatCurrency(c.valorTotal)}</span>
                   </div>
@@ -1090,7 +1088,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             <button
               onClick={() => setIsClientsModalOpen(false)}
-              className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+              className="w-full py-2.5 bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
             >
               Fechar
             </button>
@@ -1100,21 +1098,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Modal Imóveis */}
       {isPropertiesModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-yellow-50 text-yellow-700 flex items-center justify-center border border-yellow-200">
                   <Home className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-slate-900 text-base">Imóveis e Lotes</h3>
+                  <h3 className="font-extrabold text-slate-950 text-base">Imóveis e Lotes</h3>
                   <p className="text-xs text-slate-500">Unidades cadastradas nos instrumentos contratuais</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsPropertiesModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1122,7 +1120,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             <div className="overflow-y-auto flex-1 space-y-2 pr-1">
               {contracts.map((c) => (
-                <div key={c.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1 text-xs">
+                <div key={c.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1 text-xs">
                   <div className="font-bold text-slate-900">
                     {c.imovel?.nomeEmpreendimento || 'Imóvel Individual'} • Quadra {c.imovel?.numeroQuadra || '---'}, Lote {c.imovel?.numeroLote || '---'}
                   </div>
@@ -1138,7 +1136,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             <button
               onClick={() => setIsPropertiesModalOpen(false)}
-              className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+              className="w-full py-2.5 bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
             >
               Fechar
             </button>
@@ -1148,44 +1146,44 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Modal Relatórios */}
       {isReportsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-yellow-50 text-yellow-700 flex items-center justify-center border border-yellow-200">
                   <BarChart3 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-slate-900 text-base">Relatório de Desempenho</h3>
+                  <h3 className="font-extrabold text-slate-950 text-base">Relatório de Desempenho</h3>
                   <p className="text-xs text-slate-500">Balanço das vendas e comissões do período</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsReportsModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3.5 rounded-2xl bg-green-50 border border-green-100 flex items-center justify-between">
+              <div className="p-3.5 rounded-2xl bg-yellow-50 border border-yellow-200 flex items-center justify-between">
                 <div>
-                  <span className="text-green-900 font-bold block">Vendas à Vista</span>
-                  <span className="text-green-700 text-[11px]">{countVendasAVista} contratos liquidados</span>
+                  <span className="text-yellow-950 font-bold block">Vendas à Vista</span>
+                  <span className="text-yellow-800 text-[11px]">{countVendasAVista} contratos liquidados</span>
                 </div>
-                <span className="text-base font-extrabold text-green-950">{formatCurrency(totalVendasAVista)}</span>
+                <span className="text-base font-extrabold text-yellow-950">{formatCurrency(totalVendasAVista)}</span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-between">
+              <div className="p-3.5 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-between">
                 <div>
-                  <span className="text-emerald-900 font-bold block">Vendas Parceladas</span>
-                  <span className="text-emerald-700 text-[11px]">{countVendasParceladas} contratos sob parcelamento</span>
+                  <span className="text-slate-950 font-bold block">Vendas Parceladas</span>
+                  <span className="text-slate-700 text-[11px]">{countVendasParceladas} contratos sob parcelamento</span>
                 </div>
-                <span className="text-base font-extrabold text-emerald-950">{formatCurrency(totalVendasParceladas)}</span>
+                <span className="text-base font-extrabold text-slate-950">{formatCurrency(totalVendasParceladas)}</span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                 <div>
                   <span className="text-slate-900 font-bold block">Contratos sob Exclusividade</span>
                   <span className="text-slate-700 text-[11px]">{activeExclusivities.length} ativos para promoção</span>
@@ -1196,7 +1194,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             <button
               onClick={() => setIsReportsModalOpen(false)}
-              className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
+              className="w-full py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl transition-colors cursor-pointer"
             >
               Concluído
             </button>
@@ -1206,21 +1204,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Modal Mobile "+ Novo" */}
       {isMobileNewModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in slide-in-from-bottom sm:zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-green-600 text-white flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 text-slate-950 flex items-center justify-center font-bold">
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-slate-900 text-base">Novo Contrato</h3>
+                  <h3 className="font-extrabold text-slate-950 text-base">Novo Contrato</h3>
                   <p className="text-xs text-slate-500">Escolha a modalidade jurídica</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsMobileNewModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1232,18 +1230,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   setIsMobileNewModalOpen(false);
                   onNewContract('venda_vista');
                 }}
-                className="w-full p-3.5 rounded-2xl bg-green-50 hover:bg-green-100 border border-green-200 flex items-center justify-between text-left transition-colors cursor-pointer"
+                className="w-full p-3.5 rounded-2xl bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 flex items-center justify-between text-left transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-green-600 text-white flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 text-slate-950 flex items-center justify-center shrink-0">
                     <Home className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="font-extrabold text-slate-900 text-sm">Venda à Vista</div>
+                    <div className="font-extrabold text-slate-950 text-sm">Venda à Vista</div>
                     <div className="text-[11px] text-slate-600">Quitação integral imediata</div>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-green-600" />
+                <ChevronRight className="w-5 h-5 text-yellow-600" />
               </button>
 
               <button
@@ -1251,18 +1249,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   setIsMobileNewModalOpen(false);
                   onNewContract('venda_parcelada');
                 }}
-                className="w-full p-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 flex items-center justify-between text-left transition-colors cursor-pointer"
+                className="w-full p-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-between text-left transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
                     <CalendarDays className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="font-extrabold text-slate-900 text-sm">Venda Parcelada</div>
+                    <div className="font-extrabold text-slate-950 text-sm">Venda Parcelada</div>
                     <div className="text-[11px] text-slate-600">Entrada + parcelas mensais</div>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-emerald-600" />
+                <ChevronRight className="w-5 h-5 text-slate-600" />
               </button>
 
               <button
@@ -1270,18 +1268,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   setIsMobileNewModalOpen(false);
                   onNewContract('exclusividade');
                 }}
-                className="w-full p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-between text-left transition-colors cursor-pointer"
+                className="w-full p-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white border border-slate-800 flex items-center justify-between text-left transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-600 text-white flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 text-slate-950 flex items-center justify-center shrink-0">
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="font-extrabold text-slate-900 text-sm">Exclusividade</div>
-                    <div className="text-[11px] text-slate-600">Corretagem com monitor de prazos</div>
+                    <div className="font-extrabold text-white text-sm">Exclusividade</div>
+                    <div className="text-[11px] text-slate-300">Corretagem com monitor de prazos</div>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-slate-600" />
+                <ChevronRight className="w-5 h-5 text-yellow-400" />
               </button>
             </div>
           </div>
@@ -1290,13 +1288,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Modal Mobile "Mais" */}
       {isMoreMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in slide-in-from-bottom sm:zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-extrabold text-slate-900 text-base">Menu do Sistema</h3>
+              <h3 className="font-extrabold text-slate-950 text-base">Menu do Sistema</h3>
               <button
                 onClick={() => setIsMoreMenuOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1310,7 +1308,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 }}
                 className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center gap-2 font-bold text-slate-800"
               >
-                <Users className="w-4 h-4 text-green-600" />
+                <Users className="w-4 h-4 text-yellow-600" />
                 <span>Clientes</span>
               </button>
 
@@ -1321,7 +1319,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 }}
                 className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center gap-2 font-bold text-slate-800"
               >
-                <Home className="w-4 h-4 text-green-600" />
+                <Home className="w-4 h-4 text-yellow-600" />
                 <span>Imóveis</span>
               </button>
 
@@ -1332,11 +1330,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 }}
                 className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center gap-2 font-bold text-slate-800"
               >
-                <BarChart3 className="w-4 h-4 text-green-600" />
+                <BarChart3 className="w-4 h-4 text-yellow-600" />
                 <span>Relatórios</span>
               </button>
-
-              {/* Removido: Botão Modelos Word (gerenciado pelo TemplateManager) */}
             </div>
           </div>
         </div>

@@ -202,12 +202,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-slate-200 bg-slate-50 px-6 flex gap-2">
+        <div className="border-b border-slate-200 bg-slate-50 px-6 flex gap-2 overflow-x-auto">
           <button
             onClick={() => setActiveTab('backup')}
-            className={`px-4 py-3 font-bold text-sm transition-all border-b-2 ${
+            className={`px-4 py-3 font-bold text-sm transition-all border-b-2 cursor-pointer ${
               activeTab === 'backup'
-                ? 'border-blue-600 text-blue-600'
+                ? 'border-amber-500 text-amber-900 bg-amber-50/50'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -215,9 +215,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('contatos')}
-            className={`px-4 py-3 font-bold text-sm transition-all border-b-2 flex items-center gap-1.5 ${
+            className={`px-4 py-3 font-bold text-sm transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'contatos'
-                ? 'border-blue-600 text-blue-600'
+                ? 'border-amber-500 text-amber-900 bg-amber-50/50'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -227,9 +227,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           {isAdmin && (
             <button
               onClick={() => setActiveTab('usuarios')}
-              className={`px-4 py-3 font-bold text-sm transition-all border-b-2 flex items-center gap-1.5 ${
+              className={`px-4 py-3 font-bold text-sm transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'usuarios'
-                  ? 'border-green-600 text-green-600'
+                  ? 'border-amber-500 text-amber-900 bg-amber-50/50'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -239,7 +239,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           )}
           <button
             onClick={() => setActiveTab('danger')}
-            className={`px-4 py-3 font-bold text-sm transition-all border-b-2 ${
+            className={`px-4 py-3 font-bold text-sm transition-all border-b-2 cursor-pointer ${
               activeTab === 'danger'
                 ? 'border-red-600 text-red-600'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -256,12 +256,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             <div
               className={`p-4 rounded-lg flex gap-2 text-sm ${
                 message.type === 'success'
-                  ? 'bg-green-50 border border-green-200 text-green-700'
+                  ? 'bg-amber-50 border border-amber-200 text-amber-950'
                   : 'bg-red-50 border border-red-200 text-red-700'
               }`}
             >
               {message.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
               ) : (
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               )}
@@ -272,8 +272,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           {/* CONTATOS TAB */}
           {activeTab === 'contatos' && (
             <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-900">
+              <div className="bg-amber-50/60 border border-amber-200/70 rounded-lg p-4">
+                <p className="text-sm text-amber-950">
                   Contatos de <strong>Contratado</strong> e <strong>Vendedor</strong> salvos a partir dos contratos.
                   Eles aparecem na barra suspensa "Contatos salvos" ao criar um novo contrato.
                 </p>
@@ -293,7 +293,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   {savedParties.map((party) => (
                     <div
                       key={party.id}
-                      className="flex items-center justify-between gap-3 border border-slate-200 rounded-lg p-3"
+                      className="flex items-center justify-between gap-3 border border-slate-200 rounded-lg p-3 bg-white hover:border-slate-300"
                     >
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-slate-900 truncate">{party.nome}</p>
@@ -306,7 +306,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         onClick={() => handleDeleteParty(party.id)}
                         disabled={deletingId === party.id}
                         title="Excluir contato salvo"
-                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors shrink-0 disabled:opacity-50"
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors shrink-0 disabled:opacity-50 cursor-pointer"
                       >
                         {deletingId === party.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -324,8 +324,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           {/* BACKUP TAB */}
           {activeTab === 'backup' && (
             <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-900">
+              <div className="bg-amber-50/60 border border-amber-200/70 rounded-lg p-4">
+                <p className="text-sm text-amber-950">
                    Total de contratos: <strong>{contracts.length}</strong>
                 </p>
               </div>
@@ -334,7 +334,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               <div className="border border-slate-200 rounded-lg p-4 space-y-3">
                 <div>
                   <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                    <Download className="w-4 h-4" />
+                    <Download className="w-4 h-4 text-amber-600" />
                     Exportar como JSON
                   </h3>
                   <p className="text-xs text-slate-600 mt-1">
@@ -344,7 +344,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 <button
                   onClick={handleExportJSON}
                   disabled={loading || contracts.length === 0}
-                  className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:bg-slate-300 text-slate-950 font-bold text-sm rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                 >
                   {loading ? (
                     <>
@@ -364,7 +364,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               <div className="border border-slate-200 rounded-lg p-4 space-y-3">
                 <div>
                   <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                    <Download className="w-4 h-4" />
+                    <Download className="w-4 h-4 text-slate-700" />
                     Exportar como CSV
                   </h3>
                   <p className="text-xs text-slate-600 mt-1">
@@ -374,7 +374,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 <button
                   onClick={handleExportCSV}
                   disabled={loading || contracts.length === 0}
-                  className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-slate-300 text-white font-bold text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white font-bold text-sm rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                 >
                   {loading ? (
                     <>
@@ -395,8 +395,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           {/* USUÁRIOS TAB (somente admin) */}
           {activeTab === 'usuarios' && isAdmin && (
             <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-sm text-green-900">
+              <div className="bg-amber-50/60 border border-amber-200/70 rounded-lg p-4">
+                <p className="text-sm text-amber-950">
                   Crie novos acessos ao sistema para colaboradores ou parceiros.
                 </p>
               </div>
@@ -409,7 +409,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     required
                     value={novoNome}
                     onChange={(e) => setNovoNome(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   />
                 </div>
 
@@ -420,7 +420,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     required
                     value={novoEmail}
                     onChange={(e) => setNovoEmail(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   />
                 </div>
 
@@ -432,7 +432,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     minLength={6}
                     value={novaSenha}
                     onChange={(e) => setNovaSenha(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   />
                 </div>
 
@@ -440,12 +440,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   <div
                     className={`text-xs font-semibold rounded-lg px-3 py-2 flex items-center gap-2 ${
                       userFeedback.type === 'success'
-                        ? 'text-emerald-700 bg-emerald-50 border border-emerald-100'
+                        ? 'text-amber-950 bg-amber-50 border border-amber-200'
                         : 'text-red-600 bg-red-50 border border-red-100'
                     }`}
                   >
                     {userFeedback.type === 'success' ? (
-                      <CheckCircle2 className="w-4 h-4" />
+                      <CheckCircle2 className="w-4 h-4 text-amber-600" />
                     ) : (
                       <AlertCircle className="w-4 h-4" />
                     )}
@@ -456,7 +456,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 <button
                   type="submit"
                   disabled={isCreatingUser}
-                  className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-60 text-white font-bold text-sm py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:opacity-60 text-slate-950 font-bold text-sm py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                 >
                   {isCreatingUser && <Loader2 className="w-4 h-4 animate-spin" />}
                   <UserPlus className="w-4 h-4" />

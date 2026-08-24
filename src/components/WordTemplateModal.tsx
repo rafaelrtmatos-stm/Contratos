@@ -274,7 +274,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
               onClick={() => setActiveType('venda_vista')}
               className={`p-2 sm:p-3 rounded-xl border text-left transition-all flex flex-col justify-between min-h-[58px] sm:min-h-[70px] cursor-pointer ${
                 activeType === 'venda_vista'
-                  ? 'bg-green-50/90 border-green-500 ring-2 ring-green-500/20 shadow-xs'
+                  ? 'bg-amber-50/90 border-amber-500 ring-2 ring-amber-500/20 shadow-xs'
                   : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/80 text-slate-600'
               }`}
             >
@@ -282,19 +282,19 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Banknote
                     className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${
-                      activeType === 'venda_vista' ? 'text-green-600' : 'text-slate-400'
+                      activeType === 'venda_vista' ? 'text-amber-600' : 'text-slate-400'
                     }`}
                   />
                   <span
                     className={`text-[11px] sm:text-xs font-bold truncate block ${
-                      activeType === 'venda_vista' ? 'text-green-900' : 'text-slate-700'
+                      activeType === 'venda_vista' ? 'text-amber-950' : 'text-slate-700'
                     }`}
                   >
                     1. Venda à Vista
                   </span>
                 </div>
                 {metas.venda_vista ? (
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-200 shrink-0" title="Modelo Personalizado Ativo" />
+                  <span className="w-2 h-2 rounded-full bg-amber-500 ring-2 ring-amber-200 shrink-0" title="Modelo Personalizado Ativo" />
                 ) : (
                   <span className="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0" title="Modelo Padrão" />
                 )}
@@ -306,7 +306,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                 <span
                   className={`text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.2 rounded ${
                     metas.venda_vista
-                      ? 'bg-emerald-100 text-emerald-800'
+                      ? 'bg-amber-100 text-amber-900 border border-amber-300'
                       : 'bg-slate-100 text-slate-500'
                   }`}
                 >
@@ -321,7 +321,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
               onClick={() => setActiveType('venda_parcelada')}
               className={`p-2 sm:p-3 rounded-xl border text-left transition-all flex flex-col justify-between min-h-[58px] sm:min-h-[70px] cursor-pointer ${
                 activeType === 'venda_parcelada'
-                  ? 'bg-emerald-50/90 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+                  ? 'bg-amber-50/90 border-amber-500 ring-2 ring-amber-500/20 shadow-xs'
                   : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/80 text-slate-600'
               }`}
             >
@@ -329,19 +329,19 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                 <div className="flex items-center gap-1.5 min-w-0">
                   <CalendarClock
                     className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${
-                      activeType === 'venda_parcelada' ? 'text-emerald-600' : 'text-slate-400'
+                      activeType === 'venda_parcelada' ? 'text-amber-600' : 'text-slate-400'
                     }`}
                   />
                   <span
                     className={`text-[11px] sm:text-xs font-bold truncate block ${
-                      activeType === 'venda_parcelada' ? 'text-emerald-900' : 'text-slate-700'
+                      activeType === 'venda_parcelada' ? 'text-amber-950' : 'text-slate-700'
                     }`}
                   >
                     2. Venda Parcelada
                   </span>
                 </div>
                 {metas.venda_parcelada ? (
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-200 shrink-0" title="Modelo Personalizado Ativo" />
+                  <span className="w-2 h-2 rounded-full bg-amber-500 ring-2 ring-amber-200 shrink-0" title="Modelo Personalizado Ativo" />
                 ) : (
                   <span className="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0" title="Modelo Padrão" />
                 )}
@@ -353,7 +353,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                 <span
                   className={`text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.2 rounded ${
                     metas.venda_parcelada
-                      ? 'bg-emerald-100 text-emerald-800'
+                      ? 'bg-amber-100 text-amber-900 border border-amber-300'
                       : 'bg-slate-100 text-slate-500'
                   }`}
                 >
@@ -553,7 +553,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                           </span>
                         )}
                         {!template.testemunhas && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 rounded">
                             <LockOpen className="w-3 h-3" />
                             SEM TESTEMUNHAS
                           </span>
@@ -576,10 +576,10 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                     <button
                       onClick={() => handleDownloadSupabaseTemplate(template.arquivo)}
                       disabled={downloadingTemplate === template.arquivo}
-                      className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[38px] text-xs font-semibold bg-green-600 hover:bg-green-700 disabled:bg-slate-300 text-white rounded-lg transition-colors shadow-xs cursor-pointer whitespace-nowrap shrink-0"
+                      className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[38px] text-xs font-bold bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:bg-slate-300 text-slate-950 rounded-lg transition-colors shadow-xs cursor-pointer whitespace-nowrap shrink-0"
                       title="Baixar template para visualizar ou editar"
                     >
-                      <Download className="w-4 h-4" />
+                      <Download className="w-4 h-4 text-slate-950" />
                       <span>{downloadingTemplate === template.arquivo ? 'Baixando...' : 'Baixar'}</span>
                     </button>
                   </div>

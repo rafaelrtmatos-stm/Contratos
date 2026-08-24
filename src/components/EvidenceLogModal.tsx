@@ -32,7 +32,7 @@ export const EvidenceLogModal: React.FC<EvidenceLogModalProps> = ({ contract, on
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-blue-600" />
+            <ShieldCheck className="w-5 h-5 text-amber-600" />
             <h2 className="text-sm font-bold text-slate-900">Log de Evidências</h2>
           </div>
           <button
@@ -58,7 +58,7 @@ export const EvidenceLogModal: React.FC<EvidenceLogModalProps> = ({ contract, on
                   <span className="text-xs font-bold text-slate-900">
                     {roleLabel(a.role)} — {a.nomeSignatario}
                   </span>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold text-amber-900 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
                     Assinado digitalmente
                   </span>
                 </div>
