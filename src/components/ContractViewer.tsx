@@ -312,6 +312,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   const cTermo = isExcl ? 'CONTRATADO(A)' : (anyTags.comprador_termo || 'PROMITENTE COMPRADOR(A)');
 
   const isDigital = currentModality === 'digital';
+  const isFullySigned = contract.modalidadeAssinatura === 'digital' && (contract.assinaturas?.length || 0) >= 2;
 
   return (
     <div className="max-w-4xl mx-auto pb-16 space-y-6">
@@ -373,16 +374,18 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             <span>Imprimir</span>
           </button>
 
-          {/* Exportar WORD (.DOCX) */}
-          <button
-            onClick={handleDownloadDocx}
-            disabled={isDownloadingDocx}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-bold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors shadow-2xs cursor-pointer"
-            title="Gera o arquivo Word (.docx) original substituindo apenas as TAGs com 100% de preservação de formatação"
-          >
-            <FileDown className="w-4 h-4 text-green-600 shrink-0" />
-            <span>{isDownloadingDocx ? 'Gerando...' : 'Word (.docx)'}</span>
-          </button>
+          {/* Exportar WORD (.DOCX) - some depois que o contrato digital está 100% assinado */}
+          {!isFullySigned && (
+            <button
+              onClick={handleDownloadDocx}
+              disabled={isDownloadingDocx}
+              className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-bold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors shadow-2xs cursor-pointer"
+              title="Gera o arquivo Word (.docx) original substituindo apenas as TAGs com 100% de preservação de formatação"
+            >
+              <FileDown className="w-4 h-4 text-green-600 shrink-0" />
+              <span>{isDownloadingDocx ? 'Gerando...' : 'Word (.docx)'}</span>
+            </button>
+          )}
 
           {/* Exportar PDF */}
           <button
@@ -398,7 +401,21 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
       {/* ========================================================================= */}
       {/* SELETOR DE MODALIDADE DE FINALIZAÇÃO / ASSINATURA DO CONTRATO            */}
+      {/* Some por completo quando o contrato digital já está 100% assinado        */}
       {/* ========================================================================= */}
+      {isFullySigned ? (
+        <div className="bg-emerald-50 p-4 sm:p-5 rounded-2xl border border-emerald-200 shadow-sm print:hidden flex items-center gap-3">
+          <ShieldCheck className="w-6 h-6 text-emerald-600 shrink-0" />
+          <div>
+            <span className="text-sm font-bold text-emerald-900 block">
+              Contrato assinado — somente visualização
+            </span>
+            <p className="text-xs text-emerald-700 mt-0.5">
+              Ambas as partes já assinaram digitalmente. Não é mais possível reabrir o fluxo de assinatura.
+            </p>
+          </div>
+        </div>
+      ) : (
       <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm print:hidden space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div>
@@ -512,12 +529,13 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                 title="Fluxo com OTP e carimbo digital"
               >
                 <ShieldCheck className="w-4 h-4" />
-                <span>Assinar com Carimbo Digital</span>
+                <span>Assinatura Digital</span>
               </button>
             </div>
           </div>
         )}
       </div>
+      )}
 
       {/* Banner de Monitor de Prazo se for Exclusividade */}
       {contract.tipo === 'exclusividade' && contract.exclusividade && (
