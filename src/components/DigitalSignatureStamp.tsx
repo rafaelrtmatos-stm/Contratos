@@ -30,8 +30,8 @@ const PAGE_HEIGHT_MM = 297;
 const STAMP_WIDTH_MM = PAGE_WIDTH_MM * 0.33; // 69.3mm
 const STAMP_HEIGHT_MM = PAGE_HEIGHT_MM * 0.07; // 20.79mm
 
-// Tamanho mínimo de fonte: 4pt (nenhum texto fica abaixo disso)
-const MIN_FONT = '4pt';
+// Tamanho mínimo de fonte: 3.5pt (nenhum texto fica abaixo disso)
+const MIN_FONT = '3.5pt';
 
 export const DigitalSignatureStamp: React.FC<DigitalSignatureStampProps> = ({
   signature,
