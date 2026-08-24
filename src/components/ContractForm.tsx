@@ -41,7 +41,8 @@ import { fetchSavedParties, saveParty } from '../utils/savedPartiesRepository';
 interface ContractFormProps {
   initialData?: ContractData | null;
   defaultType?: ContractType;
-  onSave: (contract: ContractData) => void;
+  onSave: (contract: ContractData) => void | Promise<void>;
+  onSaveDraft: (contract: ContractData) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -101,8 +102,13 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   initialData,
   defaultType = 'venda_vista',
   onSave,
+  onSaveDraft,
   onCancel,
 }) => {
+  // Gerado UMA VEZ por sessão de preenchimento (não a cada save) - senão
+  // salvar rascunho mais de uma vez criaria um contrato novo a cada clique
+  // em vez de atualizar o mesmo registro no Supabase.
+  const [contractId] = useState(() => initialData?.id || generateUUID());
   const [tipo, setTipo] = useState<ContractType>(initialData?.tipo || defaultType);
   const [subcategoria, setSubcategoria] = useState<ContractSubtype>(
     initialData?.subcategoria || 'imovel'
@@ -493,6 +499,87 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     return missing;
   };
 
+  const buildContractData = (): ContractData => ({
+    id: contractId,
+    numeroContrato,
+    titulo: titulo || (subcategoria === 'outros_bens' ? 'Contrato de Compra e Venda de Bem Móvel' : 'Contrato Imobiliário'),
+    tipo,
+    subcategoria: tipo === 'exclusividade' ? 'imovel' : subcategoria,
+    dataCriacao: initialData?.dataCriacao || new Date().toISOString(),
+    status: initialData?.status || 'rascunho',
+    vendedor,
+    comprador,
+    imovel: subcategoria === 'imovel' || tipo === 'exclusividade' ? imovel : undefined,
+    bemOutros: subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? bemOutros : undefined,
+    cidadeForo,
+    ufForo,
+    cidadeAssinatura,
+    ufAssinatura,
+    diaAssinatura,
+    mesExtensoAssinatura,
+    anoAssinatura,
+    valorTotal,
+    valorTotalExtenso: valorTotalExtenso || numeroPorExtensoReais(valorTotal),
+    vendaVista: tipo === 'venda_vista' ? {
+      formaPagamento: formaPagamentoVista as any,
+      dadosBancariosRecebedor,
+      dataQuitacao: `${diaAssinatura}/${mesExtensoAssinatura}/${anoAssinatura}`,
+      prazoEntregaPosse: 'Imediata na assinatura deste instrumento',
+    } : undefined,
+    vendaParcelada: tipo === 'venda_parcelada' ? {
+      valorEntrada,
+      formaPagamentoEntrada: 'Transferência / PIX',
+      dataEntrada: `${diaAssinatura}/${mesExtensoAssinatura}/${anoAssinatura}`,
+      numeroParcelas,
+      valorParcela,
+      periodicidade: 'Mensal',
+      dataPrimeiroVencimento: '30 dias após a assinatura',
+      formaPagamentoParcelas: formaPagamentoParcelas as any,
+      multaAtrasoPercentual: 2,
+      jurosMoraMensalPercentual: 1,
+      clausulaReservaDominio,
+    } : undefined,
+    exclusividade: tipo === 'exclusividade' ? {
+      tipoExclusividade: 'Venda de Imóvel',
+      dataInicio: dataInicioExcl,
+      dataTermino: new Date(Date.now() + (prazoMesesOuDias * (unidadePrazo === 'meses' ? 30 : 1) * 86400000)).toISOString().split('T')[0],
+      prazoMesesOuDias,
+      unidadePrazo,
+      percentualComissao,
+      multaRescisaoOuQuebra: 10,
+      renovacaoAutomatica: false,
+      autorizaDivulgacaoPlacasRedes: true,
+      condicoesPagamento,
+      documentoPropriedade,
+      matricula,
+      inscricaoPrefeitura,
+      outrosDadosImovel,
+    } : undefined,
+    clausulasExtras,
+    assinaturas: initialData?.assinaturas || [],
+    modalidadeAssinatura: initialData?.modalidadeAssinatura,
+    testemunha1: initialData?.testemunha1,
+    testemunha2: initialData?.testemunha2,
+  });
+
+  // Salvar Rascunho: NÃO valida campos obrigatórios - salva o que já foi
+  // preenchido até agora no Supabase, pra continuar depois em outro
+  // dispositivo (ex: começou no celular com o cliente, termina no PC).
+  // Não navega pra outra tela - fica no formulário, só confirma o salvamento.
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
+  const handleSaveDraft = async () => {
+    setSavingDraft(true);
+    setDraftSaved(false);
+    try {
+      await onSaveDraft({ ...buildContractData(), status: 'rascunho' });
+      setDraftSaved(true);
+      setTimeout(() => setDraftSaved(false), 3000);
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -505,69 +592,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     }
     setMissingFields([]);
 
-    const contractData: ContractData = {
-      id: initialData?.id || generateUUID(),
-      numeroContrato,
-      titulo: titulo || (subcategoria === 'outros_bens' ? 'Contrato de Compra e Venda de Bem Móvel' : 'Contrato Imobiliário'),
-      tipo,
-      subcategoria: tipo === 'exclusividade' ? 'imovel' : subcategoria,
-      dataCriacao: initialData?.dataCriacao || new Date().toISOString(),
-      status: initialData?.status || 'rascunho',
-      vendedor,
-      comprador,
-      imovel: subcategoria === 'imovel' || tipo === 'exclusividade' ? imovel : undefined,
-      bemOutros: subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? bemOutros : undefined,
-      cidadeForo,
-      ufForo,
-      cidadeAssinatura,
-      ufAssinatura,
-      diaAssinatura,
-      mesExtensoAssinatura,
-      anoAssinatura,
-      valorTotal,
-      valorTotalExtenso: valorTotalExtenso || numeroPorExtensoReais(valorTotal),
-      vendaVista: tipo === 'venda_vista' ? {
-        formaPagamento: formaPagamentoVista as any,
-        dadosBancariosRecebedor,
-        dataQuitacao: `${diaAssinatura}/${mesExtensoAssinatura}/${anoAssinatura}`,
-        prazoEntregaPosse: 'Imediata na assinatura deste instrumento',
-      } : undefined,
-      vendaParcelada: tipo === 'venda_parcelada' ? {
-        valorEntrada,
-        formaPagamentoEntrada: 'Transferência / PIX',
-        dataEntrada: `${diaAssinatura}/${mesExtensoAssinatura}/${anoAssinatura}`,
-        numeroParcelas,
-        valorParcela,
-        periodicidade: 'Mensal',
-        dataPrimeiroVencimento: '30 dias após a assinatura',
-        formaPagamentoParcelas: formaPagamentoParcelas as any,
-        multaAtrasoPercentual: 2,
-        jurosMoraMensalPercentual: 1,
-        clausulaReservaDominio,
-      } : undefined,
-      exclusividade: tipo === 'exclusividade' ? {
-        tipoExclusividade: 'Venda de Imóvel',
-        dataInicio: dataInicioExcl,
-        dataTermino: new Date(Date.now() + (prazoMesesOuDias * (unidadePrazo === 'meses' ? 30 : 1) * 86400000)).toISOString().split('T')[0],
-        prazoMesesOuDias,
-        unidadePrazo,
-        percentualComissao,
-        multaRescisaoOuQuebra: 10,
-        renovacaoAutomatica: false,
-        autorizaDivulgacaoPlacasRedes: true,
-        condicoesPagamento,
-        documentoPropriedade,
-        matricula,
-        inscricaoPrefeitura,
-        outrosDadosImovel,
-      } : undefined,
-      clausulasExtras,
-      assinaturas: initialData?.assinaturas || [],
-      modalidadeAssinatura: initialData?.modalidadeAssinatura,
-      testemunha1: initialData?.testemunha1,
-      testemunha2: initialData?.testemunha2,
-    };
-
+    const contractData = buildContractData();
     onSave(contractData);
   };
 
@@ -2241,6 +2266,20 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             className="w-full sm:w-auto min-h-[44px] sm:min-h-[40px] px-4 py-2.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer text-center"
           >
             Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveDraft}
+            disabled={savingDraft}
+            title="Salva o que já foi preenchido no Supabase, sem exigir os campos obrigatórios - continue depois em outro dispositivo"
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-[40px] flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 disabled:opacity-60 border border-amber-200 rounded-lg transition-colors cursor-pointer text-center"
+          >
+            {draftSaved ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-green-600" />
+            ) : (
+              <FileText className="w-4 h-4 shrink-0" />
+            )}
+            <span>{savingDraft ? 'Salvando...' : draftSaved ? 'Rascunho salvo!' : 'Salvar Rascunho'}</span>
           </button>
           {activeTab === 'revisao' && (
             <button

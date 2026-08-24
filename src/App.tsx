@@ -123,6 +123,27 @@ function MainApp() {
     }
   };
 
+  // Salvar Rascunho: persiste no Supabase (mesma tabela/lógica de sempre),
+  // mas NÃO navega pra outra tela - o usuário continua no formulário,
+  // podendo terminar de preencher depois em outro dispositivo.
+  const handleSaveDraftFromForm = async (savedContract: ContractData) => {
+    try {
+      const persisted = await saveContract(savedContract);
+      setContracts((prev) => {
+        const existsIndex = prev.findIndex((c) => c.id === persisted.id);
+        if (existsIndex >= 0) {
+          const next = [...prev];
+          next[existsIndex] = persisted;
+          return next;
+        }
+        return [persisted, ...prev];
+      });
+    } catch (e: any) {
+      console.error('Falha ao salvar rascunho no Supabase', e);
+      alert(e.message || 'Falha ao salvar rascunho.');
+    }
+  };
+
   const handleUpdateContractFromViewer = async (updatedContract: ContractData) => {
     try {
       const persisted = await saveContract(updatedContract);
@@ -264,6 +285,7 @@ function MainApp() {
             initialData={selectedContract}
             defaultType={formDefaultType}
             onSave={handleSaveContractFromForm}
+            onSaveDraft={handleSaveDraftFromForm}
             onCancel={() => {
               if (selectedContract) {
                 setCurrentView('viewer');
