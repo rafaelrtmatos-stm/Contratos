@@ -69,19 +69,19 @@ const TEMPLATE_GROUPS: Record<ContractType | 'outros_bens', Array<{
   venda_parcelada: [
     {
       modalidade: 'Digital',
-      arquivo: 'venda_parcelada_assinatura_digital.docx',
+      arquivo: 'parcelado_assinatura_digital_sem_testemunhas.docx',
       descricao: 'Ambos assinam digitalmente - SEM testemunhas',
       testemunhas: false,
     },
     {
       modalidade: 'Manual',
-      arquivo: 'venda_parcelada_assinatura_manual_2_testemunhas.docx',
+      arquivo: 'parcelado_ambos_manuais_2_testemunhas.docx',
       descricao: 'Ambos assinam manualmente - COM 2 testemunhas',
       testemunhas: true,
     },
     {
       modalidade: 'Mista',
-      arquivo: 'venda_parcelada_mista_2_testemunhas.docx',
+      arquivo: 'parcelado_usuario_digital_comprador_manual_2_testemunhas.docx',
       descricao: 'Um digital, outro manual - COM 2 testemunhas',
       testemunhas: true,
     },
@@ -89,20 +89,20 @@ const TEMPLATE_GROUPS: Record<ContractType | 'outros_bens', Array<{
   exclusividade: [
     {
       modalidade: 'Digital',
-      arquivo: 'exclusividade_assinatura_digital.docx',
+      arquivo: 'exclusividade_digital_sem_testemunhas.docx',
       descricao: 'Ambos assinam digitalmente - SEM testemunhas',
       testemunhas: false,
     },
     {
       modalidade: 'Mista',
-      arquivo: 'exclusividade_mista_2_testemunhas.docx',
+      arquivo: 'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',
       descricao: 'Um digital, outro manual - COM 2 testemunhas',
       testemunhas: true,
     },
     {
       modalidade: 'Sem Cônjuge',
-      arquivo: 'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
-      descricao: 'Variante SEM cônjuge - COM 2 testemunhas',
+      arquivo: 'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',
+      descricao: 'Variante SEM cônjuge - COM 2 testemunhas (usa o mesmo arquivo do Mista - confirmar com Rafael)',
       testemunhas: true,
     },
   ],
@@ -118,8 +118,8 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
   const [activeTab, setActiveTab] = useState<Tab>('venda_vista');
   const [preferences, setPreferences] = useState<TemplatePreferences>({
     venda_vista: 'venda_vista_assinatura_digital.docx',
-    venda_parcelada: 'venda_parcelada_assinatura_digital.docx',
-    exclusividade: 'exclusividade_assinatura_digital.docx',
+    venda_parcelada: 'parcelado_assinatura_digital_sem_testemunhas.docx',
+    exclusividade: 'exclusividade_digital_sem_testemunhas.docx',
     outros_bens: '', // Vazio até serem adicionados templates
   });
 
