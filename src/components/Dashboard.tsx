@@ -766,10 +766,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <button
                         onClick={() => onSignContractDirect(contract)}
                         className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
-                        title="Assinar Digitalmente"
+                        title="Assinar com Carimbo Digital"
                       >
-                        <PenTool className="w-4 h-4" />
-                        <span>Assinar</span>
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>Carimbo Digital</span>
                       </button>
 
                       <button
@@ -915,9 +915,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             <button
                               onClick={() => onSignContractDirect(contract)}
                               className="p-2 text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
-                              title="Assinar Digitalmente"
+                              title="Assinar com Carimbo Digital"
                             >
-                              <PenTool className="w-4 h-4" />
+                              <ShieldCheck className="w-4 h-4" />
                             </button>
 
                             <button

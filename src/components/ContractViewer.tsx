@@ -28,10 +28,10 @@ import { saveSignature } from '../utils/contractsRepository';
 import { AuditStamp, formatAuditStampText } from '../utils/signatureOtpUtils';
 import { DigitalSignatureFlowModal } from './DigitalSignatureFlowModal';
 import { DigitalSignatureStamp } from './DigitalSignatureStamp';
+import { EvidenceLogModal } from './EvidenceLogModal';
 import {
   FileDown,
   FileText,
-  PenTool,
   ArrowLeft,
   Edit3,
   Printer,
@@ -44,6 +44,7 @@ import {
   Users,
   PrinterCheck,
   Sparkles,
+  FileSearch,
 } from 'lucide-react';
 
 interface ContractViewerProps {
@@ -61,6 +62,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 }) => {
   const [isWordTemplateModalOpen, setIsWordTemplateModalOpen] = useState(false);
   const [isDigitalSignFlowOpen, setIsDigitalSignFlowOpen] = useState(false);
+  const [isEvidenceLogOpen, setIsEvidenceLogOpen] = useState(false);
   const [signFlowParte, setSignFlowParte] = useState<'usuario' | 'comprador'>('usuario');
   const [copied, setCopied] = useState(false);
   const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
@@ -457,17 +459,28 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               )}
             </div>
 
-            <button
-              onClick={() => {
-                setSignFlowParte('usuario');
-                setIsDigitalSignFlowOpen(true);
-              }}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer shrink-0 min-h-[38px]"
-              title="Fluxo com OTP e carimbo digital"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Assinar com Carimbo Digital</span>
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsEvidenceLogOpen(true)}
+                className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
+                title="Ver log de evidências das assinaturas"
+              >
+                <FileSearch className="w-4 h-4" />
+                <span>Log de Evidências</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setSignFlowParte('usuario');
+                  setIsDigitalSignFlowOpen(true);
+                }}
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
+                title="Fluxo com OTP e carimbo digital"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Assinar com Carimbo Digital</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -730,6 +743,13 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           parte={signFlowParte}
           onClose={() => setIsDigitalSignFlowOpen(false)}
           onSignatureRegistered={handleSignatureRegistered}
+        />
+      )}
+
+      {isEvidenceLogOpen && (
+        <EvidenceLogModal
+          contract={contract}
+          onClose={() => setIsEvidenceLogOpen(false)}
         />
       )}
     </div>

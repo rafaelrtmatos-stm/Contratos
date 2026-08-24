@@ -5,7 +5,8 @@ import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
 import { ContractForm } from './components/ContractForm';
 import { ContractViewer } from './components/ContractViewer';
-import { DigitalSignatureModal } from './components/DigitalSignatureModal';
+import { DigitalSignatureFlowModal } from './components/DigitalSignatureFlowModal';
+import { AuditStamp } from './utils/signatureOtpUtils';
 
 import { TemplateManagerModal } from './components/TemplateManagerModal';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -69,6 +70,7 @@ function MainApp() {
 
   // Modal de assinatura rápida acionada diretamente pelo dashboard
   const [quickSignContract, setQuickSignContract] = useState<ContractData | null>(null);
+  const [quickSignParte, setQuickSignParte] = useState<'usuario' | 'comprador'>('usuario');
 
   // Carregar contratos do Supabase ao iniciar
   useEffect(() => {
@@ -172,8 +174,19 @@ function MainApp() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleQuickSignConfirm = async (signature: any) => {
+  const handleQuickSignConfirm = async (auditStamp: AuditStamp) => {
     if (!quickSignContract) return;
+
+    const signature = {
+      role: quickSignParte === 'usuario' ? 'vendedor' : 'comprador',
+      nomeSignatario: quickSignParte === 'usuario' ? quickSignContract.vendedor.nome : quickSignContract.comprador.nome,
+      documentoSignatario: quickSignParte === 'usuario' ? quickSignContract.vendedor.cpfCnpj : quickSignContract.comprador.cpfCnpj,
+      assinaturaDataUrl: auditStamp.signatureId,
+      assinadoEm: auditStamp.dataAssinatura,
+      hashAutenticacao: auditStamp.hashDocumento,
+      ipAssinatura: auditStamp.ipAssinatura,
+      metadadosNavegador: auditStamp.userAgent || navigator.userAgent,
+    };
 
     const filtered = quickSignContract.assinaturas.filter((a) => a.role !== signature.role);
     const updatedSignatures = [...filtered, signature];
@@ -232,7 +245,12 @@ function MainApp() {
             onSelectContract={handleSelectContractToView}
             onNewContract={handleCreateNewContract}
             onDeleteContract={handleDeleteContract}
-            onSignContractDirect={(contract) => setQuickSignContract(contract)}
+            onSignContractDirect={(contract) => {
+              const vendedorAssinou = contract.assinaturas?.some((a) => a.role === 'vendedor');
+              const compradorAssinou = contract.assinaturas?.some((a) => a.role === 'comprador');
+              setQuickSignParte(vendedorAssinou && !compradorAssinou ? 'comprador' : 'usuario');
+              setQuickSignContract(contract);
+            }}
             onOpenWordTemplates={() => setIsWordTemplateModalOpen(true)}
           />
         )}
@@ -289,11 +307,11 @@ function MainApp() {
 
       {/* Modal de Assinatura Rápida Direta do Dashboard */}
       {quickSignContract && (
-        <DigitalSignatureModal
+        <DigitalSignatureFlowModal
           contract={quickSignContract}
-          isOpen={true}
+          parte={quickSignParte}
           onClose={() => setQuickSignContract(null)}
-          onSign={handleQuickSignConfirm}
+          onSignatureRegistered={handleQuickSignConfirm}
         />
       )}
     </div>
