@@ -7,6 +7,7 @@ import { ContractViewer } from './components/ContractViewer';
 import { DigitalSignatureModal } from './components/DigitalSignatureModal';
 
 import { TemplateManagerModal } from './components/TemplateManagerModal';
+import { SettingsPanel } from './components/SettingsPanel';
 import { LoginScreen } from './components/LoginScreen';
 import { AdminUsersPanel } from './components/AdminUsersPanel';
 import { AuthProvider, useAuth } from './utils/authContext';
@@ -50,6 +51,7 @@ function MainApp() {
   
   // Modal de gestão de templates
   const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
+  const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
 
   // Modal de assinatura rápida acionada diretamente pelo dashboard
@@ -132,6 +134,20 @@ function MainApp() {
     }
   };
 
+  const handleDeleteAllContracts = async () => {
+    try {
+      for (const contract of contracts) {
+        await deleteContract(contract.id);
+      }
+      setContracts([]);
+      setSelectedContract(null);
+      setCurrentView('dashboard');
+    } catch (e: any) {
+      console.error('Falha ao excluir contratos', e);
+      throw new Error(e.message || 'Falha ao excluir contratos.');
+    }
+  };
+
   const handleSelectContractToView = (contract: ContractData) => {
     setSelectedContract(contract);
     setCurrentView('viewer');
@@ -175,6 +191,7 @@ function MainApp() {
         }}
         onNewContract={handleCreateNewContract}
         onOpenTemplateManager={() => setIsTemplateManagerOpen(true)}
+        onOpenSettings={() => setIsSettingsPanelOpen(true)}
         contractCount={contracts.length}
         isAdmin={profile?.role === 'admin'}
         onOpenAdminPanel={() => setIsAdminPanelOpen(true)}
@@ -239,6 +256,16 @@ function MainApp() {
         <TemplateManagerModal
           isOpen={isTemplateManagerOpen}
           onClose={() => setIsTemplateManagerOpen(false)}
+        />
+      )}
+
+      {/* Painel de Configurações */}
+      {isSettingsPanelOpen && (
+        <SettingsPanel
+          isOpen={isSettingsPanelOpen}
+          onClose={() => setIsSettingsPanelOpen(false)}
+          contracts={contracts}
+          onDeleteAllContracts={handleDeleteAllContracts}
         />
       )}
 
