@@ -83,6 +83,9 @@ export const SIGNATURE_TAGS = {
   // Contrato de Exclusividade: {{CONTRATANTE_ASSINATURA_DIGITAL}} é o selo do CONTRATANTE
   // (mapeado para o slot "comprador" internamente - ver mapTagsToConfig)
   CONTRATANTE_DIGITAL: '{{CONTRATANTE_ASSINATURA_DIGITAL}}',
+  // Contrato de Exclusividade (modalidade mista): {{CONTRATANTE_ASSINATURA_MANUAL}} é o
+  // espaço/linha de assinatura manuscrita do CONTRATANTE (mapeado para o slot "comprador")
+  CONTRATANTE_MANUAL: '{{CONTRATANTE_ASSINATURA_MANUAL}}',
 };
 
 function escapeXml(value: string): string {
@@ -342,6 +345,9 @@ export function mapTagsToConfig(
     } else if (tag.includes('CONTRATANTE') && tag.includes('DIGITAL')) {
       // Exclusividade: CONTRATANTE_ASSINATURA_DIGITAL usa o mesmo slot de compradorInfo
       config.push({ tag, tipo: 'digital', parte: 'comprador', info: compradorInfo });
+    } else if (tag.includes('CONTRATANTE') && tag.includes('MANUAL')) {
+      // Exclusividade (mista): CONTRATANTE_ASSINATURA_MANUAL usa o mesmo slot de compradorInfo
+      config.push({ tag, tipo: 'manual', parte: 'comprador', info: compradorInfo });
     }
   }
 
