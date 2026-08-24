@@ -90,6 +90,49 @@ export function generateContractTags(contract: ContractData): TagMapping {
 }
 
 /**
+ * Escapa valor para inserção segura em texto XML (preserva formatação dos runs ao redor)
+ */
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+/**
+ * Substitui tags {{TAG}} em uma string XML, mesmo quando o Word fragmenta a tag
+ * em múltiplos nós <w:t> (ex: "{{VEN" + "DEDOR_NOME}}"). Não altera formatação:
+ * apenas o conteúdo textual dentro dos nós <w:t> é trocado, os runs e estilos
+ * ao redor permanecem intactos.
+ */
+function replaceTagsPreservingFormat(xml: string, tags: TagMapping): string {
+  // Casa {{ ... }} mesmo com marcação XML de runs quebrados no meio (non-greedy)
+  let result = xml.replace(/\{\{([\s\S]*?)\}\}/g, (fullMatch, innerRaw: string) => {
+    // Remove qualquer marcação XML que o Word tenha inserido entre os fragmentos da tag
+    const cleanTag = innerRaw.replace(/<[^>]+>/g, '').trim();
+
+    if (!cleanTag || !/^[A-Za-z0-9_À-ÿ]+$/.test(cleanTag)) {
+      // Não parece ser uma tag válida (ex: chaves de código/fórmula) — não mexe
+      return fullMatch;
+    }
+
+    const upperTag = cleanTag.toUpperCase();
+    const matchKey = Object.keys(tags).find((k) => k.toUpperCase() === upperTag);
+
+    if (matchKey === undefined) {
+      // Tag desconhecida: remove para não deixar {{...}} residual no documento final
+      return '';
+    }
+
+    return escapeXml(tags[matchKey] || '');
+  });
+
+  return result;
+}
+
+/**
  * Substitui tags em documento DOCX
  */
 export async function substituirTagsNoDocx(
@@ -99,62 +142,18 @@ export async function substituirTagsNoDocx(
   const zip = new JSZip();
   await zip.loadAsync(docxBuffer);
 
-  // Processar document.xml
-  const documentXml = await zip.file('word/document.xml')?.async('string');
-  if (documentXml) {
-    let processedXml = documentXml;
+  const partsToProcess = [
+    'word/document.xml',
+    'word/document2.xml',
+    ...[1, 2, 3, 4, 5].map((i) => `word/header${i}.xml`),
+    ...[1, 2, 3, 4, 5].map((i) => `word/footer${i}.xml`),
+  ];
 
-    // Substituir cada tag
-    for (const [tag, valor] of Object.entries(tags)) {
-      const regex = new RegExp(`{{${tag}}}`, 'g');
-      processedXml = processedXml.replace(regex, valor || '');
-    }
-
-    zip.file('word/document.xml', processedXml);
-  }
-
-  // Processar document2.xml se existir (alguns documentos têm múltiplas partes)
-  const document2Xml = await zip.file('word/document2.xml')?.async('string');
-  if (document2Xml) {
-    let processedXml = document2Xml;
-
-    for (const [tag, valor] of Object.entries(tags)) {
-      const regex = new RegExp(`{{${tag}}}`, 'g');
-      processedXml = processedXml.replace(regex, valor || '');
-    }
-
-    zip.file('word/document2.xml', processedXml);
-  }
-
-  // Processar headers
-  for (let i = 1; i <= 5; i++) {
-    const headerFile = `word/header${i}.xml`;
-    const headerXml = await zip.file(headerFile)?.async('string');
-    if (headerXml) {
-      let processedXml = headerXml;
-
-      for (const [tag, valor] of Object.entries(tags)) {
-        const regex = new RegExp(`{{${tag}}}`, 'g');
-        processedXml = processedXml.replace(regex, valor || '');
-      }
-
-      zip.file(headerFile, processedXml);
-    }
-  }
-
-  // Processar footers
-  for (let i = 1; i <= 5; i++) {
-    const footerFile = `word/footer${i}.xml`;
-    const footerXml = await zip.file(footerFile)?.async('string');
-    if (footerXml) {
-      let processedXml = footerXml;
-
-      for (const [tag, valor] of Object.entries(tags)) {
-        const regex = new RegExp(`{{${tag}}}`, 'g');
-        processedXml = processedXml.replace(regex, valor || '');
-      }
-
-      zip.file(footerFile, processedXml);
+  for (const partName of partsToProcess) {
+    const originalXml = await zip.file(partName)?.async('string');
+    if (originalXml) {
+      const processedXml = replaceTagsPreservingFormat(originalXml, tags);
+      zip.file(partName, processedXml);
     }
   }
 
