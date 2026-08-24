@@ -1449,6 +1449,21 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   />
                 </div>
 
+                {tipo === 'exclusividade' && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      CRECI
+                    </label>
+                    <input
+                      type="text"
+                      value={comprador.creci || ''}
+                      onChange={(e) => setComprador({ ...comprador, creci: e.target.value })}
+                      placeholder="Ex: 1234-J"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
                     Nacionalidade
