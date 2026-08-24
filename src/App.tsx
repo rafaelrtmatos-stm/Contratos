@@ -141,6 +141,11 @@ function MainApp() {
       }
       setContracts([]);
       setSelectedContract(null);
+      
+      // 🧹 Limpar cache do localStorage
+      localStorage.removeItem('contracts_cache');
+      localStorage.removeItem('contracts_last_updated');
+      
       setCurrentView('dashboard');
     } catch (e: any) {
       console.error('Falha ao excluir contratos', e);

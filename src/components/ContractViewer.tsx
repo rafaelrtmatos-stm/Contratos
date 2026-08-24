@@ -19,6 +19,10 @@ import {
   mapTagsToConfig,
   summarizeChanges,
 } from '../utils/signatureTagProcessor';
+import {
+  generateContractTags,
+  substituirTagsNoDocx,
+} from '../utils/dataTagsProcessor';
 import { DigitalSignatureFlowModal } from './DigitalSignatureFlowModal';
 import { DigitalSignatureStamp } from './DigitalSignatureStamp';
 import {
@@ -194,8 +198,15 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
       const docxBuffer = await blob.arrayBuffer();
 
+      // 2.5 NOVO: Substituir tags de DADOS do contrato
+      console.log('🔄 Gerando tags de dados...');
+      const tagsContrato = generateContractTags(contract);
+      
+      console.log('✏️ Substituindo tags de dados no template...');
+      const docxComDados = await substituirTagsNoDocx(docxBuffer, tagsContrato);
+
       // 3. Processar tags de assinatura
-      const tagsEncontradas = await findSignatureTags(docxBuffer);
+      const tagsEncontradas = await findSignatureTags(docxComDados);
       
       if (tagsEncontradas.length > 0) {
         console.log('🏷️ Tags de assinatura encontradas:', tagsEncontradas);
@@ -211,8 +222,8 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
         const resumo = summarizeChanges(tagsConfig);
         console.log('📊 Resumo de mudanças:', resumo);
 
-        // Processar tags
-        const docxProcessado = await processSignatureTags(docxBuffer, tagsConfig);
+        // Processar tags de assinatura (sobre o DOCX com dados já substituídos)
+        const docxProcessado = await processSignatureTags(docxComDados, tagsConfig);
 
         // 4. Fazer download
         const url = URL.createObjectURL(new Blob([docxProcessado], { 
@@ -226,8 +237,10 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } else {
-        // Nenhuma tag de assinatura, fazer download direto
-        const url = URL.createObjectURL(blob);
+        // Nenhuma tag de assinatura, fazer download direto com dados substituídos
+        const url = URL.createObjectURL(new Blob([docxComDados], { 
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+        }));
         const a = document.createElement('a');
         a.href = url;
         a.download = `${contract.nomeLote || 'contrato'}_${new Date().getTime()}.docx`;
