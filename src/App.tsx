@@ -5,7 +5,7 @@ import { Dashboard } from './components/Dashboard';
 import { ContractForm } from './components/ContractForm';
 import { ContractViewer } from './components/ContractViewer';
 import { DigitalSignatureModal } from './components/DigitalSignatureModal';
-import { WordTemplateModal } from './components/WordTemplateModal';
+
 import { TemplateManagerModal } from './components/TemplateManagerModal';
 import { LoginScreen } from './components/LoginScreen';
 import { AdminUsersPanel } from './components/AdminUsersPanel';
@@ -48,8 +48,7 @@ function MainApp() {
   const [selectedContract, setSelectedContract] = useState<ContractData | null>(null);
   const [formDefaultType, setFormDefaultType] = useState<ContractType>('venda_vista');
   
-  // Modal de modelos Word
-  const [isWordTemplateModalOpen, setIsWordTemplateModalOpen] = useState(false);
+  // Modal de gestão de templates
   const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
 
@@ -175,7 +174,6 @@ function MainApp() {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         onNewContract={handleCreateNewContract}
-        onOpenWordTemplates={() => setIsWordTemplateModalOpen(true)}
         onOpenTemplateManager={() => setIsTemplateManagerOpen(true)}
         contractCount={contracts.length}
         isAdmin={profile?.role === 'admin'}
@@ -235,15 +233,6 @@ function MainApp() {
 
       {/* Painel de Administração de Usuários */}
       <AdminUsersPanel isOpen={isAdminPanelOpen} onClose={() => setIsAdminPanelOpen(false)} />
-
-      {/* Modal Global de Modelos Word (.docx) */}
-      {isWordTemplateModalOpen && (
-        <WordTemplateModal
-          isOpen={isWordTemplateModalOpen}
-          initialType={selectedContract?.tipo || formDefaultType || 'venda_vista'}
-          onClose={() => setIsWordTemplateModalOpen(false)}
-        />
-      )}
 
       {/* Modal de Gestão de Templates (Padrões do Supabase) */}
       {isTemplateManagerOpen && (

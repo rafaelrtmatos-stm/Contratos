@@ -51,7 +51,6 @@ interface DashboardProps {
   onNewContract: (type?: ContractType) => void;
   onDeleteContract: (contractId: string) => void;
   onSignContractDirect: (contract: ContractData) => void;
-  onOpenWordTemplates?: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -60,7 +59,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onNewContract,
   onDeleteContract,
   onSignContractDirect,
-  onOpenWordTemplates,
 }) => {
   // Filtros principais
   const [selectedCategory, setSelectedCategory] = useState<ContractType | 'todos'>('todos');
@@ -488,18 +486,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </span>
           </button>
 
-          {/* Card 5: Modelos */}
-          <button
-            onClick={() => onOpenWordTemplates?.()}
-            className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-100 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group"
-          >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-            <span className="text-[11px] sm:text-xs font-bold text-slate-700 leading-tight">
-              Modelos
-            </span>
-          </button>
+          {/* Removido: Card de Modelos (agora gerenciado pelo TemplateManager) */}
         </div>
       </section>
 
@@ -1300,16 +1287,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <span>Relatórios</span>
               </button>
 
-              <button
-                onClick={() => {
-                  setIsMoreMenuOpen(false);
-                  onOpenWordTemplates?.();
-                }}
-                className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center gap-2 font-bold text-slate-800"
-              >
-                <FileText className="w-4 h-4 text-green-600" />
-                <span>Modelos Word</span>
-              </button>
+              {/* Removido: Botão Modelos Word (gerenciado pelo TemplateManager) */}
             </div>
           </div>
         </div>

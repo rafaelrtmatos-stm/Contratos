@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { ContractType } from '../types/contract';
 import {
   FileSignature,
-  FileText,
   Plus,
   ChevronDown,
   LayoutGrid,
@@ -18,7 +17,6 @@ interface NavbarProps {
   currentView: 'dashboard' | 'form' | 'viewer';
   onNavigateDashboard: () => void;
   onNewContract: (type: ContractType) => void;
-  onOpenWordTemplates: () => void;
   onOpenTemplateManager?: () => void;
   contractCount: number;
   isAdmin?: boolean;
@@ -30,7 +28,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentView,
   onNavigateDashboard,
   onNewContract,
-  onOpenWordTemplates,
   onOpenTemplateManager,
   contractCount,
   isAdmin,
@@ -79,15 +76,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Dashboard de Contratos"
             >
               <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-
-            {/* Botão de Modelos de Documento */}
-            <button
-              onClick={onOpenWordTemplates}
-              className="p-2.5 rounded-xl bg-[#101935] hover:bg-[#18254b] border border-slate-700/60 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
-              title="Modelos Institucionais Word (.docx)"
-            >
-              <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             {/* Botão de Gestão de Templates (Padrões Supabase) */}
