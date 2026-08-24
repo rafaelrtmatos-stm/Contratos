@@ -44,15 +44,26 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
   const existingVendedorSig = contract.assinaturas?.find(a => a.role === 'vendedor');
   const existingCompradorSig = contract.assinaturas?.find(a => a.role === 'comprador');
 
+  // Em contratos de exclusividade, o campo "vendedor" guarda o Contratante/Proprietário
+  // e o campo "comprador" guarda o Contratado/Corretor — invertido em relação aos demais
+  // tipos de contrato. As partes de cada fluxo (senha vs. CPF/OTP) seguem essa inversão.
+  const isExclParties = contract.tipo === 'exclusividade';
+  const partyContratado = isExclParties ? contract.comprador : contract.vendedor;
+  const roleContratado: 'vendedor' | 'comprador' = isExclParties ? 'comprador' : 'vendedor';
+  const partyContratante = isExclParties ? contract.vendedor : contract.comprador;
+  const roleContratante: 'vendedor' | 'comprador' = isExclParties ? 'vendedor' : 'comprador';
+  const existingContratadoSig = isExclParties ? existingCompradorSig : existingVendedorSig;
+  const existingContratanteSig = isExclParties ? existingVendedorSig : existingCompradorSig;
+
   const [activeFlow, setActiveFlow] = useState<'contratado' | 'contratante'>(
-    existingVendedorSig && !existingCompradorSig ? 'contratante' : 'contratado'
+    existingContratadoSig && !existingContratanteSig ? 'contratante' : 'contratado'
   );
 
   // --- Fluxo Contratado ---
   const [contratadoPassword, setContratadoPassword] = useState('');
   const [contratadoPasswordError, setContratadoPasswordError] = useState('');
   const [contratadoDrawMode, setContratadoDrawMode] = useState<'draw' | 'type'>('draw');
-  const [contratadoTypedSig, setContratadoTypedSig] = useState(contract.vendedor.nome || '');
+  const [contratadoTypedSig, setContratadoTypedSig] = useState(partyContratado.nome || '');
   const [contratadoFont, setContratadoFont] = useState<'cursive' | 'serif'>('cursive');
   const [acceptedLegalContratado, setAcceptedLegalContratado] = useState(true);
 
@@ -66,7 +77,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
   const [otpError, setOtpError] = useState('');
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [contratanteDrawMode, setContratanteDrawMode] = useState<'draw' | 'type'>('draw');
-  const [contratanteTypedSig, setContratanteTypedSig] = useState(contract.comprador.nome || '');
+  const [contratanteTypedSig, setContratanteTypedSig] = useState(partyContratante.nome || '');
   const [contratanteFont, setContratanteFont] = useState<'cursive' | 'serif'>('cursive');
   const [acceptedLegalContratante, setAcceptedLegalContratante] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -201,9 +212,9 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     }
 
     const newSig: DigitalSignature = {
-      role: 'vendedor',
-      nomeSignatario: contract.vendedor.nome || 'Contratado(a)',
-      documentoSignatario: contract.vendedor.cpfCnpj || '---',
+      role: roleContratado,
+      nomeSignatario: partyContratado.nome || 'Contratado(a)',
+      documentoSignatario: partyContratado.cpfCnpj || '---',
       assinaturaDataUrl: signatureImage,
       assinadoEm: new Date().toISOString(),
       hashAutenticacao: generateSignatureHash(),
@@ -221,7 +232,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
   const handleValidateContratanteCpf = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanInput = contratanteCpfInput.replace(/\D/g, '');
-    const expectedCpf = (contract.comprador.cpfCnpj || '').replace(/\D/g, '');
+    const expectedCpf = (partyContratante.cpfCnpj || '').replace(/\D/g, '');
 
     if (cleanInput.length < 4) {
       setContratanteCpfError('Informe o CPF completo cadastrado.');
@@ -230,7 +241,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
 
     // Aceita CPF correspondente ou em homologação
     if (expectedCpf && cleanInput !== expectedCpf && cleanInput !== expectedCpf.slice(0, cleanInput.length)) {
-      setContratanteCpfError(`CPF informado diverge do cadastrado no contrato (${contract.comprador.cpfCnpj || ''}).`);
+      setContratanteCpfError(`CPF informado diverge do cadastrado no contrato (${partyContratante.cpfCnpj || ''}).`);
       return;
     }
 
@@ -297,9 +308,9 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
     }
 
     const newSig: DigitalSignature = {
-      role: 'comprador',
-      nomeSignatario: contract.comprador.nome || 'Contratante',
-      documentoSignatario: contract.comprador.cpfCnpj || '---',
+      role: roleContratante,
+      nomeSignatario: partyContratante.nome || 'Contratante',
+      documentoSignatario: partyContratante.cpfCnpj || '---',
       assinaturaDataUrl: signatureImage,
       assinadoEm: new Date().toISOString(),
       hashAutenticacao: generateSignatureHash(),
@@ -364,7 +375,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
           >
             <Lock className="w-3.5 h-3.5 text-green-600" />
             <span>1. {labelContratado}</span>
-            {existingVendedorSig && (
+            {existingContratadoSig && (
               <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.2 rounded-full font-bold">
                 Assinado
               </span>
@@ -382,7 +393,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
           >
             <Smartphone className="w-3.5 h-3.5 text-slate-600" />
             <span>2. {labelContratante}</span>
-            {existingCompradorSig ? (
+            {existingContratanteSig ? (
               <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.2 rounded-full font-bold">
                 Assinado
               </span>
@@ -409,7 +420,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                 </div>
               </div>
 
-              {existingVendedorSig ? (
+              {existingContratadoSig ? (
                 <div className="space-y-3">
                   <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-emerald-800 font-bold text-xs sm:text-sm">
@@ -426,17 +437,17 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                   </div>
                   <div className="space-y-3">
                     <DigitalSignatureStamp
-                      signature={existingVendedorSig}
-                      signerName={existingVendedorSig.nomeSignatario}
-                      signerDoc={existingVendedorSig.documentoSignatario}
+                      signature={existingContratadoSig}
+                      signerName={existingContratadoSig.nomeSignatario}
+                      signerDoc={existingContratadoSig.documentoSignatario}
                       roleLabel={labelContratado.toUpperCase()}
                       contractNumber={contract.numeroContrato}
                       contractId={contract.id}
                     />
                     {/* Nome e CPF abaixo do selo */}
                     <div className="text-center">
-                      <p className="text-sm font-bold text-slate-900">{existingVendedorSig.nomeSignatario}</p>
-                      <p className="text-xs text-slate-600">CPF: {existingVendedorSig.documentoSignatario}</p>
+                      <p className="text-sm font-bold text-slate-900">{existingContratadoSig.nomeSignatario}</p>
+                      <p className="text-xs text-slate-600">CPF: {existingContratadoSig.documentoSignatario}</p>
                     </div>
                   </div>
                 </div>
@@ -446,11 +457,11 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
                     <div>
                       <span className="text-[11px] font-bold text-slate-500 uppercase block">Nome</span>
-                      <strong className="text-sm text-slate-900">{contract.vendedor.nome || 'Vendedor/Contratado'}</strong>
+                      <strong className="text-sm text-slate-900">{partyContratado.nome || 'Vendedor/Contratado'}</strong>
                     </div>
                     <div>
                       <span className="text-[11px] font-bold text-slate-500 uppercase block">CPF / CNPJ</span>
-                      <strong className="text-sm text-slate-900">{contract.vendedor.cpfCnpj || '---'}</strong>
+                      <strong className="text-sm text-slate-900">{partyContratado.cpfCnpj || '---'}</strong>
                     </div>
                   </div>
 
@@ -647,7 +658,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
               <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-4">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200 text-xs">
                   <span className="font-bold text-slate-800">
-                    Etapas de Assinatura do Contratante ({contract.comprador.nome || 'Cliente'})
+                    Etapas de Assinatura do Contratante ({partyContratante.nome || 'Cliente'})
                   </span>
                   <span className="text-slate-500 font-semibold">Passo {contratanteStep} de 5</span>
                 </div>
@@ -667,7 +678,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                             setContratanteCpfInput(e.target.value);
                             setContratanteCpfError('');
                           }}
-                          placeholder={contract.comprador.cpfCnpj || '000.000.000-00'}
+                          placeholder={partyContratante.cpfCnpj || '000.000.000-00'}
                           className="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-green-500 min-h-[44px]"
                         />
                         <button
@@ -684,7 +695,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                         </p>
                       )}
                       <p className="text-[11px] text-slate-500 mt-1">
-                        Dica: O CPF cadastrado é <strong>{contract.comprador.cpfCnpj || 'não informado'}</strong>.
+                        Dica: O CPF cadastrado é <strong>{partyContratante.cpfCnpj || 'não informado'}</strong>.
                       </p>
                     </div>
                   </form>
@@ -702,7 +713,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                         <strong>Contrato:</strong> {contract.numeroContrato} — {contract.titulo}
                       </p>
                       <p className="text-slate-600">
-                        <strong>Contratante:</strong> {contract.comprador.nome} | <strong>CPF:</strong> {contract.comprador.cpfCnpj}
+                        <strong>Contratante:</strong> {partyContratante.nome} | <strong>CPF:</strong> {partyContratante.cpfCnpj}
                       </p>
                       <p className="text-slate-600">
                         <strong>Valor Total:</strong> R$ {contract.valorTotal?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
