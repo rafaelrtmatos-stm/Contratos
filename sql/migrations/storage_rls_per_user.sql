@@ -93,7 +93,10 @@ using (
 -- BUCKET: contract-templates
 -- Dois tipos de arquivo:
 --   - Templates oficiais (9 arquivos na raiz do bucket) -> leitura
---     liberada para qualquer usuário autenticado; escrita só admin.
+--     liberada pra qualquer um, INCLUSIVE cliente anônimo via link de
+--     assinatura (precisa deles pra montar a prévia/PDF - "Object not
+--     found" reportado em 24/08, corrigido no mesmo dia); escrita só
+--     admin.
 --   - Templates personalizados (custom/{ownerId}/...) -> só o dono
 --     ou admin, leitura e escrita.
 -- ============================================================
@@ -104,7 +107,7 @@ on storage.objects for select
 using (
   bucket_id = 'contract-templates'
   and (
-    (coalesce(array_length(storage.foldername(name), 1), 0) = 0 and auth.role() = 'authenticated')
+    coalesce(array_length(storage.foldername(name), 1), 0) = 0
     or (
       array_length(storage.foldername(name), 1) >= 2
       and (storage.foldername(name))[1] = 'custom'
