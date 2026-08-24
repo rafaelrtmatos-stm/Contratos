@@ -11,15 +11,14 @@ CREATE TABLE IF NOT EXISTS contract_signature_links (
   validade TIMESTAMP NOT NULL,
   signed_at TIMESTAMP,
   pdf_url TEXT,
-  status VARCHAR(50) DEFAULT 'pending', -- pending, signed, expired
+  status VARCHAR(50) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
   
-  -- Índices para performance
   CONSTRAINT valid_token CHECK (length(token) > 10)
 );
 
--- Índices
+-- Criar índices
 CREATE INDEX IF NOT EXISTS idx_contract_signature_links_contract_id 
   ON contract_signature_links(contract_id);
 
@@ -32,34 +31,32 @@ CREATE INDEX IF NOT EXISTS idx_contract_signature_links_validade
 CREATE INDEX IF NOT EXISTS idx_contract_signature_links_status 
   ON contract_signature_links(status);
 
--- RLS Policies
+-- Habilitar RLS
 ALTER TABLE contract_signature_links ENABLE ROW LEVEL SECURITY;
 
--- Política: Vendedor pode ver seus próprios links
-CREATE POLICY "vendedor_view_own_links" ON contract_signature_links
+-- Politica: Vendedor pode ver seus proprios links
+CREATE POLICY IF NOT EXISTS vendedor_view_own_links ON contract_signature_links
   FOR SELECT
   USING (auth.uid() = vendedor_id);
 
--- Política: Vendedor pode criar links
-CREATE POLICY "vendedor_create_links" ON contract_signature_links
+-- Politica: Vendedor pode criar links
+CREATE POLICY IF NOT EXISTS vendedor_create_links ON contract_signature_links
   FOR INSERT
   WITH CHECK (auth.uid() = vendedor_id);
 
--- Política: Vendedor pode atualizar seus links
-CREATE POLICY "vendedor_update_own_links" ON contract_signature_links
+-- Politica: Vendedor pode atualizar seus links
+CREATE POLICY IF NOT EXISTS vendedor_update_own_links ON contract_signature_links
   FOR UPDATE
   USING (auth.uid() = vendedor_id)
   WITH CHECK (auth.uid() = vendedor_id);
 
--- Política: Anônimo pode ver link específico para assinar (apenas CPF validation)
-CREATE POLICY "anonymous_view_link_for_signature" ON contract_signature_links
+-- Politica: Anonimo pode ver link especifico para assinar
+CREATE POLICY IF NOT EXISTS anonymous_view_link_for_signature ON contract_signature_links
   FOR SELECT
-  USING (true); -- Em produção, adicione more restrictions
+  USING (true);
 
--- Política: Anônimo pode atualizar link após assinar
-CREATE POLICY "anonymous_sign_link" ON contract_signature_links
+-- Politica: Anonimo pode atualizar link apos assinar
+CREATE POLICY IF NOT EXISTS anonymous_sign_link ON contract_signature_links
   FOR UPDATE
   USING (true)
-  WITH CHECK (true); -- Em produção, validate signed_at field
-
-COMMIT;
+  WITH CHECK (true);
