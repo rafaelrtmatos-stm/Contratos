@@ -686,16 +686,26 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               {/* Signatário 1: Contratado / Vendedor */}
               {(() => {
                 const sig = contract.assinaturas?.find((a) => a.role === 'vendedor');
+                const displayName = sig ? sig.nomeSignatario : vNome;
+                const displayDoc = sig ? sig.documentoSignatario : vDoc;
                 return (
-                  <DigitalSignatureStamp
-                    signature={sig}
-                    signerName={sig ? sig.nomeSignatario : vNome}
-                    signerDoc={sig ? sig.documentoSignatario : vDoc}
-                    roleLabel={vTermo.toUpperCase()}
-                    contractNumber={contract.numeroContrato}
-                    contractId={contract.id}
-                    isPending={!sig}
-                  />
+                  <div className="space-y-3">
+                    {/* Selo */}
+                    <DigitalSignatureStamp
+                      signature={sig}
+                      signerName={displayName}
+                      signerDoc={displayDoc}
+                      roleLabel={vTermo.toUpperCase()}
+                      contractNumber={contract.numeroContrato}
+                      contractId={contract.id}
+                      isPending={!sig}
+                    />
+                    {/* Nome e CPF abaixo do selo */}
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-slate-900">{displayName}</p>
+                      <p className="text-xs text-slate-600">CPF: {displayDoc}</p>
+                    </div>
+                  </div>
                 );
               })()}
 
@@ -709,17 +719,26 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                 const roleLabel = isExcl
                   ? 'CONTRATADO(A)'
                   : (allCompradores.length > 1 ? `${idx + 1}º PROMITENTE COMPRADOR(A)` : cTermo.toUpperCase());
+                const displayName = sig ? sig.nomeSignatario : (comp.nome || `COMPRADOR ${idx + 1}`);
+                const displayDoc = sig ? sig.documentoSignatario : comp.cpfCnpj;
                 return (
-                  <DigitalSignatureStamp
-                    key={idx}
-                    signature={sig}
-                    signerName={sig ? sig.nomeSignatario : (comp.nome || `COMPRADOR ${idx + 1}`)}
-                    signerDoc={sig ? sig.documentoSignatario : comp.cpfCnpj}
-                    roleLabel={roleLabel}
-                    contractNumber={contract.numeroContrato}
-                    contractId={contract.id}
-                    isPending={!sig}
-                  />
+                  <div key={idx} className="space-y-3">
+                    {/* Selo */}
+                    <DigitalSignatureStamp
+                      signature={sig}
+                      signerName={displayName}
+                      signerDoc={displayDoc}
+                      roleLabel={roleLabel}
+                      contractNumber={contract.numeroContrato}
+                      contractId={contract.id}
+                      isPending={!sig}
+                    />
+                    {/* Nome e CPF abaixo do selo */}
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-slate-900">{displayName}</p>
+                      <p className="text-xs text-slate-600">CPF: {displayDoc}</p>
+                    </div>
+                  </div>
                 );
               })}
             </div>
