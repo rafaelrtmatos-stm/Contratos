@@ -35,11 +35,12 @@ interface TemplatePreferences {
   venda_vista: string;
   venda_parcelada: string;
   exclusividade: string;
+  outros_bens: string;
 }
 
-type Tab = 'venda_vista' | 'venda_parcelada' | 'exclusividade';
+type Tab = 'venda_vista' | 'venda_parcelada' | 'exclusividade' | 'outros_bens';
 
-const TEMPLATE_GROUPS: Record<ContractType, Array<{
+const TEMPLATE_GROUPS: Record<ContractType | 'outros_bens', Array<{
   modalidade: string;
   arquivo: string;
   descricao: string;
@@ -105,6 +106,12 @@ const TEMPLATE_GROUPS: Record<ContractType, Array<{
       testemunhas: true,
     },
   ],
+  outros_bens: [
+    // 🔄 PREPARADO PARA ADICIONAR 3 TEMPLATES FUTUROS
+    // - outros_bens_assinatura_digital.docx
+    // - outros_bens_assinatura_manual_2_testemunhas.docx
+    // - outros_bens_mista_2_testemunhas.docx
+  ],
 };
 
 export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOpen, onClose }) => {
@@ -113,6 +120,7 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
     venda_vista: 'venda_vista_assinatura_digital.docx',
     venda_parcelada: 'venda_parcelada_assinatura_digital.docx',
     exclusividade: 'exclusividade_assinatura_digital.docx',
+    outros_bens: '', // Vazio até serem adicionados templates
   });
 
   const [loading, setLoading] = useState(false);
@@ -225,6 +233,8 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
         return 'Venda Parcelada';
       case 'exclusividade':
         return 'Exclusividade';
+      case 'outros_bens':
+        return 'Outros Bens';
     }
   };
 
@@ -255,19 +265,24 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
         {/* Tabs */}
         <div className="sticky top-[88px] bg-white border-b border-slate-200 p-4">
           <div className="flex gap-2">
-            {(['venda_vista', 'venda_parcelada', 'exclusividade'] as Tab[]).map((type) => (
+            {(['venda_vista', 'venda_parcelada', 'exclusividade', 'outros_bens'] as Tab[]).map((type) => {
+              const templates = TEMPLATE_GROUPS[type];
+              return (
               <button
                 key={type}
                 onClick={() => setActiveTab(type)}
-                className={`px-4 py-2.5 rounded-lg font-bold text-sm transition-all ${
+                className={`px-4 py-2.5 rounded-lg font-bold text-sm transition-all whitespace-nowrap ${
                   activeTab === type
                     ? 'bg-green-600 text-white shadow-lg'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
+                } ${templates.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={templates.length === 0}
               >
                 {getIconForType(type)} {getTypeLabel(type)}
+                {templates.length === 0 && <span className="text-xs ml-1">(Em breve)</span>}
               </button>
-            ))}
+            );
+            })}
           </div>
           <p className="text-xs text-slate-500 mt-2">
             Escolha qual tipo de contrato deseja gerenciar →
