@@ -207,12 +207,21 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
     try {
       // 1. Decidir qual template usar
-      const sigVendedorAtual = contract.assinaturas?.find(a => a.role === 'vendedor');
-      const sigCompradorAtual = contract.assinaturas?.find(a => a.role === 'comprador');
+      const isExclDownload = contract.tipo === 'exclusividade';
+      // "usuario" (selo {{USUARIO_ASSINATURA_DIGITAL}}) é sempre o CORRETOR/CONTRATADO.
+      // Na exclusividade, quem guarda os dados do corretor é o campo "comprador"
+      // (o campo "vendedor" guarda o CONTRATANTE/proprietário) - ver getContractExclusividadeTags.
+      const dadosCorretor = isExclDownload ? contract.comprador : contract.vendedor;
+      const dadosCliente = isExclDownload ? contract.vendedor : contract.comprador;
+      const roleCorretor: 'vendedor' | 'comprador' = isExclDownload ? 'comprador' : 'vendedor';
+      const roleCliente: 'vendedor' | 'comprador' = isExclDownload ? 'vendedor' : 'comprador';
+
+      const sigCorretorAtual = contract.assinaturas?.find(a => a.role === roleCorretor);
+      const sigClienteAtual = contract.assinaturas?.find(a => a.role === roleCliente);
       const estadoAssinatura = {
-        usuarioAssinou: !!sigVendedorAtual,
+        usuarioAssinou: !!sigCorretorAtual,
         usuarioModalidade: (contract.modalidadeAssinatura === 'digital' ? 'digital' : 'manual') as 'digital' | 'manual',
-        compradorAssinou: !!sigCompradorAtual,
+        compradorAssinou: !!sigClienteAtual,
         compradorModalidade: (contract.modalidadeAssinatura === 'digital' ? 'digital' : 'manual') as 'digital' | 'manual',
         testemunhaprecisa: contract.modalidadeAssinatura === 'manual',
       };
@@ -237,34 +246,30 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
       const docxBuffer = await blob.arrayBuffer();
 
-      // 2.5 NOVO: Substituir tags de DADOS do contrato
-      console.log('🔄 Gerando tags de dados...');
-      const tagsContrato = generateContractTags(contract);
-      
-      console.log('✏️ Substituindo tags de dados no template...');
-      const docxComDados = await substituirTagsNoDocx(docxBuffer, tagsContrato);
+      // 2. Processar tags de assinatura PRIMEIRO (antes da substituição geral de dados,
+      // que apaga qualquer {{TAG}} que não reconheça - incluindo as tags de selo).
+      const tagsEncontradas = await findSignatureTags(docxBuffer);
 
-      // 3. Processar tags de assinatura
-      const tagsEncontradas = await findSignatureTags(docxComDados);
-      
+      let docxComSelos = docxBuffer;
+
       if (tagsEncontradas.length > 0) {
         console.log('🏷️ Tags de assinatura encontradas:', tagsEncontradas);
 
         const usuarioInfo: PartySignatureInfo = {
           assinou: estadoAssinatura.usuarioAssinou,
           modalidade: estadoAssinatura.usuarioModalidade,
-          signature: sigVendedorAtual,
-          nome: contract.vendedor.nome,
-          documento: contract.vendedor.cpfCnpj,
-          roleLabel: vTermo,
+          signature: sigCorretorAtual,
+          nome: dadosCorretor.nome,
+          documento: dadosCorretor.cpfCnpj,
+          roleLabel: isExclDownload ? 'CONTRATADO(A)' : vTermo,
         };
         const compradorInfo: PartySignatureInfo = {
           assinou: estadoAssinatura.compradorAssinou,
           modalidade: estadoAssinatura.compradorModalidade,
-          signature: sigCompradorAtual,
-          nome: contract.comprador.nome,
-          documento: contract.comprador.cpfCnpj,
-          roleLabel: cTermo,
+          signature: sigClienteAtual,
+          nome: dadosCliente.nome,
+          documento: dadosCliente.cpfCnpj,
+          roleLabel: isExclDownload ? 'CONTRATANTE' : cTermo,
         };
 
         const tagsConfig = mapTagsToConfig(tagsEncontradas, usuarioInfo, compradorInfo);
@@ -272,17 +277,19 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
         const resumo = summarizeChanges(tagsConfig);
         console.log('📊 Resumo de mudanças:', resumo);
 
-        // Processar tags de assinatura (sobre o DOCX com dados já substituídos)
-        const docxProcessado = await processSignatureTags(docxComDados, tagsConfig);
-
-        // 4. Fazer download + salvar no Supabase
-        const nomeArquivo = `${contract.nomeLote || 'contrato'}_${new Date().getTime()}.docx`;
-        await realizarDownloadESalvar(docxProcessado, nomeArquivo);
-      } else {
-        // Nenhuma tag de assinatura, fazer download direto com dados substituídos
-        const nomeArquivo = `${contract.nomeLote || 'contrato'}_${new Date().getTime()}.docx`;
-        await realizarDownloadESalvar(docxComDados, nomeArquivo);
+        docxComSelos = await processSignatureTags(docxBuffer, tagsConfig);
       }
+
+      // 3. Substituir tags de DADOS do contrato (sobre o DOCX já com os selos inseridos)
+      console.log('🔄 Gerando tags de dados...');
+      const tagsContrato = generateContractTags(contract);
+
+      console.log('✏️ Substituindo tags de dados no template...');
+      const docxComDados = await substituirTagsNoDocx(docxComSelos, tagsContrato);
+
+      // 4. Fazer download + salvar no Supabase
+      const nomeArquivo = `${contract.nomeLote || 'contrato'}_${new Date().getTime()}.docx`;
+      await realizarDownloadESalvar(docxComDados, nomeArquivo);
     } catch (error: any) {
       console.error('Erro ao baixar DOCX:', error);
       setDownloadError(error.message || 'Houve um erro ao processar o arquivo Word.');

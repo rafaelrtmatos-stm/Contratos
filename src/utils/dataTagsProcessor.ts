@@ -4,6 +4,7 @@
  */
 
 import { ContractData } from '../types/contract';
+import { getContractExclusividadeTags } from './contractGenerators';
 import JSZip from 'jszip';
 
 interface TagMapping {
@@ -86,6 +87,50 @@ export function generateContractTags(contract: ContractData): TagMapping {
     OBJETO_DESCRICAO: contract.objetoDescricao || '',
   };
 
+  // TAGS DO CONTRATO DE EXCLUSIVIDADE (templates usam {tag} em minúsculo, chave única)
+  // Reaproveita os cálculos já existentes de getContractExclusividadeTags
+  // (contratante = vendedor/proprietário, contratado = comprador/corretor)
+  if (contract.tipo === 'exclusividade') {
+    const ex = getContractExclusividadeTags(contract);
+    Object.assign(tags, {
+      contratante: ex.CONTRATANTE_NOME,
+      estado_civil_contratante: ex.CONTRATANTE_ESTADO_CIVIL,
+      cpf_contratante: ex.CONTRATANTE_CPF,
+      rg_contratante: ex.CONTRATANTE_RG,
+      endereco_contratante: ex.CONTRATANTE_ENDERECO,
+
+      contratado: ex.VENDEDOR_NOME,
+      cpf_contratado: ex.VENDEDOR_CPF,
+      creci_contratado: ex.VENDEDOR_CRECI,
+      endereco_contratado: ex.VENDEDOR_ENDERECO,
+      telefone_contratado: ex.VENDEDOR_TELEFONE,
+      NOME_PAPEL_CONTRATADO: 'CONTRATADO(A)',
+
+      tipo_imovel: ex.TIPO_IMOVEL,
+      localizacao_imovel: ex.LOCALIZACAO_IMOVEL,
+      documento_propriedade: ex.DOCUMENTO_PROPRIEDADE,
+      matricula: ex.MATRICULA,
+      inscricao_prefeitura: ex.INSCRICAO_PREFEITURA,
+      outros_dados_imovel: ex.OUTROS_DADOS_IMOVEL,
+
+      valor_total: ex.VALOR_TOTAL,
+      valor_total_extenso: ex.VALOR_TOTAL_EXTENSO,
+      condicoes_pagamento: ex.CONDICOES_PAGAMENTO,
+
+      percentual_corretagem: ex.PERCENTUAL_CORRETAGEM,
+      percentual_corretagem_extenso: ex.PERCENTUAL_CORRETAGEM_EXTENSO,
+
+      prazo_exclusividade_dias: ex.PRAZO_EXCLUSIVIDADE_DIAS,
+      data_termino_exclusividade: ex.DATA_TERMINO_EXCLUSIVIDADE,
+
+      cidade: ex.CIDADE_ASSINATURA,
+      estado: ex.ESTADO_ASSINATURA,
+      dia: ex.DIA,
+      mes_extenso: ex.MES_EXTENSO,
+      ano: ex.ANO,
+    });
+  }
+
   return tags;
 }
 
@@ -108,7 +153,7 @@ function escapeXml(value: string): string {
  * ao redor permanecem intactos.
  */
 function replaceTagsPreservingFormat(xml: string, tags: TagMapping): string {
-  // Casa {{ ... }} mesmo com marcação XML de runs quebrados no meio (non-greedy)
+  // Casa {{ ... }} (duplo) mesmo com marcação XML de runs quebrados no meio (non-greedy)
   let result = xml.replace(/\{\{([\s\S]*?)\}\}/g, (fullMatch, innerRaw: string) => {
     // Remove qualquer marcação XML que o Word tenha inserido entre os fragmentos da tag
     const cleanTag = innerRaw.replace(/<[^>]+>/g, '').trim();
@@ -118,12 +163,44 @@ function replaceTagsPreservingFormat(xml: string, tags: TagMapping): string {
       return fullMatch;
     }
 
+    // Nunca mexe em tags de SELO de assinatura ({{USUARIO_ASSINATURA_DIGITAL}},
+    // {{CONTRATANTE_ASSINATURA_DIGITAL}} etc.) — essas são de responsabilidade
+    // exclusiva do signatureTagProcessor, processado ANTES desta função.
+    if (cleanTag.toUpperCase().includes('ASSINATURA')) {
+      return fullMatch;
+    }
+
     const upperTag = cleanTag.toUpperCase();
     const matchKey = Object.keys(tags).find((k) => k.toUpperCase() === upperTag);
 
     if (matchKey === undefined) {
       // Tag desconhecida: remove para não deixar {{...}} residual no documento final
       return '';
+    }
+
+    return escapeXml(tags[matchKey] || '');
+  });
+
+  // Casa { ... } (simples) - usado pelos templates de exclusividade (ex: {contratante}, {tipo_imovel})
+  result = result.replace(/\{([\s\S]*?)\}/g, (fullMatch, innerRaw: string) => {
+    const cleanTag = innerRaw.replace(/<[^>]+>/g, '').trim();
+
+    if (!cleanTag || !/^[A-Za-z0-9_À-ÿ]+$/.test(cleanTag)) {
+      return fullMatch;
+    }
+
+    // Preserva tags de selo de assinatura não processadas (não deveria sobrar nenhuma aqui,
+    // mas por segurança nunca apaga algo com "ASSINATURA" no nome)
+    if (cleanTag.toUpperCase().includes('ASSINATURA')) {
+      return fullMatch;
+    }
+
+    const upperTag = cleanTag.toUpperCase();
+    const matchKey = Object.keys(tags).find((k) => k.toUpperCase() === upperTag);
+
+    if (matchKey === undefined) {
+      // Tag simples desconhecida: deixa como está (pode ser texto legítimo entre chaves)
+      return fullMatch;
     }
 
     return escapeXml(tags[matchKey] || '');

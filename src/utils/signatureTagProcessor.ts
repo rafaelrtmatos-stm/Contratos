@@ -32,6 +32,9 @@ export const SIGNATURE_TAGS = {
   USUARIO_MANUAL: '{{USUARIO_ASSINATURA_MANUAL}}',
   COMPRADOR_DIGITAL: '{{COMPRADOR_ASSINATURA_DIGITAL}}',
   COMPRADOR_MANUAL: '{{COMPRADOR_ASSINATURA_MANUAL}}',
+  // Contrato de Exclusividade: {{CONTRATANTE_ASSINATURA_DIGITAL}} é o selo do CONTRATANTE
+  // (mapeado para o slot "comprador" internamente - ver mapTagsToConfig)
+  CONTRATANTE_DIGITAL: '{{CONTRATANTE_ASSINATURA_DIGITAL}}',
 };
 
 function escapeXml(value: string): string {
@@ -225,6 +228,9 @@ export function mapTagsToConfig(
       config.push({ tag, tipo: 'digital', parte: 'comprador', info: compradorInfo });
     } else if (tag.includes('COMPRADOR') && tag.includes('MANUAL')) {
       config.push({ tag, tipo: 'manual', parte: 'comprador', info: compradorInfo });
+    } else if (tag.includes('CONTRATANTE') && tag.includes('DIGITAL')) {
+      // Exclusividade: CONTRATANTE_ASSINATURA_DIGITAL usa o mesmo slot de compradorInfo
+      config.push({ tag, tipo: 'digital', parte: 'comprador', info: compradorInfo });
     }
   }
 

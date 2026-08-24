@@ -174,6 +174,23 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     initialData?.dataInicioExcl || new Date().toISOString().split('T')[0]
   );
 
+  // Dados do imóvel específicos do Contrato de Exclusividade
+  const [documentoPropriedade, setDocumentoPropriedade] = useState<string>(
+    initialData?.exclusividade?.documentoPropriedade || ''
+  );
+  const [matricula, setMatricula] = useState<string>(
+    initialData?.exclusividade?.matricula || ''
+  );
+  const [inscricaoPrefeitura, setInscricaoPrefeitura] = useState<string>(
+    initialData?.exclusividade?.inscricaoPrefeitura || ''
+  );
+  const [outrosDadosImovel, setOutrosDadosImovel] = useState<string>(
+    initialData?.exclusividade?.outrosDadosImovel || ''
+  );
+  const [condicoesPagamento, setCondicoesPagamento] = useState<string>(
+    initialData?.exclusividade?.condicoesPagamento || ''
+  );
+
   const [clausulasExtras, setClausulasExtras] = useState(initialData?.clausulasExtras || '');
 
   // Atualizar cálculo de extenso quando o valor muda
@@ -378,6 +395,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
         multaRescisaoOuQuebra: 10,
         renovacaoAutomatica: false,
         autorizaDivulgacaoPlacasRedes: true,
+        condicoesPagamento,
+        documentoPropriedade,
+        matricula,
+        inscricaoPrefeitura,
+        outrosDadosImovel,
       } : undefined,
       clausulasExtras,
       assinaturas: initialData?.assinaturas || [],
@@ -610,8 +632,128 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 />
               </div>
 
-              {/* RENDERIZAÇÃO CONDICIONAL: IMÓVEL vs OUTROS BENS */}
-              {subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? (
+              {/* RENDERIZAÇÃO CONDICIONAL: EXCLUSIVIDADE vs IMÓVEL vs OUTROS BENS */}
+              {tipo === 'exclusividade' ? (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Tipo do Imóvel
+                    </label>
+                    <input
+                      type="text"
+                      value={imovel.tipoImovel || ''}
+                      onChange={(e) => setImovel({ ...imovel, tipoImovel: e.target.value })}
+                      placeholder="Ex: Terreno urbano, Casa, Apartamento, Sala comercial"
+                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Localização do Imóvel
+                    </label>
+                    <input
+                      type="text"
+                      value={imovel.localizacaoImovel}
+                      onChange={(e) => setImovel({ ...imovel, localizacaoImovel: e.target.value })}
+                      placeholder="Ex: Rua das Palmeiras, nº 120, Bairro Aldeia"
+                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Cidade do Imóvel
+                    </label>
+                    <input
+                      type="text"
+                      value={imovel.cidadeImovel}
+                      onChange={(e) => setImovel({ ...imovel, cidadeImovel: e.target.value })}
+                      placeholder="Ex: Santarém"
+                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      UF do Imóvel
+                    </label>
+                    <input
+                      type="text"
+                      value={imovel.ufImovel}
+                      onChange={(e) => setImovel({ ...imovel, ufImovel: e.target.value.toUpperCase() })}
+                      placeholder="Ex: PA"
+                      maxLength={2}
+                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden uppercase"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Documento de Propriedade
+                    </label>
+                    <input
+                      type="text"
+                      value={documentoPropriedade}
+                      onChange={(e) => setDocumentoPropriedade(e.target.value)}
+                      placeholder="Ex: Título Definitivo de Propriedade nº 1234/2020"
+                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Matrícula
+                    </label>
+                    <input
+                      type="text"
+                      value={matricula}
+                      onChange={(e) => setMatricula(e.target.value)}
+                      placeholder="Ex: Sob o nº 12.345 do 1º Ofício de Registro de Imóveis"
+                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Inscrição na Prefeitura
+                    </label>
+                    <input
+                      type="text"
+                      value={inscricaoPrefeitura}
+                      onChange={(e) => setInscricaoPrefeitura(e.target.value)}
+                      placeholder="Ex: Cadastrado sob o nº 00.00.000.0000.000"
+                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Outros Dados do Imóvel
+                    </label>
+                    <input
+                      type="text"
+                      value={outrosDadosImovel}
+                      onChange={(e) => setOutrosDadosImovel(e.target.value)}
+                      placeholder="Descrição, dimensões e confrontações"
+                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Condições de Pagamento (para venda futura do imóvel)
+                    </label>
+                    <input
+                      type="text"
+                      value={condicoesPagamento}
+                      onChange={(e) => setCondicoesPagamento(e.target.value)}
+                      placeholder="Ex: À vista, em moeda corrente nacional, via PIX ou transferência bancária"
+                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                    />
+                  </div>
+                </>
+              ) : subcategoria === 'outros_bens' ? (
                 <>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
