@@ -14,6 +14,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { LoginScreen } from './components/LoginScreen';
 import { AuthProvider, useAuth } from './utils/authContext';
 import { fetchContracts, saveContract, deleteContract, saveSignature } from './utils/contractsRepository';
+import { deleteContractDocuments } from './utils/contractDocumentsStorage';
 import { SignatureLink } from './pages/SignatureLink';
 
 export default function App() {
@@ -138,6 +139,9 @@ function MainApp() {
   const handleDeleteContract = async (contractId: string) => {
     try {
       await deleteContract(contractId);
+      // Apaga também os arquivos do contrato no Storage (docx do corretor
+      // e PDF do cliente), pra não deixar arquivo órfão no bucket.
+      await deleteContractDocuments(contractId);
       setContracts((prev) => prev.filter((c) => c.id !== contractId));
       if (selectedContract?.id === contractId) {
         setSelectedContract(null);
@@ -153,6 +157,7 @@ function MainApp() {
     try {
       for (const contract of contracts) {
         await deleteContract(contract.id);
+        await deleteContractDocuments(contract.id);
       }
       setContracts([]);
       setSelectedContract(null);

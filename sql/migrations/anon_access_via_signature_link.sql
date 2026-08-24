@@ -35,3 +35,18 @@ using (
     select contract_id from public.contract_signature_links where validade > now()
   )
 );
+
+-- Cliente também precisa poder ENVIAR o PDF assinado pra pasta clientes/,
+-- não só ler - mesma trava de validade do link.
+drop policy if exists "contract_documents_insert_client_via_valid_link" on storage.objects;
+create policy "contract_documents_insert_client_via_valid_link"
+on storage.objects for insert
+to anon
+with check (
+  bucket_id = 'contract-documents'
+  and array_length(storage.foldername(name), 1) >= 2
+  and (storage.foldername(name))[1] = 'clientes'
+  and (storage.foldername(name))[2]::uuid in (
+    select contract_id from public.contract_signature_links where validade > now()
+  )
+);

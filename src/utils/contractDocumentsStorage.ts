@@ -7,6 +7,10 @@ import { supabase } from './supabaseClient';
 import { ContractData } from '../types/contract';
 
 const DOCUMENTS_BUCKET = 'contract-documents';
+// Documento .docx salvo pelo corretor (download depois de assinar)
+const BROKER_FOLDER = 'contratos';
+// PDF salvo automaticamente quando o CLIENTE assina pelo link
+const CLIENT_FOLDER = 'clientes';
 
 interface SavedDocument {
   id: string;
@@ -40,7 +44,7 @@ export async function saveContractDocumentToSupabase(
     // 2. Definir path no storage
     // Formato: contratos/{contractId}/{timestamp}_{fileName}
     const timestamp = Date.now();
-    const filePath = `contratos/${contractId}/${timestamp}_${fileName}`;
+    const filePath = `${BROKER_FOLDER}/${contractId}/${timestamp}_${fileName}`;
 
     console.log(`📤 Fazendo upload para Supabase: ${filePath}`);
 
@@ -130,7 +134,7 @@ export async function listContractDocuments(
   try {
     const { data: files, error } = await supabase.storage
       .from(DOCUMENTS_BUCKET)
-      .list(`contratos/${contractId}`, {
+      .list(`${BROKER_FOLDER}/${contractId}`, {
         limit: 100,
         offset: 0,
         sortBy: { column: 'created_at', order: 'desc' },
@@ -144,7 +148,7 @@ export async function listContractDocuments(
     // privado desde a trava de RLS por usuário, getPublicUrl() não serve mais)
     const documents = await Promise.all(
       files.map(async (file) => {
-        const filePath = `contratos/${contractId}/${file.name}`;
+        const filePath = `${BROKER_FOLDER}/${contractId}/${file.name}`;
         const { data: urlData } = await supabase.storage
           .from(DOCUMENTS_BUCKET)
           .createSignedUrl(filePath, 60 * 10);
@@ -175,7 +179,7 @@ export async function downloadContractDocument(
   fileName: string
 ): Promise<Blob> {
   try {
-    const filePath = `contratos/${contractId}/${fileName}`;
+    const filePath = `${BROKER_FOLDER}/${contractId}/${fileName}`;
 
     const { data, error } = await supabase.storage
       .from(DOCUMENTS_BUCKET)
@@ -192,30 +196,73 @@ export async function downloadContractDocument(
 }
 
 /**
- * Deleta documentos salvos de um contrato
+ * Salva automaticamente o PDF do contrato assinado quando o CLIENTE
+ * finaliza a assinatura pelo link (pasta separada da do corretor, já
+ * em PDF, não .docx).
+ */
+export async function saveClientSignedPdfToSupabase(
+  contractId: string,
+  pdfBlob: Blob
+): Promise<void> {
+  try {
+    const timestamp = Date.now();
+    const filePath = `${CLIENT_FOLDER}/${contractId}/${timestamp}_contrato.pdf`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(DOCUMENTS_BUCKET)
+      .upload(filePath, pdfBlob, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: 'application/pdf',
+      });
+
+    if (uploadError) {
+      throw new Error(`Erro ao fazer upload do PDF do cliente: ${uploadError.message}`);
+    }
+
+    console.log(`✅ PDF do cliente salvo: ${filePath}`);
+  } catch (error: any) {
+    // Não bloqueia o fluxo de assinatura do cliente se o salvamento falhar -
+    // a assinatura em si já foi registrada no banco antes desta chamada.
+    console.warn('Aviso: PDF do cliente não foi salvo no Storage:', error.message);
+  }
+}
+
+/**
+ * Deleta TODOS os documentos salvos de um contrato - tanto os .docx do
+ * corretor quanto os PDFs salvos automaticamente quando o cliente assina.
+ * Chamar sempre que o contrato for excluído do painel, pra não deixar
+ * arquivo órfão no bucket.
  */
 export async function deleteContractDocuments(contractId: string): Promise<void> {
-  try {
-    const { data: files, error: listError } = await supabase.storage
-      .from(DOCUMENTS_BUCKET)
-      .list(`contratos/${contractId}`);
+  for (const folder of [BROKER_FOLDER, CLIENT_FOLDER]) {
+    try {
+      const { data: files, error: listError } = await supabase.storage
+        .from(DOCUMENTS_BUCKET)
+        .list(`${folder}/${contractId}`);
 
-    if (listError) throw listError;
+      if (listError) {
+        console.warn(`Erro ao listar documentos (${folder}):`, listError.message);
+        continue;
+      }
 
-    if (!files || files.length === 0) return;
+      if (!files || files.length === 0) continue;
 
-    // Deletar cada arquivo
-    const filesToDelete = files.map((f) => `contratos/${contractId}/${f.name}`);
+      const filesToDelete = files.map((f) => `${folder}/${contractId}/${f.name}`);
 
-    const { error: deleteError } = await supabase.storage
-      .from(DOCUMENTS_BUCKET)
-      .remove(filesToDelete);
+      const { error: deleteError } = await supabase.storage
+        .from(DOCUMENTS_BUCKET)
+        .remove(filesToDelete);
 
-    if (deleteError) throw deleteError;
+      if (deleteError) {
+        console.warn(`Erro ao deletar documentos (${folder}):`, deleteError.message);
+        continue;
+      }
 
-    console.log(`🗑️ ${filesToDelete.length} documento(s) deletado(s)`);
-  } catch (error: any) {
-    console.error('Erro ao deletar documentos:', error.message);
+      console.log(`🗑️ ${filesToDelete.length} documento(s) deletado(s) de ${folder}/${contractId}`);
+    } catch (error: any) {
+      console.warn(`Erro ao deletar documentos (${folder}):`, error.message);
+    }
   }
 }
 

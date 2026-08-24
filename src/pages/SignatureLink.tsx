@@ -9,7 +9,7 @@ import {
   signContractViaLink,
 } from '../utils/signatureLinksRepository';
 import { renderContractDocumentHtml, renderContractDocumentPdf } from '../utils/renderContractFromDocx';
-import { getSignedDocumentUrl } from '../utils/contractDocumentsStorage';
+import { getSignedDocumentUrl, saveClientSignedPdfToSupabase } from '../utils/contractDocumentsStorage';
 import { sha256Hex, getClientIpAddress } from '../utils/signatureOtpUtils';
 
 export const SignatureLink: React.FC = () => {
@@ -146,28 +146,32 @@ export const SignatureLink: React.FC = () => {
       );
     }
 
+    const updatedContract: ContractData = {
+      ...contract,
+      status: 'assinado_total',
+      assinaturas: [
+        ...(contract.assinaturas || []),
+        {
+          role: 'comprador',
+          nomeSignatario: nome,
+          documentoSignatario: documento,
+          assinaturaDataUrl: '',
+          assinadoEm: new Date().toISOString(),
+          hashAutenticacao: hash,
+          ipAssinatura: ip,
+          metadadosNavegador: navigator.userAgent,
+        },
+      ],
+    };
+
     setSigned(true);
-    setContract((prev) =>
-      prev
-        ? {
-            ...prev,
-            status: 'assinado_total',
-            assinaturas: [
-              ...(prev.assinaturas || []),
-              {
-                role: 'comprador',
-                nomeSignatario: nome,
-                documentoSignatario: documento,
-                assinaturaDataUrl: '',
-                assinadoEm: new Date().toISOString(),
-                hashAutenticacao: hash,
-                ipAssinatura: ip,
-                metadadosNavegador: navigator.userAgent,
-              },
-            ],
-          }
-        : prev
-    );
+    setContract(updatedContract);
+
+    // Salva automaticamente uma cópia em PDF na pasta do cliente (não
+    // bloqueia a tela se falhar - a assinatura em si já foi confirmada).
+    renderContractDocumentPdf(updatedContract)
+      .then((pdfBlob) => saveClientSignedPdfToSupabase(updatedContract.id, pdfBlob))
+      .catch((err) => console.warn('Não foi possível salvar o PDF do cliente:', err));
   };
 
   const handleDownload = async () => {
