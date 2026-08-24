@@ -44,6 +44,16 @@ export interface PartyDetailedInfo {
   };
 }
 
+// Contato salvo (Contratado/Vendedor) reutilizável entre contratos,
+// gerenciado em Configurações e selecionável via dropdown no formulário.
+export interface SavedParty {
+  id: string;
+  nome: string;
+  cpfCnpj?: string;
+  data: PartyDetailedInfo;
+  criadoEm?: string;
+}
+
 export interface PropertyDetails {
   nomeEmpreendimento: string;
   localizacaoImovel: string;

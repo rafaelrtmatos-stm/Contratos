@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { X, Download, Trash2, RotateCcw, AlertCircle, CheckCircle2, Loader2, UserPlus } from 'lucide-react';
-import { ContractData } from '../types/contract';
+import React, { useState, useEffect } from 'react';
+import { X, Download, Trash2, RotateCcw, AlertCircle, CheckCircle2, Loader2, UserPlus, BookUser } from 'lucide-react';
+import { ContractData, SavedParty } from '../types/contract';
 import { supabase } from '../utils/supabaseClient';
+import { fetchSavedParties, deleteSavedParty } from '../utils/savedPartiesRepository';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -11,7 +12,7 @@ interface SettingsPanelProps {
   isAdmin?: boolean;
 }
 
-type Tab = 'backup' | 'usuarios' | 'danger';
+type Tab = 'backup' | 'contatos' | 'usuarios' | 'danger';
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   isOpen,
@@ -31,6 +32,32 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [novaSenha, setNovaSenha] = useState('');
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [userFeedback, setUserFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Contatos salvos (Contratado/Vendedor) reutilizáveis
+  const [savedParties, setSavedParties] = useState<SavedParty[]>([]);
+  const [loadingParties, setLoadingParties] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'contatos') return;
+    setLoadingParties(true);
+    fetchSavedParties()
+      .then(setSavedParties)
+      .catch(() => setMessage({ type: 'error', text: 'Erro ao carregar contatos salvos.' }))
+      .finally(() => setLoadingParties(false));
+  }, [isOpen, activeTab]);
+
+  const handleDeleteParty = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await deleteSavedParty(id);
+      setSavedParties((prev) => prev.filter((p) => p.id !== id));
+    } catch (error: any) {
+      setMessage({ type: 'error', text: `Erro ao excluir contato: ${error.message}` });
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -186,6 +213,17 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           >
              Backup & Exportação
           </button>
+          <button
+            onClick={() => setActiveTab('contatos')}
+            className={`px-4 py-3 font-bold text-sm transition-all border-b-2 flex items-center gap-1.5 ${
+              activeTab === 'contatos'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <BookUser className="w-4 h-4" />
+            Contatos
+          </button>
           {isAdmin && (
             <button
               onClick={() => setActiveTab('usuarios')}
@@ -228,6 +266,58 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               )}
               {message.text}
+            </div>
+          )}
+
+          {/* CONTATOS TAB */}
+          {activeTab === 'contatos' && (
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-900">
+                  Contatos de <strong>Contratado</strong> e <strong>Vendedor</strong> salvos a partir dos contratos.
+                  Eles aparecem na barra suspensa "Contatos salvos" ao criar um novo contrato.
+                </p>
+              </div>
+
+              {loadingParties ? (
+                <div className="flex items-center justify-center gap-2 text-sm text-slate-500 py-8">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Carregando contatos...
+                </div>
+              ) : savedParties.length === 0 ? (
+                <div className="text-center text-sm text-slate-500 py-8 border border-dashed border-slate-200 rounded-lg">
+                  Nenhum contato salvo ainda. Use o botão "Salvar contato" ao preencher um Contratado ou Vendedor.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {savedParties.map((party) => (
+                    <div
+                      key={party.id}
+                      className="flex items-center justify-between gap-3 border border-slate-200 rounded-lg p-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-900 truncate">{party.nome}</p>
+                        <p className="text-xs text-slate-500 truncate">
+                          {party.cpfCnpj || 'CPF/CNPJ não informado'}
+                          {party.data?.telefone ? ` • ${party.data.telefone}` : ''}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteParty(party.id)}
+                        disabled={deletingId === party.id}
+                        title="Excluir contato salvo"
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors shrink-0 disabled:opacity-50"
+                      >
+                        {deletingId === party.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

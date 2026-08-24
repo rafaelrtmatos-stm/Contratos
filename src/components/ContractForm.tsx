@@ -34,6 +34,9 @@ import { GenderSelect } from './GenderSelect';
 import { EstadoCivilSelect } from './EstadoCivilSelect';
 import { convertEstadoCivilToGenero } from '../utils/civilStatus';
 import { convertNacionalidadeToGenero } from '../utils/nacionalidade';
+import { SavedPartyPicker } from './SavedPartyPicker';
+import { SavedParty } from '../types/contract';
+import { fetchSavedParties, saveParty } from '../utils/savedPartiesRepository';
 
 interface ContractFormProps {
   initialData?: ContractData | null;
@@ -42,19 +45,21 @@ interface ContractFormProps {
   onCancel: () => void;
 }
 
+// Nenhum campo vem pré-preenchido: o usuário digita do zero ou seleciona
+// um contato já salvo (dropdown "Usar contato salvo" em cada aba).
 const emptyParty: PartyDetailedInfo = {
   nome: '',
-  nacionalidade: 'brasileiro(a)',
-  estadoCivil: 'solteiro(a)',
+  nacionalidade: '',
+  estadoCivil: '',
   rg: '',
-  rgOrgao: 'SSP/PA',
+  rgOrgao: '',
   cpfCnpj: '',
   endereco: '',
-  numero: 'S/N',
+  numero: '',
   bairro: '',
   cep: '',
-  cidade: 'Santarém',
-  uf: 'PA',
+  cidade: '',
+  uf: '',
   telefone: '',
   email: '',
 };
@@ -130,6 +135,35 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   const [comprador, setComprador] = useState<PartyDetailedInfo>(
     initialData?.comprador ? { ...emptyParty, ...initialData.comprador } : { ...emptyParty }
   );
+
+  // Contatos salvos (Contratado/Vendedor) reutilizáveis via dropdown
+  const [savedParties, setSavedParties] = useState<SavedParty[]>([]);
+  const [loadingSavedParties, setLoadingSavedParties] = useState(true);
+
+  useEffect(() => {
+    fetchSavedParties()
+      .then(setSavedParties)
+      .catch(() => setSavedParties([]))
+      .finally(() => setLoadingSavedParties(false));
+  }, []);
+
+  const refreshSavedParties = async () => {
+    try {
+      setSavedParties(await fetchSavedParties());
+    } catch {
+      // silencioso: dropdown apenas fica sem atualizar
+    }
+  };
+
+  const handleSaveVendedorContact = async () => {
+    await saveParty(vendedor);
+    await refreshSavedParties();
+  };
+
+  const handleSaveCompradorContact = async () => {
+    await saveParty(comprador);
+    await refreshSavedParties();
+  };
 
   // Imóvel Detalhado
   const [imovel, setImovel] = useState<PropertyDetails>(
@@ -1161,6 +1195,14 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 <span className="text-[11px] font-medium text-slate-500">Dados do Transmitente / Vendedor</span>
               </div>
 
+              <SavedPartyPicker
+                savedParties={savedParties}
+                loading={loadingSavedParties}
+                currentParty={vendedor}
+                onSelect={(data) => setVendedor({ ...emptyParty, ...data })}
+                onSaveContact={handleSaveVendedorContact}
+              />
+
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -1359,6 +1401,14 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </h2>
                 <span className="text-[11px] font-medium text-slate-500">Dados do Adquirente / Beneficiário</span>
               </div>
+
+              <SavedPartyPicker
+                savedParties={savedParties}
+                loading={loadingSavedParties}
+                currentParty={comprador}
+                onSelect={(data) => setComprador({ ...emptyParty, ...data })}
+                onSaveContact={handleSaveCompradorContact}
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                 <div className="sm:col-span-2">
