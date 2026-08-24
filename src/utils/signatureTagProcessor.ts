@@ -247,21 +247,15 @@ async function insertDigitalSignatureStampImage(
 /**
  * Insere um aviso de pendência quando a modalidade é digital, mas a parte ainda não assinou.
  * Evita deixar a tag "{{...}}" crua e visível no documento final.
+ *
+ * Não imprime nome/cargo aqui: TODOS os templates já têm um bloco de texto fixo
+ * logo abaixo da tag (ex: "{NOME_PAPEL_CONTRATADO} - {contratado}" / "CPF nº
+ * {cpf_contratado}") com o nome e CPF da parte. Antes, esta função também
+ * imprimia nome+cargo, duplicando o nome no documento final.
  */
 function insertPendingSignatureNotice(xml: string, tag: string, info: PartySignatureInfo): string {
-  const nome = escapeXml(info.nome || '');
-  const role = escapeXml(info.roleLabel || '');
-
   const block = `<w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:before="120" w:after="0"/></w:pPr>
-      <w:r><w:rPr><w:b/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr><w:t xml:space="preserve">${nome}</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>
-      <w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">${role}</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="120"/></w:pPr>
+      <w:pPr><w:jc w:val="center"/><w:spacing w:before="120" w:after="120"/></w:pPr>
       <w:r><w:rPr><w:i/><w:color w:val="B45309"/><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:t xml:space="preserve">[Pendente de assinatura eletrônica]</w:t></w:r>
     </w:p>`;
 
