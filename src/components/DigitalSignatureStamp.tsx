@@ -38,19 +38,22 @@ export const DigitalSignatureStamp: React.FC<DigitalSignatureStampProps> = ({
   // Formatação dos Dados
   const effectiveName = signature?.nomeSignatario || signerName || 'Signatário Autenticado';
   
-  // Mascarar CPF preservando privacidade
+  // CPF/CNPJ COMPLETO (não mascarado)
   const rawDoc = signature?.documentoSignatario || signerDoc || '';
-  const formatMaskedDoc = (doc: string): string => {
+  const formatDoc = (doc: string): string => {
+    // Retorna o CPF/CNPJ completo e formatado
     const clean = doc.replace(/\D/g, '');
     if (clean.length === 11) {
-      return `***.${clean.slice(3, 6)}.${clean.slice(6, 9)}-**`;
+      // CPF: 000.000.000-00
+      return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}-${clean.slice(9, 11)}`;
     }
     if (clean.length === 14) {
-      return `**.${clean.slice(2, 5)}.${clean.slice(5, 8)}/****-**`;
+      // CNPJ: 00.000.000/0000-00
+      return `${clean.slice(0, 2)}.${clean.slice(2, 5)}.${clean.slice(5, 8)}/${clean.slice(8, 12)}-${clean.slice(12, 14)}`;
     }
-    return doc.includes('*') ? doc : `***.***.***-**`;
+    return doc;
   };
-  const effectiveDoc = formatMaskedDoc(rawDoc);
+  const effectiveDoc = formatDoc(rawDoc);
 
   // Data e Hora
   const dateObj = signature?.assinadoEm ? new Date(signature.assinadoEm) : new Date();
@@ -144,7 +147,7 @@ export const DigitalSignatureStamp: React.FC<DigitalSignatureStampProps> = ({
 
       {/* ================= ÁREA DE CONTEÚDO ================= */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <div className="flex items-start gap-3 px-3 sm:px-4 pt-3 pb-2.5 border-b border-slate-100">
+        <div className="flex items-start gap-3 px-3 sm:px-4 pt-3 pb-2.5 border-b border-slate-100 bg-blue-50/50">
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#164A82] text-white flex items-center justify-center shrink-0">
             <User className="w-5 h-5" />
           </div>
@@ -152,10 +155,10 @@ export const DigitalSignatureStamp: React.FC<DigitalSignatureStampProps> = ({
             <span className="text-[9px] sm:text-[10px] font-bold text-[#3F4D63] uppercase tracking-wider block">
               {roleLabel || 'ASSINANTE'}
             </span>
-            <h3 className="text-sm sm:text-base font-black text-[#0D376B] truncate leading-tight">
+            <h3 className="text-sm sm:text-base font-black text-[#0D376B] leading-tight break-words">
               {effectiveName}
             </h3>
-            <p className="text-[10px] sm:text-[11px] font-semibold text-[#3F4D63] mt-0.5">
+            <p className="text-[10px] sm:text-[11px] font-semibold text-[#3F4D63] mt-0.5 break-words">
               CPF: <span className="font-mono text-slate-900 font-bold">{effectiveDoc}</span>
             </p>
           </div>
