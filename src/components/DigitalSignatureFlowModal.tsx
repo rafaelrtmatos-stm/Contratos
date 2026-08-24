@@ -4,6 +4,7 @@ import { useAuth } from '../utils/authContext';
 import { supabase } from '../utils/supabaseClient';
 import { createAuditStamp, getClientIpAddress, AuditStamp } from '../utils/signatureOtpUtils';
 import { renderContractDocumentPdf, renderContractDocumentPlainText } from '../utils/renderContractFromDocx';
+import { buildPdfFileName } from '../utils/pdfFileName';
 import { GenerateSignatureCodeModal } from './GenerateSignatureCodeModal';
 import { Lock, CheckCircle2, AlertCircle, Loader, X, FileDown, KeyRound } from 'lucide-react';
 
@@ -83,7 +84,11 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `contrato_${contract.numeroContrato || 'assinado'}.pdf`;
+      const nomeClientePdf =
+        (contract.tipo === 'exclusividade' ? contract.vendedor?.nome : contract.comprador?.nome) ||
+        contract.nomeLote ||
+        'documento';
+      a.download = buildPdfFileName(nomeClientePdf);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

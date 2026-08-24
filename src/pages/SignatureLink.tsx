@@ -10,6 +10,7 @@ import {
 } from '../utils/signatureLinksRepository';
 import { renderContractDocumentHtml, renderContractDocumentPdf, renderContractDocumentPlainText } from '../utils/renderContractFromDocx';
 import { getSignedDocumentUrl, saveClientSignedPdfToSupabase } from '../utils/contractDocumentsStorage';
+import { buildPdfFileName } from '../utils/pdfFileName';
 import { sha256Hex, getClientIpAddress } from '../utils/signatureOtpUtils';
 
 export const SignatureLink: React.FC = () => {
@@ -206,7 +207,11 @@ export const SignatureLink: React.FC = () => {
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `contrato_${contract.numeroContrato || 'assinado'}.pdf`;
+      const nomeClientePdf =
+        (contract.tipo === 'exclusividade' ? contract.vendedor?.nome : contract.comprador?.nome) ||
+        contract.nomeLote ||
+        'documento';
+      a.download = buildPdfFileName(nomeClientePdf);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

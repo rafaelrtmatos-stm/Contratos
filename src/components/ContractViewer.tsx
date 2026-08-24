@@ -28,6 +28,7 @@ import {
   substituirTagsNoDocx,
 } from '../utils/dataTagsProcessor';
 import { saveContractDocumentToSupabase } from '../utils/contractDocumentsStorage';
+import { buildPdfFileName } from '../utils/pdfFileName';
 import { saveSignature } from '../utils/contractsRepository';
 import { AuditStamp, formatAuditStampText } from '../utils/signatureOtpUtils';
 import { DigitalSignatureFlowModal } from './DigitalSignatureFlowModal';
@@ -188,8 +189,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       const a = document.createElement('a');
       a.href = url;
       const nomeClientePdf = (isExcl ? contract.vendedor?.nome : contract.comprador?.nome) || contract.nomeLote || 'documento';
-      const dataPdf = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-      a.download = `${slugifyNomeArquivo(nomeClientePdf)}_${dataPdf}.pdf`;
+      a.download = buildPdfFileName(nomeClientePdf);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

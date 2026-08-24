@@ -6,6 +6,7 @@ import {
   getExclusivityStatus,
 } from '../utils/contractGenerators';
 import { renderContractDocumentPdf } from '../utils/renderContractFromDocx';
+import { buildPdfFileName } from '../utils/pdfFileName';
 import {
   downloadDocxContract,
 } from '../utils/docxProcessor';
@@ -102,7 +103,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `contrato_${contract.numeroContrato || 'documento'}.pdf`;
+      const nomeClientePdf =
+        (contract.tipo === 'exclusividade' ? contract.vendedor?.nome : contract.comprador?.nome) ||
+        contract.nomeLote ||
+        'documento';
+      a.download = buildPdfFileName(nomeClientePdf);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
