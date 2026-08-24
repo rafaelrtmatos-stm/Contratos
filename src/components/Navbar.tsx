@@ -58,18 +58,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="font-extrabold text-base sm:text-lg text-white tracking-tight block leading-tight">
                 Contratos<span className="text-green-500">360</span>
               </span>
-              <span className="text-[11px] sm:text-xs text-slate-300 font-medium truncate block max-w-[150px] sm:max-w-none">
+              <span className="text-[11px] sm:text-xs text-slate-300 font-medium truncate block max-w-[90px] sm:max-w-none">
                 Contratos de Venda de Imóveis
               </span>
             </div>
           </div>
 
           {/* Botões de Acesso Rápido e Botão "+ Novo" */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Botão de Grade / Dashboard */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
+            {/* Botão de Grade / Dashboard - escondido no mobile: clicar na logo já navega pro dashboard */}
             <button
               onClick={onNavigateDashboard}
-              className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
+              className={`hidden sm:flex p-2.5 rounded-xl border transition-all cursor-pointer items-center justify-center ${
                 currentView === 'dashboard'
                   ? 'bg-[#1e2c56] border-green-500/50 text-green-400 shadow-xs'
                   : 'bg-[#101935] hover:bg-[#18254b] border-slate-700/60 text-slate-300 hover:text-white'
@@ -79,10 +79,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
-            {/* Botão de Gestão de Templates (Padrões Supabase) */}
+            {/* Botão de Gestão de Templates (Padrões Supabase) - escondido no mobile pra caber Sair/Novo */}
             <button
               onClick={onOpenTemplateManager}
-              className="p-2.5 rounded-xl bg-[#101935] hover:bg-[#18254b] border border-slate-700/60 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+              className="hidden sm:flex p-2.5 rounded-xl bg-[#101935] hover:bg-[#18254b] border border-slate-700/60 text-slate-300 hover:text-white transition-all cursor-pointer items-center justify-center"
               title="Gerenciar Templates Padrão do Supabase"
             >
               <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -102,14 +102,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Botão de Sair */}
             <button
               onClick={onSignOut}
-              className="p-2.5 rounded-xl bg-[#101935] hover:bg-[#18254b] border border-slate-700/60 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+              className="shrink-0 p-2.5 rounded-xl bg-[#101935] hover:bg-[#18254b] border border-slate-700/60 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
               title="Sair"
             >
               <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             {/* Botão "+ Novo" em Destaque com Dropdown */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => setIsNewMenuOpen(!isNewMenuOpen)}
                 className="bg-green-600 hover:bg-green-500 active:bg-green-700 text-white font-bold text-xs sm:text-sm px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl flex items-center gap-1.5 shadow-md shadow-blue-900/40 transition-all cursor-pointer shrink-0"
