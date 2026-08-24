@@ -28,7 +28,7 @@ export interface StampImageResult {
   heightPx: number;
 }
 
-const SCALE = 16; // px por mm — resolução do canvas (fixa a nitidez do PNG)
+const SCALE = 24; // px por mm — resolução do canvas (fixa a nitidez do PNG; ~610 DPI no tamanho final impresso, mais nítido que antes)
 const STAMP_WIDTH_MM = 69.3; // 33% de 210mm (A4)
 const STAMP_HEIGHT_MM = 20.79; // 7% de 297mm — define a proporção do desenho
 
@@ -91,6 +91,8 @@ export async function renderSignatureStampPng(data: StampImageData): Promise<Sta
   canvas.height = h;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D não suportado.');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   // Moldura
   ctx.fillStyle = COLORS.branco;
@@ -196,7 +198,10 @@ export async function renderSignatureStampPng(data: StampImageData): Promise<Sta
 
   // Grid DATA / HORA / ID
   const colW = contentW / 3;
-  const gx = contentX - avatarR * 2 - 0.6 * mm;
+  // gx marca o início da área de conteúdo (mesmo x de gx0/CPF) - ANTES
+  // estava subtraindo o deslocamento do avatar por engano, o que empurrava
+  // DATA/HORA/ID/INTEGRIDADE/HASH ~2,9mm pra esquerda, invadindo o painel azul.
+  const gx = contentX;
   const gridLabelY = cy;
   const gridValueY = cy + lh;
 

@@ -1,3 +1,4 @@
+import { getTratamento } from './tratamento';
 import * as mammoth from 'mammoth';
 import { ContractData } from '../types/contract';
 import { resolveTemplate } from './templateResolver';
@@ -80,7 +81,9 @@ async function buildFilledDocx(contract: ContractData): Promise<ArrayBuffer> {
       signature: sigCorretorAtual,
       nome: dadosCorretor?.nome || '',
       documento: dadosCorretor?.cpfCnpj || '',
-      roleLabel: isExcl ? 'CONTRATADO(A)' : 'VENDEDOR(A)',
+      roleLabel: isExcl
+        ? getTratamento('contratado', dadosCorretor?.genero)
+        : getTratamento('vendedor', dadosCorretor?.genero),
     };
     const compradorInfo: PartySignatureInfo = {
       assinou: !!sigClienteAtual,
@@ -88,7 +91,9 @@ async function buildFilledDocx(contract: ContractData): Promise<ArrayBuffer> {
       signature: sigClienteAtual,
       nome: dadosCliente?.nome || '',
       documento: dadosCliente?.cpfCnpj || '',
-      roleLabel: isExcl ? 'CONTRATANTE' : 'COMPRADOR(A)',
+      roleLabel: isExcl
+        ? getTratamento('contratante', dadosCliente?.genero)
+        : getTratamento('comprador', dadosCliente?.genero),
     };
 
     const tagsConfig = mapTagsToConfig(tagsEncontradas, usuarioInfo, compradorInfo);

@@ -14,6 +14,7 @@ import {
 } from '../utils/docxProcessor';
 import { resolveTemplate } from '../utils/templateResolver';
 import { downloadTemplateWithCache } from '../utils/supabaseTemplateStorage';
+import { getTratamento } from '../utils/tratamento';
 import { renderContractDocumentHtml, renderContractDocumentPdf, renderContractDocumentPlainText } from '../utils/renderContractFromDocx';
 import { 
   processSignatureTags,
@@ -315,7 +316,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           signature: sigCorretorAtual,
           nome: dadosCorretor.nome,
           documento: dadosCorretor.cpfCnpj,
-          roleLabel: isExclDownload ? 'CONTRATADO(A)' : vTermo,
+          roleLabel: isExclDownload ? getTratamento('contratado', dadosCorretor.genero) : vTermo,
         };
         const compradorInfo: PartySignatureInfo = {
           assinou: estadoAssinatura.compradorAssinou,
@@ -323,7 +324,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           signature: sigClienteAtual,
           nome: dadosCliente.nome,
           documento: dadosCliente.cpfCnpj,
-          roleLabel: isExclDownload ? 'CONTRATANTE' : cTermo,
+          roleLabel: isExclDownload ? getTratamento('contratante', dadosCliente.genero) : cTermo,
         };
 
         const tagsConfig = mapTagsToConfig(tagsEncontradas, usuarioInfo, compradorInfo);

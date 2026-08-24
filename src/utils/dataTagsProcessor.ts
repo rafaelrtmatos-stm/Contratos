@@ -5,6 +5,7 @@
 
 import { ContractData } from '../types/contract';
 import { getContractExclusividadeTags } from './contractGenerators';
+import { getTratamento } from './tratamento';
 import JSZip from 'jszip';
 
 interface TagMapping {
@@ -104,7 +105,7 @@ export function generateContractTags(contract: ContractData): TagMapping {
       creci_contratado: ex.VENDEDOR_CRECI,
       endereco_contratado: ex.VENDEDOR_ENDERECO,
       telefone_contratado: ex.VENDEDOR_TELEFONE,
-      NOME_PAPEL_CONTRATADO: 'CONTRATADO(A)',
+      NOME_PAPEL_CONTRATADO: getTratamento('contratado', contract.comprador.genero),
 
       tipo_imovel: ex.TIPO_IMOVEL,
       localizacao_imovel: ex.LOCALIZACAO_IMOVEL,
