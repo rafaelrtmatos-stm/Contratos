@@ -45,7 +45,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      setMessage({ type: 'success', text: `✅ Backup JSON exportado (${contracts.length} contratos)` });
+      setMessage({ type: 'success', text: `📋 Backup JSON exportado (${contracts.length} contratos)` });
       setTimeout(() => setMessage(null), 3000);
     } catch (error: any) {
       setMessage({ type: 'error', text: `Erro ao exportar: ${error.message}` });
@@ -93,7 +93,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      setMessage({ type: 'success', text: `✅ Backup CSV exportado (${contracts.length} contratos)` });
+      setMessage({ type: 'success', text: `📋 Backup CSV exportado (${contracts.length} contratos)` });
       setTimeout(() => setMessage(null), 3000);
     } catch (error: any) {
       setMessage({ type: 'error', text: `Erro ao exportar: ${error.message}` });
@@ -107,7 +107,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setLoading(true);
     try {
       await onDeleteAllContracts();
-      setMessage({ type: 'success', text: '✅ Todos os contratos foram deletados' });
+      setMessage({ type: 'success', text: '📋 Todos os contratos foram deletados' });
       setConfirmDelete(false);
       setTimeout(() => {
         setMessage(null);
@@ -126,7 +126,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-blue-50 to-slate-50 border-b border-slate-200 p-6 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">⚙️ Configurações</h2>
+            <h2 className="text-xl font-bold text-slate-900">⚙ Configurações</h2>
             <p className="text-xs text-slate-600 mt-1">Backup, exportação e gerenciamento de dados</p>
           </div>
           <button
@@ -147,7 +147,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
-            💾 Backup & Exportação
+             Backup & Exportação
           </button>
           <button
             onClick={() => setActiveTab('danger')}
@@ -157,7 +157,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
-            ⚠️ Zona de Risco
+            ⚠ Zona de Risco
           </button>
         </div>
 
@@ -186,7 +186,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-900">
-                  📊 Total de contratos: <strong>{contracts.length}</strong>
+                   Total de contratos: <strong>{contracts.length}</strong>
                 </p>
               </div>
 
@@ -257,7 +257,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             <div className="space-y-4">
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-sm text-red-900 font-bold">
-                  ⚠️ ATENÇÃO: Ações nesta seção são IRREVERSÍVEIS!
+                  ⚠ ATENÇÃO: Ações nesta seção são IRREVERSÍVEIS!
                 </p>
               </div>
 

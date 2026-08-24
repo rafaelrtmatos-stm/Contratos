@@ -47,19 +47,19 @@ const TEMPLATE_GROUPS: Record<ContractType, Array<{
 }>> = {
   venda_vista: [
     {
-      modalidade: '🔐 Digital',
+      modalidade: 'Digital',
       arquivo: 'venda_vista_assinatura_digital.docx',
       descricao: 'Ambos assinam digitalmente - SEM testemunhas',
       testemunhas: false,
     },
     {
-      modalidade: '✍️ Manual',
+      modalidade: 'Manual',
       arquivo: 'venda_vista_assinatura_manual_2_testemunhas.docx',
       descricao: 'Ambos assinam manualmente - COM 2 testemunhas',
       testemunhas: true,
     },
     {
-      modalidade: '🔄 Mista',
+      modalidade: 'Mista',
       arquivo: 'venda_vista_mista_2_testemunhas.docx',
       descricao: 'Um digital, outro manual - COM 2 testemunhas',
       testemunhas: true,
@@ -67,19 +67,19 @@ const TEMPLATE_GROUPS: Record<ContractType, Array<{
   ],
   venda_parcelada: [
     {
-      modalidade: '🔐 Digital',
+      modalidade: 'Digital',
       arquivo: 'venda_parcelada_assinatura_digital.docx',
       descricao: 'Ambos assinam digitalmente - SEM testemunhas',
       testemunhas: false,
     },
     {
-      modalidade: '✍️ Manual',
+      modalidade: 'Manual',
       arquivo: 'venda_parcelada_assinatura_manual_2_testemunhas.docx',
       descricao: 'Ambos assinam manualmente - COM 2 testemunhas',
       testemunhas: true,
     },
     {
-      modalidade: '🔄 Mista',
+      modalidade: 'Mista',
       arquivo: 'venda_parcelada_mista_2_testemunhas.docx',
       descricao: 'Um digital, outro manual - COM 2 testemunhas',
       testemunhas: true,
@@ -87,19 +87,19 @@ const TEMPLATE_GROUPS: Record<ContractType, Array<{
   ],
   exclusividade: [
     {
-      modalidade: '🔐 Digital',
+      modalidade: 'Digital',
       arquivo: 'exclusividade_assinatura_digital.docx',
       descricao: 'Ambos assinam digitalmente - SEM testemunhas',
       testemunhas: false,
     },
     {
-      modalidade: '🔄 Mista',
+      modalidade: 'Mista',
       arquivo: 'exclusividade_mista_2_testemunhas.docx',
       descricao: 'Um digital, outro manual - COM 2 testemunhas',
       testemunhas: true,
     },
     {
-      modalidade: '👤 Sem Cônjuge',
+      modalidade: 'Sem Cônjuge',
       arquivo: 'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
       descricao: 'Variante SEM cônjuge - COM 2 testemunhas',
       testemunhas: true,
@@ -137,7 +137,7 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
     const newPrefs = { ...preferences, [type]: templateFile };
     setPreferences(newPrefs);
     localStorage.setItem('templatePreferences', JSON.stringify(newPrefs));
-    setMessage({ type: 'success', text: `✅ Template padrão atualizado para ${type}` });
+    setMessage({ type: 'success', text: `Template padrão atualizado para ${type}` });
     setTimeout(() => setMessage(null), 3000);
   };
 
@@ -159,7 +159,7 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      setMessage({ type: 'success', text: `📥 Template ${templateFile} baixado` });
+      setMessage({ type: 'success', text: `Template ${templateFile} baixado` });
       setTimeout(() => setMessage(null), 2000);
     } catch (error: any) {
       setMessage({ type: 'error', text: `Erro ao baixar: ${error.message}` });
@@ -191,7 +191,7 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
       setPreferences(newPrefs);
       localStorage.setItem('templatePreferences', JSON.stringify(newPrefs));
 
-      setMessage({ type: 'success', text: `✅ Template ${nome} enviado e definido como padrão` });
+      setMessage({ type: 'success', text: `Template ${nome} enviado e definido como padrão` });
       setTimeout(() => setMessage(null), 3000);
     } catch (error: any) {
       setMessage({ type: 'error', text: `Erro ao enviar: ${error.message}` });
@@ -207,13 +207,13 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
   const getIconForType = (type: Tab) => {
     switch (type) {
       case 'venda_vista':
-        return '💰';
+        return '';
       case 'venda_parcelada':
-        return '📅';
+        return '';
       case 'exclusividade':
-        return '📋';
+        return '';
       default:
-        return '📄';
+        return '';
     }
   };
 
@@ -324,10 +324,10 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
                       </div>
                       <p className="text-xs text-slate-600 mb-2">{template.descricao}</p>
                       <p className="text-xs font-mono text-slate-500 break-all">
-                        📄 {template.arquivo}
+                        arquivo: {template.arquivo}
                       </p>
                       {template.testemunhas && (
-                        <p className="text-xs text-blue-600 mt-1">✓ Inclui 2 espaços para testemunhas</p>
+                        <p className="text-xs text-blue-600 mt-1">Inclui 2 espaços para testemunhas</p>
                       )}
                     </div>
 
@@ -409,7 +409,7 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
           {/* Info */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
             <p>
-              ℹ️ <strong>Compatibilidade com Microsoft Word (.docx) e OpenXML.</strong> Todos os templates padrão
+              Informação: <strong>Compatibilidade com Microsoft Word (.docx) e OpenXML.</strong> Todos os templates padrão
               incluem campos para assinatura automática com carimbo digital.
             </p>
           </div>

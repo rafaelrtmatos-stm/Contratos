@@ -533,7 +533,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                           />
                           {!hasDrawnContratado && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-400 text-xs">
-                              ✍️ Assine aqui na linha
+                              Assine aqui na linha
                             </div>
                           )}
                         </div>
@@ -862,7 +862,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                           />
                           {!hasDrawnContratante && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-400 text-xs">
-                              ✍️ Assine aqui na linha
+                              Assine aqui na linha
                             </div>
                           )}
                         </div>
@@ -916,7 +916,7 @@ export const DigitalSignatureModal: React.FC<DigitalSignatureModalProps> = ({
                         onClick={handleConfirmContratante}
                         className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow-md transition-colors cursor-pointer min-h-[44px]"
                       >
-                        Finalizar Assinatura Eletrônica ✓
+                        Finalizar Assinatura Eletrônica
                       </button>
                     </div>
                   </div>
