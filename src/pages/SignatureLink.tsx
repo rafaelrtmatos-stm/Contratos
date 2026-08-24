@@ -2,58 +2,59 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Lock, FileText, AlertCircle, CheckCircle2, Loader } from 'lucide-react';
 import { ClientSignatureModal } from '../components/ClientSignatureModal';
+import { ContractData } from '../types/contract';
+import {
+  fetchContractForSignatureToken,
+  validateSignatureLinkCpf,
+  signContractViaLink,
+} from '../utils/signatureLinksRepository';
+import { generateContractLegalText, exportToPdf } from '../utils/contractGenerators';
+import { sha256Hex, getClientIpAddress } from '../utils/signatureOtpUtils';
 
 export const SignatureLink: React.FC = () => {
-  const { contratoId } = useParams<{ contratoId: string }>();
-  const [step, setStep] = useState<'cpf' | 'read' | 'error'>('cpf');
+  const { token } = useParams<{ token: string }>();
+
+  const [loadingPage, setLoadingPage] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [contract, setContract] = useState<ContractData | null>(null);
+  const [otpCode, setOtpCode] = useState('');
+  const [vendedorNome, setVendedorNome] = useState('');
+
+  const [step, setStep] = useState<'cpf' | 'read'>('cpf');
   const [cpfInput, setCpfInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [clientName, setClientName] = useState('');
-  const [contractContent, setContractContent] = useState('');
   const [signatureModalOpen, setSignatureModalOpen] = useState(false);
   const [signed, setSigned] = useState(false);
+  const [clientName, setClientName] = useState('');
+  const [accepted, setAccepted] = useState({ leu: true, concorda: true });
 
   useEffect(() => {
-    // Simular carregamento do contrato
-    setContractContent(
-      `CONTRATO DE VENDA COM SINAL
+    if (!token) {
+      setLoadError('Link inválido.');
+      setLoadingPage(false);
+      return;
+    }
 
-Celebram entre si, de um lado como VENDEDOR(A), Rafael Tavares, 
-brasileiro(a), portador(a) do CPF n.º 123.456.789-00, e de outro lado 
-como COMPRADOR(A), JOÃO DA SILVA, brasileiro(o), portador(a) do CPF 
-n.º 987.654.321-00, o presente instrumento particular de Contrato de 
-Venda, conforme as cláusulas e condições seguintes:
-
-CLÁUSULA PRIMEIRA - DO OBJETO
-O(A) VENDEDOR(A) vende ao(à) COMPRADOR(A) o imóvel localizado...
-
-CLÁUSULA SEGUNDA - DO PREÇO
-O preço total da venda é de R$ 150.000,00 (cento e cinquenta mil reais).
-
-[... mais conteúdo do contrato ...]
-
-CLÁUSULA TERCEIRA - FORMA E PRAZO DE PAGAMENTO
-O(a) comprador(a) se obriga a pagar o preço conforme acordado.
-
-CLÁUSULA QUARTA - DISPOSIÇÕES GERAIS
-As partes resolvem por este termo o presente contrato.
-
----
-
-Assinado digitalmente pelo Vendedor em: 2026-08-24 14:30:15
-Rafael Tavares | CPF: 123.456.789-00 | ID: SIGN-ABC123XYZ`
-    );
-    setClientName('João da Silva');
-  }, [contratoId]);
+    (async () => {
+      try {
+        const { contrato, otpCode, vendedorNome } = await fetchContractForSignatureToken(token);
+        setContract(contrato);
+        setOtpCode(otpCode);
+        setVendedorNome(vendedorNome);
+        setClientName(contrato.comprador?.nome || '');
+      } catch (err: any) {
+        setLoadError(err.message || 'Não foi possível carregar o contrato.');
+      } finally {
+        setLoadingPage(false);
+      }
+    })();
+  }, [token]);
 
   const handleValidateCPF = async () => {
     setError(null);
 
-    if (!cpfInput.trim()) {
-      setError('Digite os últimos 4 dígitos do seu CPF');
-      return;
-    }
+    if (!token) return;
 
     if (cpfInput.length !== 4 || !/^\d{4}$/.test(cpfInput)) {
       setError('Digite exatamente 4 dígitos numéricos');
@@ -62,15 +63,11 @@ Rafael Tavares | CPF: 123.456.789-00 | ID: SIGN-ABC123XYZ`
 
     setLoading(true);
     try {
-      // Simular validação contra o banco de dados
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      // Validação simples (em produção, validar contra API)
-      if (cpfInput !== '1234') {
+      const valido = await validateSignatureLinkCpf(token, cpfInput);
+      if (!valido) {
         setError('CPF não encontrado ou inválido');
         return;
       }
-
       setStep('read');
     } catch (err: any) {
       setError(err.message || 'Erro ao validar CPF');
@@ -79,16 +76,100 @@ Rafael Tavares | CPF: 123.456.789-00 | ID: SIGN-ABC123XYZ`
     }
   };
 
-  const handleSign = (otp: string) => {
-    setSigned(true);
-    // Aqui salvaria a assinatura no banco de dados
-  };
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleValidateCPF();
     }
   };
+
+  const handleSign = async (otpDigitado: string) => {
+    if (!token || !contract) return;
+
+    const documento = contract.comprador?.cpfCnpj || '';
+    const nome = clientName || contract.comprador?.nome || 'Cliente';
+    const ip = await getClientIpAddress();
+    const hash = await sha256Hex(`${contract.id}|${nome}|${documento}|${new Date().toISOString()}`);
+
+    const result = await signContractViaLink({
+      token,
+      otp: otpDigitado,
+      nomeSignatario: nome,
+      documentoSignatario: documento,
+      hashAutenticacao: hash,
+      ip,
+    });
+
+    if (!result.sucesso) {
+      throw new Error(
+        result.erro === 'otp_invalido'
+          ? 'Código OTP inválido.'
+          : result.erro === 'link_expirado'
+          ? 'Este link expirou.'
+          : result.erro === 'ja_assinado'
+          ? 'Este contrato já foi assinado.'
+          : 'Erro ao confirmar assinatura.'
+      );
+    }
+
+    setSigned(true);
+    setContract((prev) =>
+      prev
+        ? {
+            ...prev,
+            status: 'assinado_total',
+            assinaturas: [
+              ...(prev.assinaturas || []),
+              {
+                role: 'comprador',
+                nomeSignatario: nome,
+                documentoSignatario: documento,
+                assinaturaDataUrl: '',
+                assinadoEm: new Date().toISOString(),
+                hashAutenticacao: hash,
+                ipAssinatura: ip,
+                metadadosNavegador: navigator.userAgent,
+              },
+            ],
+          }
+        : prev
+    );
+  };
+
+  const handleDownload = () => {
+    if (!contract) return;
+    exportToPdf(contract);
+  };
+
+  if (loadingPage) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="flex items-center gap-2 text-slate-500">
+          <Loader className="w-5 h-5 animate-spin" />
+          Carregando contrato...
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError || !contract) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 flex items-center justify-center">
+        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-8 max-w-md w-full">
+          <div className="flex justify-center mb-4">
+            <AlertCircle className="w-12 h-12 text-red-600" />
+          </div>
+          <h2 className="text-lg font-bold text-red-900 mb-2 text-center">
+            Erro ao Acessar Contrato
+          </h2>
+          <p className="text-sm text-red-700 text-center">
+            {loadError || 'Este link pode ter expirado ou é inválido. Entre em contato com o vendedor.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const legal = generateContractLegalText(contract);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
@@ -99,7 +180,10 @@ Rafael Tavares | CPF: 123.456.789-00 | ID: SIGN-ABC123XYZ`
             <FileText className="w-6 h-6 text-green-600" />
             <h1 className="text-3xl font-bold text-slate-900">Assinar Contrato</h1>
           </div>
-          <p className="text-slate-600">Contrato de Venda - {contratoId}</p>
+          <p className="text-slate-600">
+            {legal.titulo} - Contrato nº {contract.numeroContrato}
+            {vendedorNome ? ` · Vendedor: ${vendedorNome}` : ''}
+          </p>
         </div>
 
         {step === 'cpf' && (
@@ -125,7 +209,7 @@ Rafael Tavares | CPF: 123.456.789-00 | ID: SIGN-ABC123XYZ`
                 <input
                   type="text"
                   value={cpfInput}
-                  onChange={(e) => setCpfInput(e.target.value)}
+                  onChange={(e) => setCpfInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   onKeyPress={handleKeyPress}
                   placeholder="____"
                   maxLength={4}
@@ -163,10 +247,6 @@ Rafael Tavares | CPF: 123.456.789-00 | ID: SIGN-ABC123XYZ`
                 )}
               </button>
             </div>
-
-            <p className="text-xs text-slate-500 text-center mt-4">
-              Use: 1234 para teste
-            </p>
           </div>
         )}
 
@@ -175,14 +255,14 @@ Rafael Tavares | CPF: 123.456.789-00 | ID: SIGN-ABC123XYZ`
             <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
               <div className="mb-6">
                 <p className="text-sm text-slate-600 mb-4">
-                  Olá {clientName}, aqui está o contrato para você ler e assinar:
+                  Olá {clientName || 'Cliente'}, aqui está o contrato para você ler e assinar:
                 </p>
               </div>
 
               {/* Contrato em Leitura */}
               <div className="bg-slate-50 border-2 border-slate-200 rounded-lg p-6 mb-6 max-h-96 overflow-y-auto">
                 <div className="prose prose-sm text-slate-700 whitespace-pre-wrap text-xs leading-relaxed">
-                  {contractContent}
+                  {legal.textoCompletoRenderizado || `${legal.titulo}\n\n${legal.preambulo}\n\n${legal.clausulas.map(c => `${c.numero} – ${c.titulo}\n${c.conteudo}`).join('\n\n')}\n\n${legal.dataLocal}`}
                 </div>
               </div>
 
@@ -191,7 +271,8 @@ Rafael Tavares | CPF: 123.456.789-00 | ID: SIGN-ABC123XYZ`
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
-                    defaultChecked
+                    checked={accepted.leu}
+                    onChange={(e) => setAccepted((prev) => ({ ...prev, leu: e.target.checked }))}
                     className="w-5 h-5 mt-0.5 accent-green-600"
                   />
                   <span className="text-sm text-slate-700">
@@ -202,7 +283,8 @@ Rafael Tavares | CPF: 123.456.789-00 | ID: SIGN-ABC123XYZ`
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
-                    defaultChecked
+                    checked={accepted.concorda}
+                    onChange={(e) => setAccepted((prev) => ({ ...prev, concorda: e.target.checked }))}
                     className="w-5 h-5 mt-0.5 accent-green-600"
                   />
                   <span className="text-sm text-slate-700">
@@ -215,11 +297,11 @@ Rafael Tavares | CPF: 123.456.789-00 | ID: SIGN-ABC123XYZ`
               <button
                 type="button"
                 onClick={() => setSignatureModalOpen(true)}
-                disabled={signed}
+                disabled={signed || !accepted.leu || !accepted.concorda}
                 className={`w-full mt-6 px-4 py-3 text-white text-sm font-bold rounded-lg
                   transition-colors flex items-center justify-center gap-2 ${
-                    signed
-                      ? 'bg-green-600 cursor-default'
+                    signed || !accepted.leu || !accepted.concorda
+                      ? 'bg-slate-300 cursor-not-allowed'
                       : 'bg-green-600 hover:bg-green-700'
                   }`}
               >
@@ -236,6 +318,7 @@ Rafael Tavares | CPF: 123.456.789-00 | ID: SIGN-ABC123XYZ`
               {signed && (
                 <button
                   type="button"
+                  onClick={handleDownload}
                   className="w-full mt-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg
                     transition-colors flex items-center justify-center gap-2"
                 >
@@ -247,24 +330,11 @@ Rafael Tavares | CPF: 123.456.789-00 | ID: SIGN-ABC123XYZ`
             {/* Modal de Assinatura */}
             <ClientSignatureModal
               isOpen={signatureModalOpen}
+              otp={otpCode}
               onClose={() => setSignatureModalOpen(false)}
               onSign={handleSign}
             />
           </>
-        )}
-
-        {step === 'error' && (
-          <div className="bg-red-50 border-2 border-red-200 rounded-lg p-8 max-w-md mx-auto">
-            <div className="flex justify-center mb-4">
-              <AlertCircle className="w-12 h-12 text-red-600" />
-            </div>
-            <h2 className="text-lg font-bold text-red-900 mb-2 text-center">
-              Erro ao Acessar Contrato
-            </h2>
-            <p className="text-sm text-red-700 text-center">
-              Este link pode ter expirado ou é inválido. Entre em contato com o vendedor.
-            </p>
-          </div>
         )}
       </div>
     </div>

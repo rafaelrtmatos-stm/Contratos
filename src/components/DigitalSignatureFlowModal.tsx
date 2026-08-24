@@ -1,25 +1,32 @@
 import React, { useState } from 'react';
 import { ContractData } from '../types/contract';
-import { Lock, CheckCircle2, AlertCircle, Loader, X } from 'lucide-react';
+import { useAuth } from '../utils/authContext';
+import { supabase } from '../utils/supabaseClient';
+import { createAuditStamp, getClientIpAddress, AuditStamp } from '../utils/signatureOtpUtils';
+import { exportToPdf } from '../utils/contractGenerators';
+import { GenerateSignatureCodeModal } from './GenerateSignatureCodeModal';
+import { Lock, CheckCircle2, AlertCircle, Loader, X, FileDown, KeyRound } from 'lucide-react';
 
 interface DigitalSignatureFlowModalProps {
   contract: ContractData;
   parte: 'usuario' | 'comprador';
   onClose: () => void;
-  onSignatureComplete: (signature: any) => void;
+  onSignatureRegistered: (auditStamp: AuditStamp) => void;
 }
 
 export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps> = ({
   contract,
-  parte,
   onClose,
-  onSignatureComplete,
+  onSignatureRegistered,
 }) => {
-  const [step, setStep] = useState<'password' | 'success' | 'error'>('password');
+  const { session, profile } = useAuth();
+  const [step, setStep] = useState<'password' | 'actions'>('password');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [carimbo, setCarimbo] = useState<any>(null);
+  const [carimbo, setCarimbo] = useState<AuditStamp | null>(null);
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const handleConfirmPassword = async () => {
     setError(null);
@@ -29,39 +36,32 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
       return;
     }
 
+    const email = session?.user.email;
+    if (!email) {
+      setError('Sessão inválida. Faça login novamente.');
+      return;
+    }
+
     setLoading(true);
     try {
-      // Simular validação de senha (em produção, validar contra API)
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Revalida a senha do usuário logado contra o Supabase Auth
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      if (authError) {
+        setError('Senha incorreta.');
+        return;
+      }
 
-      // Gerar carimbo automaticamente
-      const novoCarimbo = {
-        id: `${Math.random().toString(36).substr(2, 9)}-${Date.now()}`.toUpperCase(),
-        assinante: parte === 'usuario' ? 'Rafael Tavares' : contract.comprador.nome,
-        cpf: parte === 'usuario' ? '123.456.789-00' : contract.comprador.cpfCnpj,
-        data: new Date().toLocaleString('pt-BR'),
-        timestamp: new Date().toISOString(),
-        hash: Math.random().toString(36).substr(2, 16).toUpperCase(),
-        ip: '192.168.1.1', // Em produção, obter do servidor
-      };
+      const nomeAssinante = profile?.nome || contract.vendedor.nome;
+      const cpfAssinante = contract.vendedor.cpfCnpj;
+      const ip = await getClientIpAddress();
+      const documentText = `${contract.id}|${contract.numeroContrato}|${new Date().toISOString()}`;
+      const stamp = await createAuditStamp(nomeAssinante, cpfAssinante, documentText, ip);
 
-      setCarimbo(novoCarimbo);
-      setStep('success');
-
-      // Callback com carimbo
-      onSignatureComplete({
-        role: parte,
-        tipo: 'digital',
-        carimbo: novoCarimbo,
-      });
-
-      // Fechar após 2 segundos
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+      setCarimbo(stamp);
+      onSignatureRegistered(stamp);
+      setStep('actions');
     } catch (err: any) {
       setError(err.message || 'Erro ao processar assinatura');
-      setStep('error');
     } finally {
       setLoading(false);
     }
@@ -70,6 +70,15 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleConfirmPassword();
+    }
+  };
+
+  const handleDownloadPdf = () => {
+    setDownloading(true);
+    try {
+      exportToPdf(contract);
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -147,32 +156,68 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
             </>
           )}
 
-          {step === 'success' && carimbo && (
-            <div className="space-y-3">
+          {step === 'actions' && carimbo && (
+            <div className="space-y-4">
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2">
                 <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-bold text-green-900">Carimbo Gerado com Sucesso!</p>
                   <p className="text-xs text-green-700 mt-1">
-                    Seu carimbo digital foi criado automaticamente.
+                    Seu carimbo digital foi criado e a assinatura já foi registrada.
                   </p>
                 </div>
               </div>
 
               <div className="bg-slate-50 rounded-lg p-3 space-y-1">
                 <p className="text-xs font-bold text-slate-700">ID da Assinatura:</p>
-                <p className="text-xs font-mono text-slate-600">{carimbo.id}</p>
+                <p className="text-xs font-mono text-slate-600">{carimbo.signatureId}</p>
                 <p className="text-xs font-bold text-slate-700 mt-2">Data/Hora:</p>
-                <p className="text-xs text-slate-600">{carimbo.data}</p>
+                <p className="text-xs text-slate-600">
+                  {new Date(carimbo.dataAssinatura).toLocaleString('pt-BR')}
+                </p>
               </div>
 
-              <p className="text-xs text-slate-500 text-center">
-                Fechando em alguns segundos...
-              </p>
+              <div className="space-y-2 pt-2 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={handleDownloadPdf}
+                  disabled={downloading}
+                  className="w-full px-4 py-2.5 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-300 text-white text-sm font-bold rounded-lg
+                    transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {downloading ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <FileDown className="w-4 h-4" />
+                  )}
+                  PDF Assinado por Mim
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsCodeModalOpen(true)}
+                  className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg
+                    transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  Gerar Código para Cliente
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {isCodeModalOpen && (
+        <GenerateSignatureCodeModal
+          contract={contract}
+          isOpen={isCodeModalOpen}
+          onClose={() => setIsCodeModalOpen(false)}
+          onCodeGenerated={() => {
+            // Link exibido dentro do próprio modal; usuário fecha quando quiser.
+          }}
+        />
+      )}
     </div>
   );
 };

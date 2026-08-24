@@ -24,6 +24,8 @@ import {
   substituirTagsNoDocx,
 } from '../utils/dataTagsProcessor';
 import { saveContractDocumentToSupabase } from '../utils/contractDocumentsStorage';
+import { saveSignature } from '../utils/contractsRepository';
+import { AuditStamp, formatAuditStampText } from '../utils/signatureOtpUtils';
 import { DigitalSignatureFlowModal } from './DigitalSignatureFlowModal';
 import { DigitalSignatureStamp } from './DigitalSignatureStamp';
 import {
@@ -118,44 +120,27 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
     window.print();
   };
 
-  const handleSignatureFlowComplete = async (auditStamp: any, docxProcessado: ArrayBuffer) => {
+  const handleSignatureRegistered = async (auditStamp: AuditStamp) => {
+    const signature: DigitalSignature = {
+      role: signFlowParte === 'usuario' ? 'vendedor' : 'comprador',
+      nomeSignatario: signFlowParte === 'usuario' ? contract.vendedor.nome : contract.comprador.nome,
+      documentoSignatario: signFlowParte === 'usuario' ? contract.vendedor.cpfCnpj : contract.comprador.cpfCnpj,
+      assinaturaDataUrl: auditStamp.signatureId,
+      assinadoEm: auditStamp.dataAssinatura,
+      hashAutenticacao: auditStamp.hashDocumento,
+      ipAssinatura: auditStamp.ipAssinatura,
+      metadadosNavegador: auditStamp.userAgent || navigator.userAgent,
+    };
+
+    handleAddSignature(signature);
+
     try {
-      // 1. Criar assinatura (para registro no contrato)
-      const signature: DigitalSignature = {
-        role: signFlowParte === 'usuario' ? 'vendedor' : 'comprador',
-        nomeSignatario: signFlowParte === 'usuario' ? contract.vendedor.nome : contract.comprador.nome,
-        documentoSignatario: signFlowParte === 'usuario' ? contract.vendedor.cpfCnpj : contract.comprador.cpfCnpj,
-        assinaturaDataUrl: auditStamp.signatureId, // Usar ID da assinatura como referência
-        assinadoEm: auditStamp.dataAssinatura,
-        hashAutenticacao: auditStamp.hashDocumento,
-        ipAssinatura: auditStamp.ipAssinatura,
-      };
-
-      // 2. Adicionar assinatura ao contrato
-      handleAddSignature(signature);
-
-      // 3. Fazer download automático do DOCX assinado
-      const blob = new Blob([docxProcessado], {
-        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${contract.nomeLote || 'contrato'}_assinado_${new Date().getTime()}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      // Fechar modal
-      setIsDigitalSignFlowOpen(false);
-
-      // Mostrar sucesso
-      alert('✅ Documento assinado e baixado com sucesso!');
-    } catch (error: any) {
-      console.error('Erro ao completar assinatura:', error);
-      alert(`Erro: ${error.message}`);
+      await saveSignature(contract.id, signature);
+    } catch (err: any) {
+      console.warn('⚠️ Assinatura registrada localmente, mas falhou ao persistir:', err.message);
     }
+
+    console.log(formatAuditStampText(auditStamp));
   };
 
   const handleCopyText = () => {
@@ -744,7 +729,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           contract={contract}
           parte={signFlowParte}
           onClose={() => setIsDigitalSignFlowOpen(false)}
-          onSignatureComplete={handleSignatureFlowComplete}
+          onSignatureRegistered={handleSignatureRegistered}
         />
       )}
     </div>

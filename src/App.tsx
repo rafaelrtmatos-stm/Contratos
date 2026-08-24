@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ContractData, ContractType } from './types/contract';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
@@ -12,12 +13,24 @@ import { LoginScreen } from './components/LoginScreen';
 import { AdminUsersPanel } from './components/AdminUsersPanel';
 import { AuthProvider, useAuth } from './utils/authContext';
 import { fetchContracts, saveContract, deleteContract, saveSignature } from './utils/contractsRepository';
+import { SignatureLink } from './pages/SignatureLink';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AuthGate />
-    </AuthProvider>
+    <BrowserRouter>
+      <Routes>
+        {/* Rota pública: cliente assina o contrato sem precisar de login */}
+        <Route path="/assinar/:token" element={<SignatureLink />} />
+        <Route
+          path="*"
+          element={
+            <AuthProvider>
+              <AuthGate />
+            </AuthProvider>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

@@ -3,20 +3,22 @@ import { CheckCircle2, AlertCircle, Loader, Copy, X } from 'lucide-react';
 
 interface ClientSignatureModalProps {
   isOpen: boolean;
+  otp: string;
   onClose: () => void;
-  onSign: (otp: string) => void;
+  onSign: (otpDigitado: string) => Promise<void>;
 }
 
 export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
   isOpen,
+  otp,
   onClose,
   onSign,
 }) => {
   const [step, setStep] = useState<'otp' | 'success'>('otp');
-  const [otp] = useState('ABC123DEF456');
   const [otpInput, setOtpInput] = useState('');
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showPasteButton, setShowPasteButton] = useState(true);
 
   const handleCopyOTP = async () => {
@@ -25,35 +27,34 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      alert('Erro ao copiar');
+      setError('Erro ao copiar. Copie manualmente.');
     }
   };
 
   const handlePasteOTP = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      setOtpInput(text);
+      setOtpInput(text.trim());
       setShowPasteButton(false);
     } catch (err) {
-      alert('Erro ao colar. Copie manualmente.');
+      setError('Erro ao colar. Copie e digite manualmente.');
     }
   };
 
   const handleSign = async () => {
-    if (otpInput !== otp) {
-      alert('Código OTP inválido');
+    setError(null);
+
+    if (otpInput.trim() !== otp) {
+      setError('Código OTP inválido. Confira e tente novamente.');
       return;
     }
 
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await onSign(otpInput.trim());
       setStep('success');
-      onSign(otp);
-
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao confirmar assinatura.');
     } finally {
       setLoading(false);
     }
@@ -119,12 +120,19 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
                   type="text"
                   value={otpInput}
                   onChange={(e) => setOtpInput(e.target.value)}
-                  placeholder="ABC123DEF456"
+                  placeholder={otp}
                   className="w-full px-3 py-2.5 border-2 border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 text-sm font-mono
                     focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500
                     disabled:bg-slate-100 disabled:cursor-not-allowed"
                 />
               </div>
+
+              {error && (
+                <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-red-700">{error}</p>
+                </div>
+              )}
 
               {/* Botões de Ação */}
               <div className="flex gap-2">
@@ -185,7 +193,7 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
                 onClick={onClose}
                 className="w-full px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg"
               >
-                📥 Baixar Contrato
+                Fechar
               </button>
             </div>
           )}

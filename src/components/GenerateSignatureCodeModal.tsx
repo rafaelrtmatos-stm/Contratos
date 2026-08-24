@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ContractData } from '../types/contract';
+import { createSignatureLink } from '../utils/signatureLinksRepository';
 import { Link as LinkIcon, Copy, CheckCircle2, AlertCircle, Loader, X } from 'lucide-react';
 
 interface GenerateSignatureCodeModalProps {
@@ -17,8 +18,9 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
 }) => {
   const [validade, setValidade] = useState('24h');
   const [customDias, setCustomDias] = useState('');
+  const [cpfLast4, setCpfLast4] = useState('');
   const [loading, setLoading] = useState(false);
-  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -38,27 +40,28 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
   };
 
   const handleGenerateCode = async () => {
+    setError(null);
+
     if (validade === 'custom' && (!customDias || parseInt(customDias) <= 0)) {
-      alert('Digite um número válido de dias');
+      setError('Digite um número válido de dias');
+      return;
+    }
+
+    if (cpfLast4.length !== 4 || !/^\d{4}$/.test(cpfLast4)) {
+      setError('Digite os 4 últimos dígitos do CPF/CNPJ do cliente');
       return;
     }
 
     setLoading(true);
     try {
-      // Simular geração de código e link
-      await new Promise(resolve => setTimeout(resolve, 600));
-
-      const code = Math.random().toString(36).substr(2, 12).toUpperCase();
-      const linkBase = window.location.origin;
-      const link = `${linkBase}/assinar/${contract.id}?code=${code}`;
       const validadeMs = getValidadeMs();
+      const { token, link, otpCode } = await createSignatureLink(contract, validadeMs, cpfLast4);
 
-      setGeneratedCode(code);
       setGeneratedLink(link);
-
-      onCodeGenerated(code, link, validadeMs);
-    } catch (err) {
-      alert('Erro ao gerar código');
+      onCodeGenerated(token, link, validadeMs);
+      void otpCode; // o cliente vê o próprio OTP na tela dele
+    } catch (err: any) {
+      setError(err.message || 'Erro ao gerar código');
     } finally {
       setLoading(false);
     }
@@ -72,7 +75,7 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      alert('Erro ao copiar link');
+      setError('Erro ao copiar link');
     }
   };
 
@@ -98,11 +101,25 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
 
         {/* Conteúdo */}
         <div className="p-6 space-y-4">
-          {!generatedCode ? (
+          {!generatedLink ? (
             <>
               <p className="text-sm text-slate-600">
-                Escolha o tempo de validade para o link de assinatura do cliente.
+                Escolha o tempo de validade e confirme os 4 últimos dígitos do CPF/CNPJ do cliente.
               </p>
+
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700">
+                  4 últimos dígitos do CPF/CNPJ do cliente
+                </label>
+                <input
+                  type="text"
+                  value={cpfLast4}
+                  onChange={(e) => setCpfLast4(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  placeholder="____"
+                  maxLength={4}
+                  className="w-full px-3 py-2.5 border-2 border-slate-300 rounded-lg text-sm tracking-widest text-center font-bold"
+                />
+              </div>
 
               <div className="space-y-3">
                 <label className="block text-xs font-bold text-slate-700">
@@ -143,6 +160,13 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
                   </div>
                 )}
               </div>
+
+              {error && (
+                <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-red-700">{error}</p>
+                </div>
+              )}
 
               <button
                 type="button"
