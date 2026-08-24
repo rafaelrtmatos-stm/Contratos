@@ -352,10 +352,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
               TOTAL EM VENDAS
             </span>
             <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
-              {formatCurrency(totalVendasGeral || 375000)}
+              {formatCurrency(totalVendasGeral)}
             </div>
             <p className="text-xs text-slate-500 font-medium">
-              <span className="font-bold text-green-600">{countTotalVendas || 2}</span> contratos de venda gerados
+              <span className="font-bold text-green-600">{countTotalVendas}</span> contratos de venda gerados
             </p>
           </div>
 
@@ -371,7 +371,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
               <div>
                 <div className="text-lg font-extrabold text-slate-900 leading-tight">
-                  {contracts.length || 2}
+                  {contracts.length}
                 </div>
                 <div className="text-xs text-slate-500 font-medium leading-tight">
                   Contratos Gerados
@@ -386,7 +386,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
               <div>
                 <div className="text-lg font-extrabold text-slate-900 leading-tight">
-                  {countVendasConcluidas || 1}
+                  {countVendasConcluidas}
                 </div>
                 <div className="text-xs text-slate-500 font-medium leading-tight">
                   Vendas Concluídas
@@ -401,7 +401,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
               <div>
                 <div className="text-lg font-extrabold text-slate-900 leading-tight">
-                  {activeExclusivities.length || 1}
+                  {activeExclusivities.length}
                 </div>
                 <div className="text-xs text-slate-500 font-medium leading-tight">
                   Prazos de Exclusividade
@@ -416,7 +416,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
               <div>
                 <div className="text-lg font-extrabold text-slate-900 leading-tight">
-                  {pendingSignaturesCount || 0}
+                  {pendingSignaturesCount}
                 </div>
                 <div className="text-xs text-slate-500 font-medium leading-tight">
                   Assinaturas Pendentes
