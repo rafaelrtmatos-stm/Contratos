@@ -140,6 +140,47 @@ export async function fetchAddressByCEP(cep: string): Promise<CEPData | null> {
   }
 }
 
+/**
+ * Busca CEP(s) por rua e cidade/UF
+ * Retorna array de endereços encontrados
+ */
+export async function fetchAddressByStreet(
+  rua: string,
+  cidade: string,
+  uf: string
+): Promise<CEPData[]> {
+  try {
+    if (!rua.trim() || !cidade.trim() || !uf.trim()) {
+      throw new Error('Preencha rua, cidade e UF');
+    }
+
+    const ruaLimpa = rua.replace(/\s+/g, '%20').trim();
+    const cidadeLimpa = cidade.replace(/\s+/g, '%20').trim();
+    const ufLimpa = uf.toUpperCase().trim();
+
+    const response = await fetch(
+      `https://viacep.com.br/ws/${ufLimpa}/${cidadeLimpa}/${ruaLimpa}/json/`
+    );
+    
+    if (!response.ok) {
+      throw new Error('Erro ao buscar endereço');
+    }
+
+    const data = await response.json();
+    
+    if (Array.isArray(data) && data.length > 0) {
+      return data;
+    } else if (data.erro) {
+      throw new Error('Nenhum endereço encontrado para essa busca');
+    }
+
+    return [];
+  } catch (error) {
+    console.error('Erro na busca por rua/cidade:', error);
+    throw error;
+  }
+}
+
 // =====================
 // CONVERSÃO PARA MAIÚSCULA
 // =====================
