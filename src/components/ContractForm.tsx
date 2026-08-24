@@ -1046,7 +1046,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
                 <div>
                   <ValidatedInput
-                    type="cpf"
+                    validationType="cpf"
                     value={vendedor.cpfCnpj}
                     onChange={(val) => setVendedor({ ...vendedor, cpfCnpj: val })}
                     label="CPF"
@@ -1090,7 +1090,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
                 <div>
                   <ValidatedInput
-                    type="rg"
+                    validationType="rg"
                     value={vendedor.rg}
                     onChange={(val) => setVendedor({ ...vendedor, rg: val })}
                     label="RG nº"
@@ -1113,7 +1113,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
                 <div>
                   <ValidatedInput
-                    type="telefone"
+                    validationType="phone"
                     value={vendedor.telefone}
                     onChange={(val) => setVendedor({ ...vendedor, telefone: val })}
                     label="Telefone / WhatsApp"
@@ -1239,7 +1239,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
                 <div>
                   <ValidatedInput
-                    type="cpf"
+                    validationType="cpf"
                     value={comprador.cpfCnpj}
                     onChange={(val) => setComprador({ ...comprador, cpfCnpj: val })}
                     label="CPF"
@@ -1283,7 +1283,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
                 <div>
                   <ValidatedInput
-                    type="rg"
+                    validationType="rg"
                     value={comprador.rg}
                     onChange={(val) => setComprador({ ...comprador, rg: val })}
                     label="RG nº"
@@ -1306,7 +1306,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
                 <div>
                   <ValidatedInput
-                    type="telefone"
+                    validationType="phone"
                     value={comprador.telefone}
                     onChange={(val) => setComprador({ ...comprador, telefone: val })}
                     label="Telefone / WhatsApp"
@@ -1317,7 +1317,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 {tipo === 'venda_parcelada' && (
                   <div>
                     <ValidatedInput
-                      type="telefone"
+                      validationType="phone"
                       value={comprador.telefone2 || ''}
                       onChange={(val) => setComprador({ ...comprador, telefone2: val })}
                       label="Telefone Secundário"
