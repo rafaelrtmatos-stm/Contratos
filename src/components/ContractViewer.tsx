@@ -30,6 +30,7 @@ import { saveContractDocumentToSupabase } from '../utils/contractDocumentsStorag
 import { saveSignature } from '../utils/contractsRepository';
 import { AuditStamp, formatAuditStampText } from '../utils/signatureOtpUtils';
 import { DigitalSignatureFlowModal } from './DigitalSignatureFlowModal';
+import { GenerateSignatureCodeModal } from './GenerateSignatureCodeModal';
 import { DigitalSignatureStamp } from './DigitalSignatureStamp';
 import { EvidenceLogModal } from './EvidenceLogModal';
 import { WordTemplateModal } from './WordTemplateModal';
@@ -49,6 +50,7 @@ import {
   PrinterCheck,
   Sparkles,
   FileSearch,
+  Link as LinkIcon,
 } from 'lucide-react';
 
 interface ContractViewerProps {
@@ -67,6 +69,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   const [isWordTemplateModalOpen, setIsWordTemplateModalOpen] = useState(false);
   const [isDigitalSignFlowOpen, setIsDigitalSignFlowOpen] = useState(false);
   const [isEvidenceLogOpen, setIsEvidenceLogOpen] = useState(false);
+  const [isShareLinkOpen, setIsShareLinkOpen] = useState(false);
   const [signFlowParte, setSignFlowParte] = useState<'usuario' | 'comprador'>('usuario');
   const [copied, setCopied] = useState(false);
   const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
@@ -404,15 +407,36 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       {/* Some por completo quando o contrato digital já está 100% assinado        */}
       {/* ========================================================================= */}
       {isFullySigned ? (
-        <div className="bg-emerald-50 p-4 sm:p-5 rounded-2xl border border-emerald-200 shadow-sm print:hidden flex items-center gap-3">
-          <ShieldCheck className="w-6 h-6 text-emerald-600 shrink-0" />
-          <div>
-            <span className="text-sm font-bold text-emerald-900 block">
-              Contrato assinado — somente visualização
-            </span>
-            <p className="text-xs text-emerald-700 mt-0.5">
-              Ambas as partes já assinaram digitalmente. Não é mais possível reabrir o fluxo de assinatura.
-            </p>
+        <div className="bg-emerald-50 p-4 sm:p-5 rounded-2xl border border-emerald-200 shadow-sm print:hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="w-6 h-6 text-emerald-600 shrink-0" />
+            <div>
+              <span className="text-sm font-bold text-emerald-900 block">
+                Contrato assinado — somente visualização
+              </span>
+              <p className="text-xs text-emerald-700 mt-0.5">
+                Ambas as partes já assinaram digitalmente. Não é mais possível reabrir o fluxo de assinatura.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setIsEvidenceLogOpen(true)}
+              className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-800 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
+              title="Ver log de evidências das assinaturas"
+            >
+              <FileSearch className="w-4 h-4" />
+              <span>Log de Evidências</span>
+            </button>
+            <button
+              onClick={() => setIsShareLinkOpen(true)}
+              className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-800 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
+              title="Gerar/compartilhar link para o cliente rever e baixar o contrato"
+            >
+              <LinkIcon className="w-4 h-4" />
+              <span>Compartilhar Link</span>
+            </button>
           </div>
         </div>
       ) : (
@@ -802,6 +826,15 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
         <EvidenceLogModal
           contract={contract}
           onClose={() => setIsEvidenceLogOpen(false)}
+        />
+      )}
+
+      {isShareLinkOpen && (
+        <GenerateSignatureCodeModal
+          contract={contract}
+          isOpen={isShareLinkOpen}
+          onClose={() => setIsShareLinkOpen(false)}
+          onCodeGenerated={() => {}}
         />
       )}
     </div>

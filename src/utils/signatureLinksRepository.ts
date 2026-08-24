@@ -61,6 +61,7 @@ export async function fetchContractForSignatureToken(token: string): Promise<{
   clienteCpfLast4: string;
   otpCode: string;
   vendedorNome: string;
+  jaAssinado: boolean;
 }> {
   const { data, error } = await supabase.rpc('get_contract_for_signature_token', {
     p_token: token,
@@ -107,7 +108,10 @@ export async function fetchContractForSignatureToken(token: string): Promise<{
     testemunha1: row.testemunhas?.testemunha1 ?? undefined,
     testemunha2: row.testemunhas?.testemunha2 ?? undefined,
     testemunha3: row.testemunhas?.testemunha3 ?? undefined,
-    assinaturas: [],
+    // Assinaturas já registradas (ex: o corretor pode ter assinado antes
+    // do cliente abrir o link) - vem do RPC get_contract_for_signature_token,
+    // que busca em contract_signatures. Nunca deixar hardcoded [].
+    assinaturas: Array.isArray(data.assinaturas) ? data.assinaturas : [],
   };
 
   return {
@@ -115,6 +119,7 @@ export async function fetchContractForSignatureToken(token: string): Promise<{
     clienteCpfLast4: data.link.clienteCpfLast4,
     otpCode: data.link.otpCode,
     vendedorNome: data.link.vendedorNome,
+    jaAssinado: data.link.status === 'signed',
   };
 }
 

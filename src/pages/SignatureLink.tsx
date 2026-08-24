@@ -26,6 +26,7 @@ export const SignatureLink: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [signatureModalOpen, setSignatureModalOpen] = useState(false);
   const [signed, setSigned] = useState(false);
+  const [previouslySigned, setPreviouslySigned] = useState(false);
   const [clientName, setClientName] = useState('');
   const [accepted, setAccepted] = useState({ leu: true, concorda: true });
 
@@ -38,11 +39,17 @@ export const SignatureLink: React.FC = () => {
 
     (async () => {
       try {
-        const { contrato, otpCode, vendedorNome } = await fetchContractForSignatureToken(token);
+        const { contrato, otpCode, vendedorNome, jaAssinado } = await fetchContractForSignatureToken(token);
         setContract(contrato);
         setOtpCode(otpCode);
         setVendedorNome(vendedorNome);
         setClientName(contrato.comprador?.nome || '');
+        if (jaAssinado) {
+          // Reabrindo o mesmo link depois de já ter assinado: pula
+          // direto pro modo visualização/download, sem bloquear com erro.
+          setSigned(true);
+          setPreviouslySigned(true);
+        }
       } catch (err: any) {
         setLoadError(err.message || 'Não foi possível carregar o contrato.');
       } finally {
@@ -255,7 +262,9 @@ export const SignatureLink: React.FC = () => {
             <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
               <div className="mb-6">
                 <p className="text-sm text-slate-600 mb-4">
-                  Olá {clientName || 'Cliente'}, aqui está o contrato para você ler e assinar:
+                  {previouslySigned
+                    ? `Olá ${clientName || 'Cliente'}, este contrato já foi assinado. Você pode revê-lo e baixá-lo quantas vezes precisar:`
+                    : `Olá ${clientName || 'Cliente'}, aqui está o contrato para você ler e assinar:`}
                 </p>
               </div>
 
@@ -266,61 +275,65 @@ export const SignatureLink: React.FC = () => {
                 </div>
               </div>
 
-              {/* Checklist de Aceito */}
-              <div className="space-y-3">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={accepted.leu}
-                    onChange={(e) => setAccepted((prev) => ({ ...prev, leu: e.target.checked }))}
-                    className="w-5 h-5 mt-0.5 accent-green-600"
-                  />
-                  <span className="text-sm text-slate-700">
-                    Li e entendi o contrato e todos os seus termos e condições.
-                  </span>
-                </label>
+              {/* Checklist de Aceito - só faz sentido antes de assinar */}
+              {!previouslySigned && (
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={accepted.leu}
+                      onChange={(e) => setAccepted((prev) => ({ ...prev, leu: e.target.checked }))}
+                      className="w-5 h-5 mt-0.5 accent-green-600"
+                    />
+                    <span className="text-sm text-slate-700">
+                      Li e entendi o contrato e todos os seus termos e condições.
+                    </span>
+                  </label>
 
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={accepted.concorda}
-                    onChange={(e) => setAccepted((prev) => ({ ...prev, concorda: e.target.checked }))}
-                    className="w-5 h-5 mt-0.5 accent-green-600"
-                  />
-                  <span className="text-sm text-slate-700">
-                    Concordo em assinar este contrato digitalmente.
-                  </span>
-                </label>
-              </div>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={accepted.concorda}
+                      onChange={(e) => setAccepted((prev) => ({ ...prev, concorda: e.target.checked }))}
+                      className="w-5 h-5 mt-0.5 accent-green-600"
+                    />
+                    <span className="text-sm text-slate-700">
+                      Concordo em assinar este contrato digitalmente.
+                    </span>
+                  </label>
+                </div>
+              )}
 
-              {/* Botão Assinar */}
-              <button
-                type="button"
-                onClick={() => setSignatureModalOpen(true)}
-                disabled={signed || !accepted.leu || !accepted.concorda}
-                className={`w-full mt-6 px-4 py-3 text-white text-sm font-bold rounded-lg
-                  transition-colors flex items-center justify-center gap-2 ${
-                    signed || !accepted.leu || !accepted.concorda
-                      ? 'bg-slate-300 cursor-not-allowed'
-                      : 'bg-green-600 hover:bg-green-700'
-                  }`}
-              >
-                {signed ? (
-                  <>
-                    <CheckCircle2 className="w-5 h-5" />
-                    Contrato Assinado
-                  </>
-                ) : (
-                  '✍️ Assinar Contrato'
-                )}
-              </button>
+              {/* Botão Assinar - só aparece antes de assinar */}
+              {!previouslySigned && (
+                <button
+                  type="button"
+                  onClick={() => setSignatureModalOpen(true)}
+                  disabled={signed || !accepted.leu || !accepted.concorda}
+                  className={`w-full mt-6 px-4 py-3 text-white text-sm font-bold rounded-lg
+                    transition-colors flex items-center justify-center gap-2 ${
+                      signed || !accepted.leu || !accepted.concorda
+                        ? 'bg-slate-300 cursor-not-allowed'
+                        : 'bg-green-600 hover:bg-green-700'
+                    }`}
+                >
+                  {signed ? (
+                    <>
+                      <CheckCircle2 className="w-5 h-5" />
+                      Contrato Assinado
+                    </>
+                  ) : (
+                    '✍️ Assinar Contrato'
+                  )}
+                </button>
+              )}
 
               {signed && (
                 <button
                   type="button"
                   onClick={handleDownload}
-                  className="w-full mt-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg
-                    transition-colors flex items-center justify-center gap-2"
+                  className={`w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg
+                    transition-colors flex items-center justify-center gap-2 ${previouslySigned ? '' : 'mt-2'}`}
                 >
                   📥 Baixar Contrato Assinado
                 </button>
