@@ -1,23 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { fetchAddressByCEP, formatCEP, isValidCEP, fetchAddressByStreet, CEPData } from '../utils/validators';
 import { Search, AlertCircle, CheckCircle2, Loader, X, MapPin } from 'lucide-react';
 
-interface CEPSearchProps {
-  initialCEP?: string;
-  onAddressFound: (data: {
-    cep: string;
-    logradouro: string;
-    bairro: string;
-    localidade: string;
-    uf: string;
-  }) => void;
+interface EnderecoData {
+  endereco: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
 }
 
-export const CEPSearch: React.FC<CEPSearchProps> = ({ initialCEP = '', onAddressFound }) => {
-  const [cep, setCEP] = useState(initialCEP);
+interface CEPSearchProps {
+  cep: string;
+  onCEPChange: (cep: string) => void;
+  onAddressChange: (data: EnderecoData) => void;
+  label?: string;
+}
+
+export const CEPSearch: React.FC<CEPSearchProps> = ({ cep, onCEPChange, onAddressChange, label = 'CEP' }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const lastSearchedCEP = useRef<string | null>(null);
 
   // Modal para buscar por rua/cidade
   const [showModal, setShowModal] = useState(false);
@@ -28,36 +31,38 @@ export const CEPSearch: React.FC<CEPSearchProps> = ({ initialCEP = '', onAddress
   const [loadingStreet, setLoadingStreet] = useState(false);
   const [errorStreet, setErrorStreet] = useState<string | null>(null);
 
-  // Busca automática quando CEP está completo
-  useEffect(() => {
-    if (cep && isValidCEP(cep)) {
-      handleSearchByCEP(cep);
-    }
-  }, [cep]);
+  // Mapeia o retorno da API (ViaCEP) para os campos usados no formulário
+  const emitAddress = (data: CEPData) => {
+    onAddressChange({
+      endereco: data.logradouro || '',
+      bairro: data.bairro || '',
+      cidade: data.localidade || '',
+      uf: data.uf || '',
+    });
+  };
 
   const handleSearchByCEP = async (cepValue: string) => {
-    setError(null);
-    setSuccess(false);
-
     const cleanCEP = cepValue.replace(/\D/g, '');
     if (!isValidCEP(cleanCEP)) {
       return;
     }
 
+    // Evita re-buscar o mesmo CEP repetidamente
+    if (lastSearchedCEP.current === cleanCEP) {
+      return;
+    }
+    lastSearchedCEP.current = cleanCEP;
+
+    setError(null);
+    setSuccess(false);
     setLoading(true);
     try {
       console.log('🔍 Buscando CEP:', cleanCEP);
       const result = await fetchAddressByCEP(cleanCEP);
-      
+
       if (result) {
         console.log('✅ CEP encontrado:', result);
-        onAddressFound({
-          cep: result.cep,
-          logradouro: result.logradouro || '',
-          bairro: result.bairro || '',
-          localidade: result.localidade || '',
-          uf: result.uf || '',
-        });
+        emitAddress(result);
         setSuccess(true);
         setTimeout(() => setSuccess(false), 2000);
       } else {
@@ -71,6 +76,17 @@ export const CEPSearch: React.FC<CEPSearchProps> = ({ initialCEP = '', onAddress
     }
   };
 
+  // Busca automática quando o CEP (controlado pelo pai) está completo
+  useEffect(() => {
+    if (cep && isValidCEP(cep)) {
+      handleSearchByCEP(cep);
+    } else {
+      // CEP foi alterado/apagado: permite nova busca se completar de novo
+      lastSearchedCEP.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cep]);
+
   const handleSearchByStreet = async () => {
     setErrorStreet(null);
     setResults([]);
@@ -83,11 +99,11 @@ export const CEPSearch: React.FC<CEPSearchProps> = ({ initialCEP = '', onAddress
     setLoadingStreet(true);
     try {
       console.log('🔍 Buscando por rua/cidade:', rua, cidade, uf);
-      const endericos = await fetchAddressByStreet(rua, cidade, uf);
-      
-      if (endericos.length > 0) {
-        console.log('✅ Endereços encontrados:', endericos.length);
-        setResults(endericos);
+      const enderecos = await fetchAddressByStreet(rua, cidade, uf);
+
+      if (enderecos.length > 0) {
+        console.log('✅ Endereços encontrados:', enderecos.length);
+        setResults(enderecos);
       } else {
         setErrorStreet('Nenhum endereço encontrado para essa busca');
       }
@@ -101,14 +117,9 @@ export const CEPSearch: React.FC<CEPSearchProps> = ({ initialCEP = '', onAddress
 
   const handleSelectAddress = (address: CEPData) => {
     const cepFormatado = address.cep.replace(/(\d{5})(\d{3})/, '$1-$2');
-    setCEP(cepFormatado);
-    onAddressFound({
-      cep: address.cep,
-      logradouro: address.logradouro,
-      bairro: address.bairro,
-      localidade: address.localidade,
-      uf: address.uf,
-    });
+    lastSearchedCEP.current = address.cep.replace(/\D/g, '');
+    onCEPChange(cepFormatado);
+    emitAddress(address);
     setShowModal(false);
     setResults([]);
   };
@@ -122,7 +133,7 @@ export const CEPSearch: React.FC<CEPSearchProps> = ({ initialCEP = '', onAddress
   return (
     <div className="space-y-2">
       <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-        CEP
+        {label}
       </label>
 
       {/* Input CEP + Botão discreto de busca por rua/cidade */}
@@ -130,7 +141,7 @@ export const CEPSearch: React.FC<CEPSearchProps> = ({ initialCEP = '', onAddress
         <input
           type="text"
           value={cep}
-          onChange={(e) => setCEP(formatCEP(e.target.value))}
+          onChange={(e) => onCEPChange(formatCEP(e.target.value))}
           placeholder="00000-000"
           maxLength={9}
           disabled={loading}

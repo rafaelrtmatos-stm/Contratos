@@ -31,6 +31,8 @@ import {
 import { ValidatedInput } from './ValidatedInput';
 import { CEPSearch } from './CEPSearch';
 import { GenderSelect } from './GenderSelect';
+import { EstadoCivilSelect } from './EstadoCivilSelect';
+import { convertEstadoCivilToGenero } from '../utils/civilStatus';
 
 interface ContractFormProps {
   initialData?: ContractData | null;
@@ -1029,7 +1031,13 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 <div>
                   <GenderSelect
                     value={vendedor.genero || ''}
-                    onChange={(val) => setVendedor({ ...vendedor, genero: val })}
+                    onChange={(val) =>
+                      setVendedor({
+                        ...vendedor,
+                        genero: val,
+                        estadoCivil: convertEstadoCivilToGenero(vendedor.estadoCivil, val),
+                      })
+                    }
                     label="Gênero"
                   />
                 </div>
@@ -1058,15 +1066,10 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Estado Civil
-                  </label>
-                  <input
-                    type="text"
+                  <EstadoCivilSelect
                     value={vendedor.estadoCivil}
-                    onChange={(e) => setVendedor({ ...vendedor, estadoCivil: e.target.value })}
-                    placeholder="casado(a) / solteiro(a)"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    onChange={(val) => setVendedor({ ...vendedor, estadoCivil: val })}
+                    genero={vendedor.genero || ''}
                   />
                 </div>
 
@@ -1220,7 +1223,13 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 <div>
                   <GenderSelect
                     value={comprador.genero || ''}
-                    onChange={(val) => setComprador({ ...comprador, genero: val })}
+                    onChange={(val) =>
+                      setComprador({
+                        ...comprador,
+                        genero: val,
+                        estadoCivil: convertEstadoCivilToGenero(comprador.estadoCivil, val),
+                      })
+                    }
                     label="Gênero"
                   />
                 </div>
@@ -1249,15 +1258,10 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Estado Civil
-                  </label>
-                  <input
-                    type="text"
+                  <EstadoCivilSelect
                     value={comprador.estadoCivil}
-                    onChange={(e) => setComprador({ ...comprador, estadoCivil: e.target.value })}
-                    placeholder="solteiro(a) / casado(a)"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    onChange={(val) => setComprador({ ...comprador, estadoCivil: val })}
+                    genero={comprador.genero || ''}
                   />
                 </div>
 
