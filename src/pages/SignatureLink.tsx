@@ -144,6 +144,13 @@ export const SignatureLink: React.FC = () => {
 
   const handleDownload = () => {
     if (!contract) return;
+    // Se já existe um documento final salvo no Storage (upload feito pelo
+    // corretor após a assinatura), o cliente baixa exatamente esse arquivo
+    // em vez de uma versão gerada na hora a partir dos dados do contrato.
+    if (contract.documentoUrl) {
+      window.open(contract.documentoUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
     exportToPdf(contract);
   };
 

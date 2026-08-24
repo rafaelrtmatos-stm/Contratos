@@ -112,14 +112,23 @@ export async function fetchContractForSignatureToken(token: string): Promise<{
     // do cliente abrir o link) - vem do RPC get_contract_for_signature_token,
     // que busca em contract_signatures. Nunca deixar hardcoded [].
     assinaturas: Array.isArray(data.assinaturas) ? data.assinaturas : [],
+    // URL do .docx salvo no Storage, se já existir (documento final assinado).
+    documentoUrl: row.documento_url ?? undefined,
   };
+
+  // "Já assinado" considera tanto o link em si (reaberto depois de assinar
+  // por ele) quanto o CONTRATO já estar 100% assinado por outras vias -
+  // ex: link novo gerado só para o cliente rever/baixar um contrato que
+  // já foi finalizado. Em ambos os casos não faz sentido oferecer o
+  // fluxo de assinatura de novo.
+  const jaAssinado = data.link.status === 'signed' || contrato.status === 'assinado_total';
 
   return {
     contrato,
     clienteCpfLast4: data.link.clienteCpfLast4,
     otpCode: data.link.otpCode,
     vendedorNome: data.link.vendedorNome,
-    jaAssinado: data.link.status === 'signed',
+    jaAssinado,
   };
 }
 

@@ -843,6 +843,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           isOpen={isShareLinkOpen}
           onClose={() => setIsShareLinkOpen(false)}
           onCodeGenerated={() => {}}
+          isFullySigned={isFullySigned}
         />
       )}
     </div>

@@ -1,7 +1,7 @@
 // Carimbo digital de assinatura eletrônica desenhado no PDF final (jsPDF).
 // Dimensão fixa: 33% da largura da página A4 (210mm) x 7% da altura (297mm),
 // ou seja, 69.3mm x 20.79mm — igual em tela, impressão e PDF.
-// Nenhum texto usa fonte abaixo de 5pt; nenhuma informação é omitida/truncada.
+// Nenhum texto usa fonte abaixo de 4pt; nenhuma informação é omitida/truncada.
 
 export interface PdfStampData {
   signerName: string;
@@ -28,7 +28,7 @@ const STAMP_COLORS = {
 };
 
 const MM_PER_PT = 25.4 / 72;
-const FONT_MIN = 5; // pt — piso mínimo absoluto de toda a fonte do selo
+const FONT_MIN = 4; // pt — piso mínimo absoluto de toda a fonte do selo
 
 /** Altura de linha (mm) para um dado tamanho de fonte (pt), com espaçamento apertado. */
 const lineH = (fontPt: number, lh = 1.12) => fontPt * MM_PER_PT * lh;
