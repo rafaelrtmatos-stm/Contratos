@@ -65,7 +65,15 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
     if (!generatedLink) return;
 
     try {
-      await navigator.clipboard.writeText(generatedLink);
+      // Extrai últimos 4 dígitos do CPF/CNPJ do comprador
+      const cpfCnpj = contract.comprador?.cpfCnpj || '';
+      const digitos = cpfCnpj.replace(/\D/g, '');
+      const codigoAcesso = digitos.slice(-4);
+
+      // Copia link + código de acesso
+      const mensagem = `${generatedLink}\n\n💡 Código de acesso: ${codigoAcesso}`;
+      
+      await navigator.clipboard.writeText(mensagem);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -180,6 +188,17 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
                 </div>
               </div>
 
+              {/* Código de Acesso */}
+              <div className="p-3 bg-amber-50 border-2 border-amber-300 rounded-lg">
+                <p className="text-xs font-bold text-amber-900 mb-1">🔐 Código de Acesso:</p>
+                <p className="text-lg font-black text-amber-700 font-mono tracking-widest">
+                  {contract.comprador?.cpfCnpj?.replace(/\D/g, '').slice(-4) || '****'}
+                </p>
+                <p className="text-[10px] text-amber-700 mt-1">
+                  ↑ Os últimos 4 dígitos do CPF do cliente
+                </p>
+              </div>
+
               <div className="bg-slate-50 rounded-lg p-3 space-y-2">
                 <p className="text-xs font-bold text-slate-700">Link para Compartilhar:</p>
                 <div className="flex gap-2">
@@ -207,6 +226,9 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
                     )}
                   </button>
                 </div>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  ℹ️ O código de acesso será incluído automaticamente ao copiar
+                </p>
               </div>
 
               <button
