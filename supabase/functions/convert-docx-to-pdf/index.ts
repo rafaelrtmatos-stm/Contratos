@@ -10,6 +10,14 @@
 
 const ILOVEAPI_BASE = 'https://api.ilovepdf.com/v1';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+
 function base64ToUint8Array(base64: string): Uint8Array {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
@@ -27,26 +35,40 @@ function uint8ArrayToBase64(bytes: Uint8Array): string {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   try {
     if (req.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Método não permitido.' }), { status: 405 });
+      return new Response(JSON.stringify({ error: 'Método não permitido.' }), {
+        status: 405,
+        headers: jsonHeaders,
+      });
     }
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Não autenticado.' }), { status: 401 });
+      return new Response(JSON.stringify({ error: 'Não autenticado.' }), {
+        status: 401,
+        headers: jsonHeaders,
+      });
     }
 
     const publicKey = Deno.env.get('ILOVEAPI_PUBLIC_KEY');
     if (!publicKey) {
       return new Response(JSON.stringify({ error: 'ILOVEAPI_PUBLIC_KEY não configurada no servidor.' }), {
         status: 500,
+        headers: jsonHeaders,
       });
     }
 
     const { docxBase64, filename } = await req.json();
     if (!docxBase64) {
-      return new Response(JSON.stringify({ error: 'docxBase64 é obrigatório.' }), { status: 400 });
+      return new Response(JSON.stringify({ error: 'docxBase64 é obrigatório.' }), {
+        status: 400,
+        headers: jsonHeaders,
+      });
     }
     const safeFilename = (filename || 'contrato.docx').replace(/[^\w.\-]/g, '_');
 
@@ -57,7 +79,10 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ public_key: publicKey }),
     });
     if (!authRes.ok) {
-      return new Response(JSON.stringify({ error: 'Falha ao autenticar no iLoveAPI.' }), { status: 502 });
+      return new Response(JSON.stringify({ error: 'Falha ao autenticar no iLoveAPI.' }), {
+        status: 502,
+        headers: jsonHeaders,
+      });
     }
     const { token } = await authRes.json();
 
@@ -66,7 +91,10 @@ Deno.serve(async (req) => {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!startRes.ok) {
-      return new Response(JSON.stringify({ error: 'Falha ao iniciar tarefa no iLoveAPI.' }), { status: 502 });
+      return new Response(JSON.stringify({ error: 'Falha ao iniciar tarefa no iLoveAPI.' }), {
+        status: 502,
+        headers: jsonHeaders,
+      });
     }
     const { server, task } = await startRes.json();
 
@@ -88,7 +116,10 @@ Deno.serve(async (req) => {
       body: uploadForm,
     });
     if (!uploadRes.ok) {
-      return new Response(JSON.stringify({ error: 'Falha ao enviar o arquivo ao iLoveAPI.' }), { status: 502 });
+      return new Response(JSON.stringify({ error: 'Falha ao enviar o arquivo ao iLoveAPI.' }), {
+        status: 502,
+        headers: jsonHeaders,
+      });
     }
     const { server_filename } = await uploadRes.json();
 
@@ -104,7 +135,10 @@ Deno.serve(async (req) => {
     });
     if (!processRes.ok) {
       const errBody = await processRes.text();
-      return new Response(JSON.stringify({ error: `Falha ao converter no iLoveAPI: ${errBody}` }), { status: 502 });
+      return new Response(JSON.stringify({ error: `Falha ao converter no iLoveAPI: ${errBody}` }), {
+        status: 502,
+        headers: jsonHeaders,
+      });
     }
 
     // 5) Download do PDF resultante
@@ -112,15 +146,21 @@ Deno.serve(async (req) => {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!downloadRes.ok) {
-      return new Response(JSON.stringify({ error: 'Falha ao baixar o PDF do iLoveAPI.' }), { status: 502 });
+      return new Response(JSON.stringify({ error: 'Falha ao baixar o PDF do iLoveAPI.' }), {
+        status: 502,
+        headers: jsonHeaders,
+      });
     }
     const pdfBytes = new Uint8Array(await downloadRes.arrayBuffer());
 
     return new Response(JSON.stringify({ pdfBase64: uint8ArrayToBase64(pdfBytes) }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500 });
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: jsonHeaders,
+    });
   }
 });
