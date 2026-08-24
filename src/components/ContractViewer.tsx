@@ -11,6 +11,14 @@ import {
   downloadDocxContract,
   getCustomWordTemplateMeta,
 } from '../utils/docxProcessor';
+import { resolveTemplate } from '../utils/templateResolver';
+import { downloadTemplateWithCache } from '../utils/supabaseTemplateStorage';
+import { 
+  processSignatureTags,
+  findSignatureTags,
+  mapTagsToConfig,
+  summarizeChanges,
+} from '../utils/signatureTagProcessor';
 import { DigitalSignatureModal } from './DigitalSignatureModal';
 import { WordTemplateModal } from './WordTemplateModal';
 import { DigitalSignatureStamp } from './DigitalSignatureStamp';
@@ -49,6 +57,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   const [isWordTemplateModalOpen, setIsWordTemplateModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   // Modalidade de Assinatura: 'digital' ou 'manual'
   const currentModality = contract.modalidadeAssinatura || (contract.assinaturas && contract.assinaturas.length > 0 ? 'digital' : 'digital');
@@ -113,11 +122,84 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
   const handleDownloadDocx = async () => {
     setIsDownloadingDocx(true);
+    setDownloadError(null);
+
     try {
-      await downloadDocxContract(contract);
-    } catch (error) {
+      // 1. Decidir qual template usar
+      const estadoAssinatura = {
+        usuarioAssinou: contract.assinaturas?.some(a => a.role === 'vendedor') || false,
+        usuarioModalidade: (contract.modalidadeAssinatura === 'digital' ? 'digital' : 'manual') as 'digital' | 'manual',
+        compradorAssinou: contract.assinaturas?.some(a => a.role === 'comprador') || false,
+        compradorModalidade: (contract.modalidadeAssinatura === 'digital' ? 'digital' : 'manual') as 'digital' | 'manual',
+        testemunhaprecisa: contract.modalidadeAssinatura === 'manual',
+      };
+
+      // Resolver qual template usar (download_depois_assinar = está baixando após ter preenchido dados)
+      const templateResolved = resolveTemplate(
+        contract.tipo,
+        'download_depois_assinar',
+        estadoAssinatura,
+        contract.tipo === 'exclusividade' ? (contract.varianteExclusividade || 'normal') : undefined
+      );
+
+      console.log('📋 Template selecionado:', templateResolved.arquivo);
+      console.log('📝 Motivação:', templateResolved.motivacao);
+
+      // 2. Recuperar template do Supabase
+      const { sucesso, blob, erro } = await downloadTemplateWithCache(templateResolved.arquivo);
+
+      if (!sucesso || !blob) {
+        throw new Error(erro || 'Falha ao recuperar template do Supabase');
+      }
+
+      const docxBuffer = await blob.arrayBuffer();
+
+      // 3. Processar tags de assinatura
+      const tagsEncontradas = await findSignatureTags(docxBuffer);
+      
+      if (tagsEncontradas.length > 0) {
+        console.log('🏷️ Tags de assinatura encontradas:', tagsEncontradas);
+        
+        const tagsConfig = mapTagsToConfig(
+          tagsEncontradas,
+          estadoAssinatura.usuarioAssinou,
+          estadoAssinatura.compradorAssinou,
+          estadoAssinatura.usuarioModalidade,
+          estadoAssinatura.compradorModalidade
+        );
+
+        const resumo = summarizeChanges(tagsConfig);
+        console.log('📊 Resumo de mudanças:', resumo);
+
+        // Processar tags
+        const docxProcessado = await processSignatureTags(docxBuffer, tagsConfig);
+
+        // 4. Fazer download
+        const url = URL.createObjectURL(new Blob([docxProcessado], { 
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+        }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${contract.nomeLote || 'contrato'}_${new Date().getTime()}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        // Nenhuma tag de assinatura, fazer download direto
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${contract.nomeLote || 'contrato'}_${new Date().getTime()}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (error: any) {
       console.error('Erro ao baixar DOCX:', error);
-      alert('Houve um erro ao processar o arquivo Word. Verifique o modelo cadastrado.');
+      setDownloadError(error.message || 'Houve um erro ao processar o arquivo Word.');
+      alert(`Erro: ${error.message || 'Falha ao gerar documento'}`);
     } finally {
       setIsDownloadingDocx(false);
     }

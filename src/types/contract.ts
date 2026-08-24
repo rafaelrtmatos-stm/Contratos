@@ -176,6 +176,9 @@ export interface ContractData {
   // Modalidade de Finalização / Assinatura do Contrato
   modalidadeAssinatura?: 'digital' | 'manual';
 
+  // Variante de exclusividade (com ou sem cônjuge)
+  varianteExclusividade?: 'normal' | 'sem_conjuge';
+
   // Testemunhas (utilizadas na modalidade manual: 1, 2 e 3)
   testemunha1?: { nome: string; cpf: string; rg: string };
   testemunha2?: { nome: string; cpf: string; rg: string };
