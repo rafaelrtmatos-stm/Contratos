@@ -1553,18 +1553,6 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
     doc.text(`1. Nome: ${contract.testemunha1?.nome || ''}    CPF: ${contract.testemunha1?.cpf || ''}    RG: ${contract.testemunha1?.rg || ''}`, margin, y);
     doc.text(`2. Nome: ${contract.testemunha2?.nome || ''}    CPF: ${contract.testemunha2?.cpf || ''}    RG: ${contract.testemunha2?.rg || ''}`, margin + colWidth + 10, y);
     y += 10;
-
-    // Testemunha 3
-    if (y > pageHeight - margin - 20) {
-      doc.addPage();
-      y = margin + 10;
-    }
-    doc.line(margin, y, margin + colWidth, y);
-    y += 4;
-    doc.setFont('times', 'normal');
-    doc.setFontSize(7.5);
-    doc.text(`3. Nome: ${contract.testemunha3?.nome || ''}    CPF: ${contract.testemunha3?.cpf || ''}    RG: ${contract.testemunha3?.rg || ''}`, margin, y);
-    y += 10;
   }
 
   // Rodapé em todas as páginas

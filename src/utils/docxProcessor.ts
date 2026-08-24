@@ -267,11 +267,10 @@ export function buildUnifiedContractTags(contract: ContractData): Record<string,
 
   // Regra de Testemunhas e Modalidade de Assinatura:
   // Se modalidade for digital: testemunhas NÃO devem aparecer (tags vazias/suprimidas)
-  // Se modalidade for manual: apresentar as 3 testemunhas
+  // Se modalidade for manual: apresentar apenas 2 testemunhas
   const isDigital = contract.modalidadeAssinatura === 'digital';
   const t1 = contract.testemunha1;
   const t2 = contract.testemunha2;
-  const t3 = contract.testemunha3;
 
   if (isDigital) {
     // Modo Digital: tags de testemunhas são limpas
@@ -294,11 +293,11 @@ export function buildUnifiedContractTags(contract: ContractData): Record<string,
     setTag('TESTEMUNHA_2_NOME', t2?.nome || '_____________________________________');
     setTag('TESTEMUNHA_2_CPF', t2?.cpf || '_________________');
     setTag('TESTEMUNHA_2_RG', t2?.rg || '_________________');
-    setTag('TESTEMUNHA_3_NOME', t3?.nome || '_____________________________________');
-    setTag('TESTEMUNHA_3_CPF', t3?.cpf || '_________________');
-    setTag('TESTEMUNHA_3_RG', t3?.rg || '_________________');
+    setTag('TESTEMUNHA_3_NOME', '');
+    setTag('TESTEMUNHA_3_CPF', '');
+    setTag('TESTEMUNHA_3_RG', '');
 
-    const blocoManual = `TESTEMUNHAS:\n1. _____________________________________________\nNome: ${t1?.nome || ''}  CPF: ${t1?.cpf || ''}  RG: ${t1?.rg || ''}\n\n2. _____________________________________________\nNome: ${t2?.nome || ''}  CPF: ${t2?.cpf || ''}  RG: ${t2?.rg || ''}\n\n3. _____________________________________________\nNome: ${t3?.nome || ''}  CPF: ${t3?.cpf || ''}  RG: ${t3?.rg || ''}`;
+    const blocoManual = `TESTEMUNHAS:\n1. _____________________________________________\nNome: ${t1?.nome || ''}  CPF: ${t1?.cpf || ''}  RG: ${t1?.rg || ''}\n\n2. _____________________________________________\nNome: ${t2?.nome || ''}  CPF: ${t2?.cpf || ''}  RG: ${t2?.rg || ''}`;
     setTag('BLOCO_TESTEMUNHAS', blocoManual);
     setTag('TESTEMUNHAS', blocoManual);
   }

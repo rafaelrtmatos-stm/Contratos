@@ -453,7 +453,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           <span className="text-xs text-slate-500">
             {isDigital
               ? '✨ 2 Partes (Sem Testemunhas) • Certificação Digital'
-              : '📄 2 Partes + 3 Testemunhas para Impressão'}
+              : '📄 2 Partes + 2 Testemunhas para Impressão'}
           </span>
         </div>
 
@@ -509,7 +509,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
                 Gera o documento para impressão e assinatura a próprio punho. 
-                <strong className="text-slate-900 block mt-0.5">Inclui Contratado, Contratante e 3 Testemunhas.</strong>
+                <strong className="text-slate-900 block mt-0.5">Inclui Contratado, Contratante e 2 Testemunhas.</strong>
               </p>
             </div>
           </label>
@@ -772,14 +772,14 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               })}
             </div>
 
-            {/* Linhas das 3 Testemunhas Obrigatórias */}
+            {/* Linhas das 2 Testemunhas Obrigatórias */}
             <div className="pt-6 border-t border-slate-200">
               <div className="flex items-center justify-between mb-6">
                 <span className="font-sans font-bold text-xs uppercase tracking-wider text-slate-800 block">
                   TESTEMUNHAS:
                 </span>
                 <span className="text-[11px] font-sans font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                  3 Testemunhas para Assinatura Manual
+                  2 Testemunhas para Assinatura Manual
                 </span>
               </div>
 
@@ -803,17 +803,6 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                     <span className="block text-slate-600">Nome: {contract.testemunha2?.nome || ''}</span>
                     <span className="block text-slate-600">CPF: {contract.testemunha2?.cpf || ''}</span>
                     <span className="block text-slate-600">RG: {contract.testemunha2?.rg || ''}</span>
-                  </div>
-                </div>
-
-                {/* Testemunha 3 */}
-                <div className="space-y-1 sm:col-span-2 sm:max-w-md">
-                  <div className="border-t border-slate-700 pt-2">
-                    <span className="font-bold block text-slate-900">3. (Assinatura)</span>
-                    <div className="h-4 border-b border-slate-300 w-full mb-1"></div>
-                    <span className="block text-slate-600">Nome: {contract.testemunha3?.nome || ''}</span>
-                    <span className="block text-slate-600">CPF: {contract.testemunha3?.cpf || ''}</span>
-                    <span className="block text-slate-600">RG: {contract.testemunha3?.rg || ''}</span>
                   </div>
                 </div>
               </div>

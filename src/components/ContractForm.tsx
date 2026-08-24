@@ -406,7 +406,6 @@ export const ContractForm: React.FC<ContractFormProps> = ({
       modalidadeAssinatura: initialData?.modalidadeAssinatura,
       testemunha1: initialData?.testemunha1,
       testemunha2: initialData?.testemunha2,
-      testemunha3: initialData?.testemunha3,
     };
 
     onSave(contractData);
