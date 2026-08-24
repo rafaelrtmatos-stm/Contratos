@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users } from 'lucide-react';
+import { User, Users, UserPlus, ChevronDown } from 'lucide-react';
 
 interface GenderSelectProps {
   value: string;
@@ -15,10 +15,13 @@ export const GenderSelect: React.FC<GenderSelectProps> = ({
   required = false,
 }) => {
   const options = [
-    { value: 'M', label: 'Masculino', emoji: '♂️' },
-    { value: 'F', label: 'Feminino', emoji: '♀️' },
-    { value: 'O', label: 'Outro', emoji: '⚪' },
+    { value: 'M', label: 'Masculino', icon: User, bgColor: 'bg-blue-100', textColor: 'text-blue-700' },
+    { value: 'F', label: 'Feminino', icon: User, bgColor: 'bg-pink-100', textColor: 'text-pink-700' },
+    { value: 'O', label: 'Outro', icon: UserPlus, bgColor: 'bg-purple-100', textColor: 'text-purple-700' },
   ];
+
+  const selectedOption = options.find(opt => opt.value === value);
+  const SelectedIcon = selectedOption?.icon || User;
 
   return (
     <div className="space-y-1.5">
@@ -28,21 +31,29 @@ export const GenderSelect: React.FC<GenderSelectProps> = ({
         {required && <span className="text-red-600">*</span>}
       </label>
 
-      <div className="flex gap-2">
-        {options.map((option) => (
-          <button
-            key={option.value}
-            onClick={() => onChange(option.value)}
-            className={`flex-1 px-3 py-2 rounded-lg text-sm font-bold transition-all border-2 ${
-              value === option.value
-                ? 'border-green-500 bg-green-50 text-green-700'
-                : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400'
-            }`}
-          >
-            <span className="mr-1">{option.emoji}</span>
-            {option.label}
-          </button>
-        ))}
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full appearance-none pl-11 pr-8 py-2.5 text-sm font-bold border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all cursor-pointer bg-white"
+        >
+          <option value="">Selecione...</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Ícone colorido estilo clipart à ESQUERDA */}
+        {selectedOption && (
+          <div className={`absolute left-2.5 top-1/2 -translate-y-1/2 ${selectedOption.bgColor} rounded-full p-1.5 pointer-events-none shadow-sm`}>
+            <SelectedIcon className={`w-4 h-4 ${selectedOption.textColor}`} />
+          </div>
+        )}
+
+        {/* Chevron à DIREITA */}
+        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
       </div>
     </div>
   );
