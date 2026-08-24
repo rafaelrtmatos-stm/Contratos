@@ -255,7 +255,7 @@ export const SignatureLink: React.FC = () => {
           </div>
           <p className="text-slate-600">
             Contrato nº {contract.numeroContrato}
-            {vendedorNome ? ` · Vendedor: ${vendedorNome}` : ''}
+            {vendedorNome ? ` · ${contract.tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}: ${vendedorNome}` : ''}
           </p>
         </div>
 

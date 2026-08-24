@@ -76,7 +76,8 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
       // dígitos do CPF/CNPJ) junto no texto copiado, para o cliente
       // desbloquear o fluxo de assinatura.
       if (!isFullySigned) {
-        const cpfCnpj = contract.comprador?.cpfCnpj || '';
+        const dadosCliente = contract.tipo === 'exclusividade' ? contract.vendedor : contract.comprador;
+        const cpfCnpj = dadosCliente?.cpfCnpj || '';
         const digitos = cpfCnpj.replace(/\D/g, '');
         const codigoAcesso = digitos.slice(-4);
         mensagem = `${generatedLink}\n\n💡 Código de acesso: ${codigoAcesso}`;
@@ -222,7 +223,7 @@ export const GenerateSignatureCodeModal: React.FC<GenerateSignatureCodeModalProp
                 <div className="p-3 bg-amber-50 border-2 border-amber-300 rounded-lg">
                   <p className="text-xs font-bold text-amber-900 mb-1">🔐 Código de Acesso:</p>
                   <p className="text-lg font-black text-amber-700 font-mono tracking-widest">
-                    {contract.comprador?.cpfCnpj?.replace(/\D/g, '').slice(-4) || '****'}
+                    {(contract.tipo === 'exclusividade' ? contract.vendedor : contract.comprador)?.cpfCnpj?.replace(/\D/g, '').slice(-4) || '****'}
                   </p>
                   <p className="text-[10px] text-amber-700 mt-1">
                     ↑ Os últimos 4 dígitos do CPF do cliente

@@ -26,7 +26,12 @@ export async function createSignatureLink(
   const user = sessionData.session?.user;
   if (!user) throw new Error('Sessão expirada. Faça login novamente.');
 
-  const cpfCliente = (contract.comprador?.cpfCnpj || '').replace(/\D/g, '');
+  // Na exclusividade os campos são invertidos: "comprador" guarda o
+  // CORRETOR e "vendedor" guarda o CONTRATANTE (cliente real).
+  const isExcl = contract.tipo === 'exclusividade';
+  const dadosCliente = isExcl ? contract.vendedor : contract.comprador;
+
+  const cpfCliente = (dadosCliente?.cpfCnpj || '').replace(/\D/g, '');
   if (cpfCliente.length < 4) {
     throw new Error('CPF/CNPJ do cliente não cadastrado no contrato.');
   }
