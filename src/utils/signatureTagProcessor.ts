@@ -93,6 +93,53 @@ export async function processSignatureTags(
 }
 
 /**
+ * Substitui o parágrafo <w:p>...</w:p> INTEIRO que contém a tag pelo bloco
+ * de parágrafos novos - nunca insere <w:p> dentro de um <w:t> existente.
+ *
+ * Inserir <w:p> dentro de <w:t> gera XML bem-formado mas estruturalmente
+ * inválido no formato OOXML (um parágrafo não pode viver dentro de um nó de
+ * texto). O Word é tolerante e "conserta" sozinho ao abrir, mas isso quebra
+ * parsers mais estritos (ex: mammoth, usado na pré-visualização/PDF) e é
+ * um risco de corrupção em outras ferramentas.
+ */
+function replaceEnclosingParagraph(xml: string, tag: string, replacementBlock: string): string {
+  let result = xml;
+  let searchFrom = 0;
+
+  while (true) {
+    const tagIndex = result.indexOf(tag, searchFrom);
+    if (tagIndex === -1) break;
+
+    // Acha a abertura do parágrafo (<w:p> ou <w:p ...>) mais próxima ANTES da tag.
+    // Regex negativa evita casar com <w:pPr>, <w:pStyle> etc.
+    const beforeTag = result.slice(0, tagIndex);
+    const pOpenRegex = /<w:p(?=[ >])/g;
+    let lastOpenIndex = -1;
+    let match: RegExpExecArray | null;
+    while ((match = pOpenRegex.exec(beforeTag)) !== null) {
+      lastOpenIndex = match.index;
+    }
+
+    // Acha o fechamento </w:p> mais próximo DEPOIS da tag.
+    const closeIndex = result.indexOf('</w:p>', tagIndex);
+
+    if (lastOpenIndex === -1 || closeIndex === -1) {
+      // Não achou os limites do parágrafo (não deveria acontecer em um
+      // template válido) - aplica só na tag em si, pra não travar o processo.
+      result = result.slice(0, tagIndex) + replacementBlock + result.slice(tagIndex + tag.length);
+      searchFrom = tagIndex + replacementBlock.length;
+      continue;
+    }
+
+    const paragraphEnd = closeIndex + '</w:p>'.length;
+    result = result.slice(0, lastOpenIndex) + replacementBlock + result.slice(paragraphEnd);
+    searchFrom = lastOpenIndex + replacementBlock.length;
+  }
+
+  return result;
+}
+
+/**
  * Insere o carimbo de assinatura eletrônica com os dados reais de quem assinou
  * (nome, CPF/CNPJ, data/hora e hash de autenticação) no lugar da tag.
  */
@@ -107,8 +154,7 @@ function insertDigitalSignatureStamp(xml: string, tag: string, info: PartySignat
   const doc = escapeXml(sig.documentoSignatario || info.documento || '');
   const role = escapeXml(info.roleLabel || '');
 
-  const block = `
-    <w:p>
+  const block = `<w:p>
       <w:pPr><w:jc w:val="center"/><w:spacing w:before="120" w:after="0"/></w:pPr>
       <w:r><w:rPr><w:b/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr><w:t xml:space="preserve">${nome}</w:t></w:r>
     </w:p>
@@ -125,7 +171,7 @@ function insertDigitalSignatureStamp(xml: string, tag: string, info: PartySignat
       <w:r><w:rPr><w:color w:val="64748B"/><w:sz w:val="14"/><w:szCs w:val="14"/></w:rPr><w:t xml:space="preserve">Código de autenticação: ${escapeXml(hash || 'N/A')}</w:t></w:r>
     </w:p>`;
 
-  return xml.split(tag).join(block);
+  return replaceEnclosingParagraph(xml, tag, block);
 }
 
 /**
@@ -136,8 +182,7 @@ function insertPendingSignatureNotice(xml: string, tag: string, info: PartySigna
   const nome = escapeXml(info.nome || '');
   const role = escapeXml(info.roleLabel || '');
 
-  const block = `
-    <w:p>
+  const block = `<w:p>
       <w:pPr><w:jc w:val="center"/><w:spacing w:before="120" w:after="0"/></w:pPr>
       <w:r><w:rPr><w:b/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr><w:t xml:space="preserve">${nome}</w:t></w:r>
     </w:p>
@@ -150,7 +195,7 @@ function insertPendingSignatureNotice(xml: string, tag: string, info: PartySigna
       <w:r><w:rPr><w:i/><w:color w:val="B45309"/><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:t xml:space="preserve">[Pendente de assinatura eletrônica]</w:t></w:r>
     </w:p>`;
 
-  return xml.split(tag).join(block);
+  return replaceEnclosingParagraph(xml, tag, block);
 }
 
 /**
@@ -162,8 +207,7 @@ function insertSignatureSpace(xml: string, tag: string, info: PartySignatureInfo
   const role = escapeXml(info.roleLabel || '');
   const doc = escapeXml(info.documento || '');
 
-  const signatureSpace = `
-    <w:p>
+  const signatureSpace = `<w:p>
       <w:pPr><w:jc w:val="center"/><w:spacing w:before="240" w:line="360" w:lineRule="auto"/></w:pPr>
       <w:r><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">_____________________________________________</w:t></w:r>
     </w:p>
@@ -176,7 +220,7 @@ function insertSignatureSpace(xml: string, tag: string, info: PartySignatureInfo
       <w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">${role}${doc ? ` — CPF/CNPJ: ${doc}` : ''}</w:t></w:r>
     </w:p>`;
 
-  return xml.split(tag).join(signatureSpace);
+  return replaceEnclosingParagraph(xml, tag, signatureSpace);
 }
 
 /**

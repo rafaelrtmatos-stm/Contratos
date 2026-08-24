@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { ContractData, DigitalSignature } from '../types/contract';
 import {
   generateContractLegalText,
-  exportToPdf,
   formatDate,
   getExclusivityStatus,
   getAllCompradores,
@@ -15,6 +14,7 @@ import {
 } from '../utils/docxProcessor';
 import { resolveTemplate } from '../utils/templateResolver';
 import { downloadTemplateWithCache } from '../utils/supabaseTemplateStorage';
+import { renderContractDocumentHtml, renderContractDocumentPdf, renderContractDocumentPlainText } from '../utils/renderContractFromDocx';
 import { 
   processSignatureTags,
   findSignatureTags,
@@ -51,6 +51,7 @@ import {
   Sparkles,
   FileSearch,
   Link as LinkIcon,
+  Loader2,
 } from 'lucide-react';
 
 interface ContractViewerProps {
@@ -73,7 +74,11 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   const [signFlowParte, setSignFlowParte] = useState<'usuario' | 'comprador'>('usuario');
   const [copied, setCopied] = useState(false);
   const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [renderedHtml, setRenderedHtml] = useState<string | null>(null);
+  const [renderLoading, setRenderLoading] = useState(true);
+  const [renderError, setRenderError] = useState<string | null>(null);
 
   // Modalidade de Assinatura: 'digital' ou 'manual'
   const currentModality = contract.modalidadeAssinatura || (contract.assinaturas && contract.assinaturas.length > 0 ? 'digital' : 'digital');
@@ -90,6 +95,28 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   const exclusivityInfo = getExclusivityStatus(contract);
   const tags = legal.tagsMapping;
   const [customTemplateMeta, setCustomTemplateMeta] = useState<CustomTemplateMeta | null>(null);
+
+  // Renderiza a visualização em tela a partir do MESMO .docx que o botão
+  // "Word (.docx)" baixa - selos e dados já processados - em vez de um
+  // texto jurídico escrito à parte, que divergia do Word real.
+  useEffect(() => {
+    let cancelled = false;
+    setRenderLoading(true);
+    setRenderError(null);
+    renderContractDocumentHtml(contract)
+      .then((html) => {
+        if (!cancelled) setRenderedHtml(html);
+      })
+      .catch((err: any) => {
+        if (!cancelled) setRenderError(err.message || 'Erro ao carregar o contrato.');
+      })
+      .finally(() => {
+        if (!cancelled) setRenderLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [contract]);
 
   useEffect(() => {
     let cancelled = false;
@@ -139,6 +166,26 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
     window.print();
   };
 
+  const handleDownloadPdf = async () => {
+    if (isDownloadingPdf) return;
+    setIsDownloadingPdf(true);
+    try {
+      const pdfBlob = await renderContractDocumentPdf(contract);
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `contrato_${contract.numeroContrato || 'documento'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Erro ao gerar PDF:', err);
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
   const handleSignatureRegistered = async (auditStamp: AuditStamp) => {
     const signature: DigitalSignature = {
       role: signFlowParte === 'usuario' ? 'vendedor' : 'comprador',
@@ -162,11 +209,15 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
     console.log(formatAuditStampText(auditStamp));
   };
 
-  const handleCopyText = () => {
-    const textToCopy = `${legal.titulo}\n\n${legal.preambulo}\n\n${legal.clausulas.map(c => `${c.numero} – ${c.titulo}\n${c.conteudo}`).join('\n\n')}\n\n${legal.dataLocal}`;
-    navigator.clipboard.writeText(textToCopy);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyText = async () => {
+    try {
+      const textToCopy = await renderContractDocumentPlainText(contract);
+      navigator.clipboard.writeText(textToCopy);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Erro ao copiar texto do contrato:', err);
+    }
   };
 
   const realizarDownloadESalvar = async (docxBuffer: ArrayBuffer, nomeArquivo: string) => {
@@ -390,14 +441,15 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             </button>
           )}
 
-          {/* Exportar PDF */}
+          {/* Exportar PDF - gerado a partir do MESMO .docx real (não mais um texto desenhado à parte) */}
           <button
-            onClick={() => exportToPdf(contract)}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer"
+            onClick={handleDownloadPdf}
+            disabled={isDownloadingPdf}
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 disabled:opacity-60 border border-rose-200 rounded-lg transition-colors cursor-pointer"
             title="Baixar em formato PDF formatado"
           >
             <FileText className="w-3.5 h-3.5 shrink-0" />
-            <span>PDF (.pdf)</span>
+            <span>{isDownloadingPdf ? 'Gerando...' : 'PDF (.pdf)'}</span>
           </button>
         </div>
       </div>
@@ -601,205 +653,37 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           </div>
         </div>
       )}
-
-      {/* Papel do Contrato (Documento Renderizado Oficial) */}
+      {/* Papel do Contrato (Documento Renderizado a partir do .docx REAL -
+          mesma fonte do botão "Word (.docx)": selos e dados já processados.
+          Fidelidade total ao contrato que você formatou, sem texto duplicado
+          mantido à parte. */}
       <div
         id="contract-paper-document"
         className="bg-white rounded-2xl border border-slate-200 shadow-md p-4 sm:p-10 md:p-14 font-serif text-slate-900 leading-relaxed transition-all max-w-full overflow-hidden"
       >
         {/* Cabeçalho do Documento */}
-        <div className="text-right text-[11px] font-sans text-slate-500 mb-6">
+        <div className="text-right text-[11px] font-sans text-slate-500 mb-6 print:hidden">
           Ref: Contrato nº <strong className="text-slate-800">{contract.numeroContrato}</strong>
         </div>
 
-        <h1 className="text-center text-lg sm:text-xl font-bold uppercase tracking-wider mb-8 text-slate-900 border-b border-slate-200 pb-4">
-          {legal.titulo}
-        </h1>
-
-        {/* Preâmbulo e Qualificação das Partes */}
-        <div className="text-justify text-sm sm:text-base space-y-4 mb-6 leading-relaxed">
-          <h2 className="font-bold font-sans text-xs tracking-wider uppercase text-slate-700">
-            DAS PARTES CONTRATANTES
-          </h2>
-
-          <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-100 font-sans text-xs sm:text-sm space-y-3">
-            <div>
-              <strong className="text-green-900 block text-xs uppercase mb-1">
-                {vTermo}:
-              </strong>
-              <p className="text-slate-800 leading-relaxed">
-                <strong>{vNome}</strong>, {tags.vendedor_nacionalidade || (tags as unknown as Record<string, string>).nacionalidade_vendedor || 'brasileiro(a)'}, {tags.vendedor_estado_civil || (tags as unknown as Record<string, string>).estado_civil_vendedor || 'casado(a)'}, portador(a) do RG nº {tags.vendedor_rg || (tags as unknown as Record<string, string>).rg_vendedor || ''} {tags.vendedor_rg_orgao || (tags as unknown as Record<string, string>).emissao_rg_vendedor || ''}, inscrito(a) no CPF/CNPJ sob o nº <strong>{vDoc}</strong>, {(tags as unknown as Record<string, string>).concordancia_vendedor || 'residente e domiciliado(a)'} na {tags.vendedor_endereco || (tags as unknown as Record<string, string>).endereco_vendedor || ''}, nº {tags.vendedor_numero || (tags as unknown as Record<string, string>).numero_vendedor || 'S/N'}, Bairro {tags.vendedor_bairro || (tags as unknown as Record<string, string>).bairro_vendedor || ''}, na cidade de {tags.vendedor_cidade || (tags as unknown as Record<string, string>).cidade_vendedor || ''}/{tags.vendedor_uf || (tags as unknown as Record<string, string>).estado_vendedor || ''}.
-              </p>
-            </div>
-
-            <div className="pt-2 border-t border-slate-200/60">
-              <strong className="text-emerald-900 block text-xs uppercase mb-1">
-                {cTermo}:
-              </strong>
-              <p className="text-slate-800 leading-relaxed">
-                <strong>{cNome}</strong>, {tags.comprador_nacionalidade || (tags as unknown as Record<string, string>).nacionalidade_comprador || 'brasileiro(a)'}, {tags.comprador_estado_civil || (tags as unknown as Record<string, string>).estado_civil_comprador || 'solteiro(a)'}, portador(a) do RG nº {tags.comprador_rg || (tags as unknown as Record<string, string>).rg_comprador || ''} {tags.comprador_rg_orgao || (tags as unknown as Record<string, string>).emissao_rg_comprador || ''}, inscrito(a) no CPF sob o nº <strong>{cDoc}</strong>, {(tags as unknown as Record<string, string>).concordancia_comprador || 'residente e domiciliado(a)'} na {tags.comprador_endereco || (tags as unknown as Record<string, string>).endereco_comprador || ''}, nº {tags.comprador_numero || (tags as unknown as Record<string, string>).numero_comprador || 'S/N'}, Bairro {tags.comprador_bairro || (tags as unknown as Record<string, string>).bairro_comprador || ''}, CEP {tags.comprador_cep || (tags as unknown as Record<string, string>).cep_comprador || ''}, na cidade de {tags.comprador_cidade || (tags as unknown as Record<string, string>).cidade_comprador || ''}/{tags.comprador_uf || (tags as unknown as Record<string, string>).estado_comprador || ''}.
-              </p>
-            </div>
+        {renderLoading && (
+          <div className="flex items-center justify-center py-16 gap-2 text-slate-500">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="text-sm font-sans">Carregando contrato...</span>
           </div>
+        )}
 
-          <p className="pt-2 text-justify">
-            Têm entre si, justo e acertado, o presente instrumento particular, que se regerá pelas seguintes cláusulas e condições:
-          </p>
-        </div>
-
-        {/* Cláusulas Contratuais */}
-        <div className="space-y-6 my-8 text-sm sm:text-base leading-relaxed text-justify">
-          {legal.clausulas.map((c, index) => (
-            <div key={index} className="space-y-1.5">
-              <h3 className="font-bold uppercase text-xs sm:text-sm tracking-wide text-slate-900">
-                {c.numero} – {c.titulo}
-              </h3>
-              <p className="text-slate-800 whitespace-pre-line leading-relaxed">
-                {c.conteudo}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Data e Local */}
-        <div className="text-right font-semibold text-sm sm:text-base text-slate-800 my-10">
-          {legal.dataLocal}
-        </div>
-
-        {/* ========================================================================= */}
-        {/* RENDERIZAÇÃO CONFORME MODALIDADE ESCOLHIDA                                */}
-        {/* ========================================================================= */}
-        {isDigital ? (
-          /* MODALIDADE 1: ASSINATURA DIGITAL / ELETRÔNICA (COM NOVO CARIMBO EXECUTIVO) */
-          <div className="space-y-6 pt-6 border-t border-slate-200">
-            <div className="flex items-center justify-between pb-2">
-              <span className="text-xs font-sans font-bold uppercase tracking-wider text-[#001f3f] flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-green-700" />
-                Certificação de Assinatura Eletrônica (MP nº 2.200-2/2001 e Lei 14.063/2020)
-              </span>
-              <span className="text-[11px] font-sans font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
-                Chancela e Carimbo Criptográfico
-              </span>
-            </div>
-
-            <div className="space-y-6">
-              {/* Signatário 1: Contratado / Vendedor */}
-              {(() => {
-                const sig = contract.assinaturas?.find((a) => a.role === 'vendedor');
-                return (
-                  <DigitalSignatureStamp
-                    signature={sig}
-                    signerName={sig ? sig.nomeSignatario : vNome}
-                    signerDoc={sig ? sig.documentoSignatario : vDoc}
-                    roleLabel={vTermo.toUpperCase()}
-                    contractNumber={contract.numeroContrato}
-                    contractId={contract.id}
-                    isPending={!sig}
-                  />
-                );
-              })()}
-
-              {/* Signatários Compradores */}
-              {allCompradores.map((comp, idx) => {
-                const sig = contract.assinaturas?.find((a) => 
-                  (a.role === 'comprador' && idx === 0) ||
-                  (a.role === 'comprador_adicional' && a.signerIndex === idx) ||
-                  a.documentoSignatario === comp.cpfCnpj
-                );
-                const roleLabel = isExcl
-                  ? 'CONTRATADO(A)'
-                  : (allCompradores.length > 1 ? `${idx + 1}º PROMITENTE COMPRADOR(A)` : cTermo.toUpperCase());
-                return (
-                  <DigitalSignatureStamp
-                    key={idx}
-                    signature={sig}
-                    signerName={sig ? sig.nomeSignatario : (comp.nome || `COMPRADOR ${idx + 1}`)}
-                    signerDoc={sig ? sig.documentoSignatario : comp.cpfCnpj}
-                    roleLabel={roleLabel}
-                    contractNumber={contract.numeroContrato}
-                    contractId={contract.id}
-                    isPending={!sig}
-                  />
-                );
-              })}
-            </div>
+        {renderError && !renderLoading && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm font-sans text-red-700">
+            Não foi possível carregar o contrato: {renderError}
           </div>
-        ) : (
-          /* MODALIDADE 2: ASSINATURA MANUAL (COM 3 TESTEMUNHAS) */
-          <div className="space-y-10 pt-10 border-t border-slate-300">
-            {/* Linhas das Partes */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 text-center text-xs sm:text-sm">
-              <div className="space-y-1">
-                <div className="w-56 sm:w-64 border-t border-slate-800 mx-auto pt-2">
-                  <strong className="block text-slate-900">{vNome}</strong>
-                  <span className="text-[11px] font-sans text-slate-600 block">{vTermo}</span>
-                  <span className="text-[11px] font-sans text-slate-500 block">CPF/CNPJ: {vDoc || '---'}</span>
-                </div>
-              </div>
+        )}
 
-              {allCompradores.map((comp, idx) => {
-                const label = isExcl
-                  ? 'CONTRATADO(A)'
-                  : (allCompradores.length > 1 ? `${idx + 1}º PROMITENTE COMPRADOR(A)` : cTermo);
-                return (
-                  <div key={idx} className="space-y-1">
-                    <div className="w-56 sm:w-64 border-t border-slate-800 mx-auto pt-2">
-                      <strong className="block text-slate-900">{comp.nome || `COMPRADOR ${idx + 1}`}</strong>
-                      <span className="text-[11px] font-sans text-slate-600 block">{label}</span>
-                      <span className="text-[11px] font-sans text-slate-500 block">CPF/CNPJ: {comp.cpfCnpj || '---'}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Linhas das 3 Testemunhas Obrigatórias */}
-            <div className="pt-6 border-t border-slate-200">
-              <div className="flex items-center justify-between mb-6">
-                <span className="font-sans font-bold text-xs uppercase tracking-wider text-slate-800 block">
-                  TESTEMUNHAS:
-                </span>
-                <span className="text-[11px] font-sans font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                  3 Testemunhas para Assinatura Manual
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 text-xs font-sans">
-                {/* Testemunha 1 */}
-                <div className="space-y-1">
-                  <div className="border-t border-slate-700 pt-2">
-                    <span className="font-bold block text-slate-900">1. (Assinatura)</span>
-                    <div className="h-4 border-b border-slate-300 w-full mb-1"></div>
-                    <span className="block text-slate-600">Nome: {contract.testemunha1?.nome || ''}</span>
-                    <span className="block text-slate-600">CPF: {contract.testemunha1?.cpf || ''}</span>
-                    <span className="block text-slate-600">RG: {contract.testemunha1?.rg || ''}</span>
-                  </div>
-                </div>
-
-                {/* Testemunha 2 */}
-                <div className="space-y-1">
-                  <div className="border-t border-slate-700 pt-2">
-                    <span className="font-bold block text-slate-900">2. (Assinatura)</span>
-                    <div className="h-4 border-b border-slate-300 w-full mb-1"></div>
-                    <span className="block text-slate-600">Nome: {contract.testemunha2?.nome || ''}</span>
-                    <span className="block text-slate-600">CPF: {contract.testemunha2?.cpf || ''}</span>
-                    <span className="block text-slate-600">RG: {contract.testemunha2?.rg || ''}</span>
-                  </div>
-                </div>
-
-                {/* Testemunha 3 */}
-                <div className="space-y-1 sm:col-span-2 sm:max-w-md">
-                  <div className="border-t border-slate-700 pt-2">
-                    <span className="font-bold block text-slate-900">3. (Assinatura)</span>
-                    <div className="h-4 border-b border-slate-300 w-full mb-1"></div>
-                    <span className="block text-slate-600">Nome: {contract.testemunha3?.nome || ''}</span>
-                    <span className="block text-slate-600">CPF: {contract.testemunha3?.cpf || ''}</span>
-                    <span className="block text-slate-600">RG: {contract.testemunha3?.rg || ''}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        {!renderLoading && !renderError && renderedHtml && (
+          <div
+            className="contract-docx-html text-sm sm:text-base [&_p]:mb-3 [&_p]:text-justify [&_strong]:font-bold [&_table]:w-full"
+            dangerouslySetInnerHTML={{ __html: renderedHtml }}
+          />
         )}
       </div>
 

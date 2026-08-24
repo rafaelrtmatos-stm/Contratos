@@ -8,7 +8,7 @@ import {
   validateSignatureLinkCpf,
   signContractViaLink,
 } from '../utils/signatureLinksRepository';
-import { generateContractLegalText, exportToPdf } from '../utils/contractGenerators';
+import { renderContractDocumentHtml, renderContractDocumentPdf } from '../utils/renderContractFromDocx';
 import { sha256Hex, getClientIpAddress } from '../utils/signatureOtpUtils';
 
 export const SignatureLink: React.FC = () => {
@@ -29,6 +29,10 @@ export const SignatureLink: React.FC = () => {
   const [previouslySigned, setPreviouslySigned] = useState(false);
   const [clientName, setClientName] = useState('');
   const [accepted, setAccepted] = useState({ leu: true, concorda: true });
+  const [renderedHtml, setRenderedHtml] = useState<string | null>(null);
+  const [renderLoading, setRenderLoading] = useState(true);
+  const [renderError, setRenderError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -57,6 +61,29 @@ export const SignatureLink: React.FC = () => {
       }
     })();
   }, [token]);
+
+  // Renderiza o contrato a partir do .docx real (mesma fonte do download em
+  // Word) sempre que o contrato mudar - inclui os selos de quem já assinou,
+  // e reflete a própria assinatura assim que o cliente confirma.
+  useEffect(() => {
+    if (!contract) return;
+    let cancelled = false;
+    setRenderLoading(true);
+    setRenderError(null);
+    renderContractDocumentHtml(contract)
+      .then((html) => {
+        if (!cancelled) setRenderedHtml(html);
+      })
+      .catch((err: any) => {
+        if (!cancelled) setRenderError(err.message || 'Erro ao carregar o texto do contrato.');
+      })
+      .finally(() => {
+        if (!cancelled) setRenderLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [contract]);
 
   const handleValidateCPF = async () => {
     setError(null);
@@ -142,9 +169,24 @@ export const SignatureLink: React.FC = () => {
     );
   };
 
-  const handleDownload = () => {
-    if (!contract) return;
-    exportToPdf(contract);
+  const handleDownload = async () => {
+    if (!contract || downloading) return;
+    setDownloading(true);
+    try {
+      const pdfBlob = await renderContractDocumentPdf(contract);
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `contrato_${contract.numeroContrato || 'assinado'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Erro ao gerar PDF:', err);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   if (loadingPage) {
@@ -176,8 +218,6 @@ export const SignatureLink: React.FC = () => {
     );
   }
 
-  const legal = generateContractLegalText(contract);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="max-w-4xl mx-auto">
@@ -188,7 +228,7 @@ export const SignatureLink: React.FC = () => {
             <h1 className="text-3xl font-bold text-slate-900">Assinar Contrato</h1>
           </div>
           <p className="text-slate-600">
-            {legal.titulo} - Contrato nº {contract.numeroContrato}
+            Contrato nº {contract.numeroContrato}
             {vendedorNome ? ` · Vendedor: ${vendedorNome}` : ''}
           </p>
         </div>
@@ -268,11 +308,23 @@ export const SignatureLink: React.FC = () => {
                 </p>
               </div>
 
-              {/* Contrato em Leitura */}
+              {/* Contrato em Leitura - renderizado a partir do .docx real */}
               <div className="bg-slate-50 border-2 border-slate-200 rounded-lg p-6 mb-6 max-h-96 overflow-y-auto">
-                <div className="prose prose-sm text-slate-700 whitespace-pre-wrap text-xs leading-relaxed">
-                  {legal.textoCompletoRenderizado || `${legal.titulo}\n\n${legal.preambulo}\n\n${legal.clausulas.map(c => `${c.numero} – ${c.titulo}\n${c.conteudo}`).join('\n\n')}\n\n${legal.dataLocal}`}
-                </div>
+                {renderLoading && (
+                  <div className="flex items-center justify-center py-8 gap-2 text-slate-500">
+                    <Loader className="w-4 h-4 animate-spin" />
+                    <span className="text-xs">Carregando contrato...</span>
+                  </div>
+                )}
+                {renderError && !renderLoading && (
+                  <div className="text-xs text-red-600">{renderError}</div>
+                )}
+                {!renderLoading && !renderError && renderedHtml && (
+                  <div
+                    className="prose prose-sm text-slate-700 text-xs leading-relaxed [&_p]:mb-2 [&_p]:text-justify [&_strong]:font-bold"
+                    dangerouslySetInnerHTML={{ __html: renderedHtml }}
+                  />
+                )}
               </div>
 
               {/* Checklist de Aceito - só faz sentido antes de assinar */}
@@ -332,10 +384,11 @@ export const SignatureLink: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleDownload}
-                  className={`w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg
+                  disabled={downloading}
+                  className={`w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold rounded-lg
                     transition-colors flex items-center justify-center gap-2 ${previouslySigned ? '' : 'mt-2'}`}
                 >
-                  📥 Baixar Contrato Assinado
+                  {downloading ? 'Gerando PDF...' : '📥 Baixar Contrato Assinado'}
                 </button>
               )}
             </div>
