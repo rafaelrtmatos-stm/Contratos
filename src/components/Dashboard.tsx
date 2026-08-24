@@ -53,6 +53,24 @@ interface DashboardProps {
   onSignContractDirect: (contract: ContractData) => void;
 }
 
+/** Indica se a parte (vendedor/contratante ou comprador/contratado) já assinou o contrato. */
+function partySigned(contract: ContractData, side: 'vendedor' | 'comprador'): boolean {
+  if (!contract.assinaturas || contract.assinaturas.length === 0) return false;
+  return contract.assinaturas.some((s) => {
+    if (s.role === 'ambos') return true;
+    if (side === 'vendedor') return s.role === 'vendedor';
+    return s.role === 'comprador' || s.role === 'comprador_adicional';
+  });
+}
+
+/** Bolinha de status: verde = assinou, vermelho = pendente. */
+const SignedDot: React.FC<{ signed: boolean }> = ({ signed }) => (
+  <span
+    className={`inline-block w-2 h-2 rounded-full shrink-0 ${signed ? 'bg-emerald-500' : 'bg-rose-500'}`}
+    title={signed ? 'Assinado' : 'Pendente de assinatura'}
+  />
+);
+
 export const Dashboard: React.FC<DashboardProps> = ({
   contracts,
   onSelectContract,
@@ -705,11 +723,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                       <div>
                         <span className="text-[10px] text-slate-400 block font-bold uppercase">1º Titular</span>
-                        <span className="text-slate-800 font-medium truncate block">{contract.vendedor.nome || '---'}</span>
+                        <span className="flex items-center gap-1.5 text-slate-800 font-medium truncate">
+                          <SignedDot signed={partySigned(contract, 'vendedor')} />
+                          <span className="truncate">{contract.vendedor.nome || '---'}</span>
+                        </span>
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-400 block font-bold uppercase">2º Titular</span>
-                        <span className="text-slate-800 font-medium truncate block">{contract.comprador.nome || '---'}</span>
+                        <span className="flex items-center gap-1.5 text-slate-800 font-medium truncate">
+                          <SignedDot signed={partySigned(contract, 'comprador')} />
+                          <span className="truncate">{contract.comprador.nome || '---'}</span>
+                        </span>
                       </div>
                       <div className="col-span-2 pt-1.5 border-t border-slate-200/60 flex items-center justify-between">
                         <span className="text-[11px] text-slate-500 font-medium">Valor Total:</span>
@@ -873,10 +897,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                         {/* Partes */}
                         <td className="py-3 px-3">
-                          <div className="font-medium text-slate-800 line-clamp-1">
+                          <div className="font-medium text-slate-800 line-clamp-1 flex items-center gap-1.5">
+                            <SignedDot signed={partySigned(contract, 'vendedor')} />
                             1º: {contract.vendedor.nome}
                           </div>
-                          <div className="text-slate-500 text-[11px] line-clamp-1">
+                          <div className="text-slate-500 text-[11px] line-clamp-1 flex items-center gap-1.5 mt-0.5">
+                            <SignedDot signed={partySigned(contract, 'comprador')} />
                             2º: {contract.comprador.nome}
                           </div>
                         </td>
