@@ -8,6 +8,7 @@ import {
 } from '../types/contract';
 import { numeroPorExtensoReais, numeroPorExtensoInteiro, percentualPorExtenso } from './numberToWords';
 import jsPDF from 'jspdf';
+import { drawDigitalSignatureStamp, STAMP_HEIGHT } from './pdfSignatureStamp';
 
 // Formatação de Moeda
 export function formatCurrency(value: number): string {
@@ -1289,8 +1290,19 @@ export function exportToDoc(contract: ContractData): void {
   URL.revokeObjectURL(url);
 }
 
+function signatureIdFromHash(hash?: string): string {
+  const h = (hash || '').toUpperCase();
+  if (h.length < 16) return (h || 'PENDENTE').padEnd(16, '0').replace(/(.{4})/g, '$1-').slice(0, 19);
+  return `${h.slice(0, 4)}-${h.slice(4, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}`;
+}
+
+function buildValidationUrl(numeroContrato: string, signatureId: string): string {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  return `${origin}/assinatura-digital?contrato=${encodeURIComponent(numeroContrato)}&sig=${encodeURIComponent(signatureId)}`;
+}
+
 // Exportação para PDF via jsPDF
-export function exportToPdf(contract: ContractData): void {
+export async function exportToPdf(contract: ContractData): Promise<void> {
   const legal = generateContractLegalText(contract);
   const tags = legal.tagsMapping;
 
@@ -1411,108 +1423,70 @@ export function exportToPdf(contract: ContractData): void {
     doc.setTextColor(30, 30, 30);
     y += 15;
 
+    // Carimbo de assinatura digital (mesmo layout/paleta do CRM) — um por signatário,
+    // empilhados verticalmente e centralizados na página.
+    const drawPartyStamp = async (sig: typeof contract.assinaturas[number] | undefined, fallbackName: string, fallbackDoc: string, roleLabel: string) => {
+      const neededHeight = sig ? STAMP_HEIGHT + 8 : 14;
+      if (y > pageHeight - margin - neededHeight) {
+        doc.addPage();
+        y = margin + 10;
+      }
+      if (sig) {
+        const dt = new Date(sig.assinadoEm);
+        const signatureId = signatureIdFromHash(sig.hashAutenticacao);
+        y = await drawDigitalSignatureStamp(doc, y, pageWidth, {
+          signerName: sig.nomeSignatario,
+          cpfCnpj: `${roleLabel} — CPF/CNPJ: ${sig.documentoSignatario}`,
+          dateStr: dt.toLocaleDateString('pt-BR'),
+          timeStr: dt.toLocaleTimeString('pt-BR'),
+          signatureId,
+          hash: sig.hashAutenticacao,
+          validationUrl: buildValidationUrl(contract.numeroContrato, signatureId),
+        });
+        y += 6;
+      } else {
+        doc.setFont('times', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(30, 30, 30);
+        doc.text(fallbackName, pageWidth / 2, y, { align: 'center' });
+        y += 4.5;
+        doc.setFont('times', 'normal');
+        doc.setFontSize(8);
+        doc.text(`${roleLabel}${fallbackDoc ? ` — CPF/CNPJ: ${fallbackDoc}` : ''}`, pageWidth / 2, y, { align: 'center' });
+        y += 5;
+        doc.setFontSize(7.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text(`[Pendente de Autenticação Digital - ${roleLabel}]`, pageWidth / 2, y, { align: 'center' });
+        doc.setTextColor(30, 30, 30);
+        y += 10;
+      }
+    };
+
     // Signatário 1: Contratado / Vendedor
     const sigVendedor = contract.assinaturas?.find(a => a.role === 'vendedor');
-    const sigComprador = contract.assinaturas?.find(a => a.role === 'comprador');
+    await drawPartyStamp(sigVendedor, vNome, vDoc, vTermo);
 
-    const colWidth = (contentWidth - 10) / 2;
-
-    // Bloco Contratado
-    doc.setDrawColor(180, 190, 205);
-    doc.line(margin, y + 14, margin + colWidth, y + 14);
-    doc.setFont('times', 'bold');
-    doc.setFontSize(9);
-    doc.text(sigVendedor ? sigVendedor.nomeSignatario : vNome, margin, y + 19);
-    doc.setFont('times', 'normal');
-    doc.setFontSize(8);
-    doc.text(`${vTermo} — CPF/CNPJ: ${sigVendedor ? sigVendedor.documentoSignatario : (vDoc || '---')}`, margin, y + 23);
-    if (sigVendedor) {
-      doc.setFontSize(7.5);
-      doc.setTextColor(5, 122, 85);
-      doc.text(`[✓ AUTENTICADO] ${formatDate(sigVendedor.assinadoEm)}`, margin, y + 27);
-      doc.setTextColor(120, 120, 120);
-      doc.setFontSize(6.5);
-      doc.text(`SHA-256: ${sigVendedor.hashAutenticacao.slice(0, 32)}...`, margin, y + 31);
-      doc.setTextColor(30, 30, 30);
-    } else {
-      doc.setFontSize(7.5);
-      doc.setTextColor(100, 116, 139);
-      doc.text('[Pendente de Autenticação Digital do Contratado]', margin, y + 27);
-      doc.setTextColor(30, 30, 30);
-    }
-
-    // Bloco Contratante / 1º Comprador
+    // Contratante / Compradores
     const primerComp = allCompradores[0] || contract.comprador;
-    const sigPrimerComp = contract.assinaturas?.find(a => 
-      a.role === 'comprador' || 
+    const sigPrimerComp = contract.assinaturas?.find(a =>
+      a.role === 'comprador' ||
       (a.role === 'comprador_adicional' && (a.signerIndex === 0 || a.documentoSignatario === primerComp.cpfCnpj))
     );
-    const primerLabel = isExcl 
-      ? 'CONTRATADO(A)' 
+    const primerLabel = isExcl
+      ? 'CONTRATADO(A)'
       : (allCompradores.length > 1 ? '1º PROMITENTE COMPRADOR(A)' : cTermo);
-
-    doc.line(margin + colWidth + 10, y + 14, pageWidth - margin, y + 14);
-    doc.setFont('times', 'bold');
-    doc.setFontSize(9);
-    doc.text(sigPrimerComp ? sigPrimerComp.nomeSignatario : (primerComp.nome || cNome), margin + colWidth + 10, y + 19);
-    doc.setFont('times', 'normal');
-    doc.setFontSize(8);
-    doc.text(`${primerLabel} — CPF: ${sigPrimerComp ? sigPrimerComp.documentoSignatario : (primerComp.cpfCnpj || cDoc || '---')}`, margin + colWidth + 10, y + 23);
-    if (sigPrimerComp) {
-      doc.setFontSize(7.5);
-      doc.setTextColor(5, 122, 85);
-      doc.text(`[✓ AUTENTICADO] ${formatDate(sigPrimerComp.assinadoEm)}`, margin + colWidth + 10, y + 27);
-      doc.setTextColor(120, 120, 120);
-      doc.setFontSize(6.5);
-      doc.text(`SHA-256: ${sigPrimerComp.hashAutenticacao.slice(0, 32)}...`, margin + colWidth + 10, y + 31);
-      doc.setTextColor(30, 30, 30);
-    } else {
-      doc.setFontSize(7.5);
-      doc.setTextColor(100, 116, 139);
-      doc.text(`[Pendente de Autenticação Digital - ${primerLabel}]`, margin + colWidth + 10, y + 27);
-      doc.setTextColor(30, 30, 30);
-    }
-
-    y += 36;
+    await drawPartyStamp(sigPrimerComp, primerComp.nome || cNome, primerComp.cpfCnpj || cDoc, primerLabel);
 
     // Compradores Adicionais
     if (allCompradores.length > 1) {
       for (let i = 1; i < allCompradores.length; i++) {
         const compAdic = allCompradores[i];
-        const sigComp = contract.assinaturas?.find(a => 
+        const sigComp = contract.assinaturas?.find(a =>
           (a.role === 'comprador_adicional' && (a.signerIndex === i || a.documentoSignatario === compAdic.cpfCnpj)) ||
           a.documentoSignatario === compAdic.cpfCnpj
         );
         const compLabel = `${i + 1}º PROMITENTE COMPRADOR(A)`;
-
-        if (y > pageHeight - margin - 40) {
-          doc.addPage();
-          y = margin + 10;
-        }
-
-        doc.line(margin, y + 14, margin + colWidth, y + 14);
-        doc.setFont('times', 'bold');
-        doc.setFontSize(9);
-        doc.text(sigComp ? sigComp.nomeSignatario : (compAdic.nome || `COMPRADOR ${i + 1}`), margin, y + 19);
-        doc.setFont('times', 'normal');
-        doc.setFontSize(8);
-        doc.text(`${compLabel} — CPF: ${sigComp ? sigComp.documentoSignatario : (compAdic.cpfCnpj || '---')}`, margin, y + 23);
-        if (sigComp) {
-          doc.setFontSize(7.5);
-          doc.setTextColor(5, 122, 85);
-          doc.text(`[✓ AUTENTICADO] ${formatDate(sigComp.assinadoEm)}`, margin, y + 27);
-          doc.setTextColor(120, 120, 120);
-          doc.setFontSize(6.5);
-          doc.text(`SHA-256: ${sigComp.hashAutenticacao.slice(0, 32)}...`, margin, y + 31);
-          doc.setTextColor(30, 30, 30);
-        } else {
-          doc.setFontSize(7.5);
-          doc.setTextColor(100, 116, 139);
-          doc.text(`[Pendente de Autenticação Digital - ${compLabel}]`, margin, y + 27);
-          doc.setTextColor(30, 30, 30);
-        }
-
-        y += 36;
+        await drawPartyStamp(sigComp, compAdic.nome || `COMPRADOR ${i + 1}`, compAdic.cpfCnpj || '', compLabel);
       }
     }
   } else {
