@@ -32,6 +32,9 @@ const STAMP_HEIGHT_MM = PAGE_HEIGHT_MM * 0.07; // 20.79mm
 
 // Tamanho mínimo de fonte: 3.5pt (nenhum texto fica abaixo disso)
 const MIN_FONT = '3.5pt';
+// Fonte um pouco menor só para o valor do ID, que agora quebra em até 2 linhas
+// em vez de truncar em 1 linha (evita cortar o texto perto do QR Code)
+const ID_FONT = '3pt';
 
 export const DigitalSignatureStamp: React.FC<DigitalSignatureStampProps> = ({
   signature,
@@ -202,7 +205,20 @@ export const DigitalSignatureStamp: React.FC<DigitalSignatureStampProps> = ({
             <Fingerprint style={{ width: '1.6mm', height: '1.6mm' }} className="text-[#164A82] shrink-0" />
             <div className="min-w-0">
               <span style={{ fontSize: MIN_FONT, lineHeight: 1.1 }} className="font-bold text-[#3F4D63] uppercase block truncate">ID</span>
-              <span style={{ fontSize: MIN_FONT, lineHeight: 1.1 }} className="font-mono font-extrabold text-slate-800 truncate block">{effectiveId}</span>
+              <span
+                style={{
+                  fontSize: ID_FONT,
+                  lineHeight: 1.05,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical' as const,
+                  overflow: 'hidden',
+                  wordBreak: 'break-all',
+                }}
+                className="font-mono font-extrabold text-slate-800"
+              >
+                {effectiveId}
+              </span>
             </div>
           </div>
         </div>
