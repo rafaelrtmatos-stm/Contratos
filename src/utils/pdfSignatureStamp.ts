@@ -7,10 +7,24 @@ export interface PdfStampData {
   signerName: string;
   cpfCnpj: string;
   dateStr: string;
-  timeStr: string;
+  timeStr: string; // já deve incluir o sufixo de fuso, ex: "19:17:40 (UTC-3)"
   signatureId: string;
   hash: string;
   validationUrl: string;
+}
+
+// Mascara CPF/CNPJ para exibição pública no carimbo, preservando apenas os
+// primeiros e últimos dígitos (padrão de mercado, minimização de dados).
+// CPF:  123.456.789-00 vira 123.***.***-00
+// CNPJ: 12.345.678/0001-90 vira 12.***.***/0001-90
+export function maskCpfCnpj(formatted: string): string {
+  if (!formatted) return formatted;
+  if (formatted.includes('/')) {
+    // CNPJ: 12.345.678/0001-90
+    return formatted.replace(/^(\d{2})\.\d{3}\.\d{3}(\/\d{4}-\d{2})$/, '$1.***.***$2');
+  }
+  // CPF: 123.456.789-00
+  return formatted.replace(/^(\d{3})\.\d{3}\.\d{3}(-\d{2})$/, '$1.***.***$2');
 }
 
 const hexToRgb = (hex: string): [number, number, number] => {
@@ -179,7 +193,7 @@ export async function drawDigitalSignatureStamp(
   const cpfLabelW = doc.getTextWidth('CPF: ');
   doc.setFont('courier', 'bold');
   doc.setTextColor(15, 23, 42);
-  doc.text(data.cpfCnpj, textX + cpfLabelW + 0.3, cy);
+  doc.text(maskCpfCnpj(data.cpfCnpj), textX + cpfLabelW + 0.3, cy);
   cy += lineH(FONT_MIN) + 0.4;
 
   // Linha DATA / HORA / ID (grid de 3 colunas em uma única "linha" de altura)

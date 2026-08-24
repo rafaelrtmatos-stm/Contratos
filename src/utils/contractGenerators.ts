@@ -8,7 +8,24 @@ import {
 } from '../types/contract';
 import { numeroPorExtensoReais, numeroPorExtensoInteiro, percentualPorExtenso } from './numberToWords';
 import jsPDF from 'jspdf';
-import { drawDigitalSignatureStamp, STAMP_HEIGHT } from './pdfSignatureStamp';
+import { drawDigitalSignatureStamp, STAMP_HEIGHT, maskCpfCnpj } from './pdfSignatureStamp';
+
+// Formata a hora da assinatura já com o sufixo do fuso horário, ex:
+// "19:17:40 (UTC-3)" — exigido para validade probatória da assinatura
+// eletrônica (evidencia o instante exato, sem ambiguidade de fuso).
+// Fixado em America/Sao_Paulo (fuso legal do sistema/contratos), independente
+// de onde o navegador/servidor que gera o PDF esteja fisicamente rodando.
+function formatTimeWithTimezone(dt: Date): string {
+  const timeStr = dt.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  const offsetStr = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo',
+    timeZoneName: 'shortOffset',
+  })
+    .formatToParts(dt)
+    .find((p) => p.type === 'timeZoneName')?.value ?? 'GMT-3';
+  const utcOffset = offsetStr.replace('GMT', 'UTC');
+  return `${timeStr} (${utcOffset})`;
+}
 
 // Formata CPF/CNPJ no mesmo padrão exibido na prévia em tela (DigitalSignatureStamp.tsx),
 // para que o selo/texto no PDF baixado mostre exatamente o mesmo formato.
@@ -1442,8 +1459,8 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
         y = await drawDigitalSignatureStamp(doc, y, pageWidth, {
           signerName: sig.nomeSignatario,
           cpfCnpj: formatCpfCnpjDoc(sig.documentoSignatario),
-          dateStr: dt.toLocaleDateString('pt-BR'),
-          timeStr: dt.toLocaleTimeString('pt-BR'),
+          dateStr: dt.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+          timeStr: formatTimeWithTimezone(dt),
           signatureId,
           hash: sig.hashAutenticacao,
           validationUrl: buildValidationUrl(contract.numeroContrato, signatureId),
@@ -1459,7 +1476,7 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
         doc.setFont('times', 'normal');
         doc.setFontSize(8);
         doc.setTextColor(71, 85, 105);
-        doc.text(`CPF: ${formatCpfCnpjDoc(sig.documentoSignatario)}`, pageWidth / 2, y, { align: 'center' });
+        doc.text(`CPF: ${maskCpfCnpj(formatCpfCnpjDoc(sig.documentoSignatario))}`, pageWidth / 2, y, { align: 'center' });
         doc.setTextColor(30, 30, 30);
         y += 6;
       } else {
