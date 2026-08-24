@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   UserPlus,
   LogOut,
+  Settings2,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -18,6 +19,7 @@ interface NavbarProps {
   onNavigateDashboard: () => void;
   onNewContract: (type: ContractType) => void;
   onOpenWordTemplates: () => void;
+  onOpenTemplateManager?: () => void;
   contractCount: number;
   isAdmin?: boolean;
   onOpenAdminPanel?: () => void;
@@ -29,6 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigateDashboard,
   onNewContract,
   onOpenWordTemplates,
+  onOpenTemplateManager,
   contractCount,
   isAdmin,
   onOpenAdminPanel,
@@ -85,6 +88,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Modelos Institucionais Word (.docx)"
             >
               <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+
+            {/* Botão de Gestão de Templates (Padrões Supabase) */}
+            <button
+              onClick={onOpenTemplateManager}
+              className="p-2.5 rounded-xl bg-[#101935] hover:bg-[#18254b] border border-slate-700/60 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+              title="Gerenciar Templates Padrão do Supabase"
+            >
+              <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             {/* Botão de Adicionar Usuário (somente admin) */}

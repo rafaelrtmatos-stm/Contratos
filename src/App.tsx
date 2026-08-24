@@ -6,6 +6,7 @@ import { ContractForm } from './components/ContractForm';
 import { ContractViewer } from './components/ContractViewer';
 import { DigitalSignatureModal } from './components/DigitalSignatureModal';
 import { WordTemplateModal } from './components/WordTemplateModal';
+import { TemplateManagerModal } from './components/TemplateManagerModal';
 import { LoginScreen } from './components/LoginScreen';
 import { AdminUsersPanel } from './components/AdminUsersPanel';
 import { AuthProvider, useAuth } from './utils/authContext';
@@ -49,6 +50,7 @@ function MainApp() {
   
   // Modal de modelos Word
   const [isWordTemplateModalOpen, setIsWordTemplateModalOpen] = useState(false);
+  const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
 
   // Modal de assinatura rápida acionada diretamente pelo dashboard
@@ -174,6 +176,7 @@ function MainApp() {
         }}
         onNewContract={handleCreateNewContract}
         onOpenWordTemplates={() => setIsWordTemplateModalOpen(true)}
+        onOpenTemplateManager={() => setIsTemplateManagerOpen(true)}
         contractCount={contracts.length}
         isAdmin={profile?.role === 'admin'}
         onOpenAdminPanel={() => setIsAdminPanelOpen(true)}
@@ -239,6 +242,14 @@ function MainApp() {
           isOpen={isWordTemplateModalOpen}
           initialType={selectedContract?.tipo || formDefaultType || 'venda_vista'}
           onClose={() => setIsWordTemplateModalOpen(false)}
+        />
+      )}
+
+      {/* Modal de Gestão de Templates (Padrões do Supabase) */}
+      {isTemplateManagerOpen && (
+        <TemplateManagerModal
+          isOpen={isTemplateManagerOpen}
+          onClose={() => setIsTemplateManagerOpen(false)}
         />
       )}
 
