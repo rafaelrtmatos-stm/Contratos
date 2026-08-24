@@ -104,10 +104,9 @@ html, body {
   }
 
   #digital-signature-stamp {
-    width: 33.333% !important;
-    max-width: 600px !important;
-    min-width: 280px !important;
-    margin: 20px auto !important;
+    width: 69.3mm !important; /* 33% da largura da página A4 (210mm) */
+    height: 20.79mm !important; /* 7% da altura da página A4 (297mm) */
+    margin: 4mm auto !important;
     page-break-inside: avoid !important;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
   }
