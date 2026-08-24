@@ -1,9 +1,9 @@
 import * as mammoth from 'mammoth';
-import jsPDF from 'jspdf';
 import { ContractData } from '../types/contract';
 import { resolveTemplate } from './templateResolver';
 import { downloadTemplateWithCache } from './supabaseTemplateStorage';
 import { generateContractTags, substituirTagsNoDocx } from './dataTagsProcessor';
+import { supabase } from './supabaseClient';
 import {
   findSignatureTags,
   mapTagsToConfig,
@@ -23,7 +23,14 @@ import {
  * selos de assinatura e os MESMOS dados, e converte o resultado para
  * HTML com mammoth. Content-wise, é sempre idêntico ao Word.
  */
-export async function renderContractDocumentHtml(contract: ContractData): Promise<string> {
+/**
+ * Pega o template .docx real, processa selos de assinatura e dados do
+ * contrato, e retorna o .docx final PREENCHIDO (buffer bruto) - sem
+ * nenhuma conversão. É a base tanto do preview em HTML (mammoth) quanto
+ * do PDF fiel (conversão externa via iLoveAPI, que preserva o layout
+ * original do Word - fonte, espaçamento, indentação, tabelas).
+ */
+async function buildFilledDocx(contract: ContractData): Promise<ArrayBuffer> {
   const isExcl = contract.tipo === 'exclusividade';
 
   // "usuario" (selo {{USUARIO_ASSINATURA_DIGITAL}}) é sempre o CORRETOR/CONTRATADO.
@@ -90,62 +97,55 @@ export async function renderContractDocumentHtml(contract: ContractData): Promis
 
   // 2) Substituir tags de DADOS do contrato
   const tagsContrato = generateContractTags(contract);
-  const docxFinal = await substituirTagsNoDocx(docxBuffer, tagsContrato);
+  return substituirTagsNoDocx(docxBuffer, tagsContrato);
+}
 
-  // 3) Converter o .docx já preenchido em HTML
+export async function renderContractDocumentHtml(contract: ContractData): Promise<string> {
+  const docxFinal = await buildFilledDocx(contract);
+  // Conversão simplificada, usada só para o preview em tela.
   const result = await mammoth.convertToHtml({ arrayBuffer: docxFinal });
   return result.value;
 }
 
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+function base64ToBlob(base64: string, type: string): Blob {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type });
+}
+
 /**
- * Gera um PDF a partir do MESMO HTML renderizado do .docx real (não mais
- * um texto desenhado manualmente linha a linha - herda automaticamente
- * qualquer correção feita no template Word, sem precisar duplicar lógica).
+ * Gera o PDF fiel ao template convertendo o .docx real (já preenchido)
+ * através do serviço externo iLoveAPI, que preserva fonte, espaçamento,
+ * indentação e layout de tabela - diferente da rota antiga
+ * (mammoth -> HTML -> jsPDF), que descartava a maior parte da formatação.
  */
 export async function renderContractDocumentPdf(contract: ContractData): Promise<Blob> {
-  const html = await renderContractDocumentHtml(contract);
+  const docxFinal = await buildFilledDocx(contract);
+  const docxBase64 = arrayBufferToBase64(docxFinal);
 
-  // Container temporário fora da tela, com largura/estilo compatíveis com A4
-  const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.left = '0';
-  container.style.top = '0';
-  container.style.zIndex = '-1';
-  container.style.pointerEvents = 'none';
-  container.style.backgroundColor = '#ffffff';
-  container.style.width = '750px';
-  container.style.fontFamily = "'Times New Roman', Times, serif";
-  container.style.fontSize = '11pt';
-  container.style.lineHeight = '1.5';
-  container.style.color = '#0f172a';
-  container.innerHTML = `
-    <style>
-      p { margin: 0 0 8px 0; text-align: justify; }
-      strong { font-weight: bold; }
-      table { width: 100%; border-collapse: collapse; }
-    </style>
-    ${html}
-  `;
-  document.body.appendChild(container);
+  const { data, error } = await supabase.functions.invoke('convert-docx-to-pdf', {
+    body: { docxBase64, filename: 'contrato.docx' },
+  });
 
-  try {
-    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-    await new Promise<void>((resolve, reject) => {
-      doc.html(container, {
-        margin: [15, 12, 15, 12],
-        autoPaging: 'text',
-        width: 186,
-        windowWidth: 750,
-        callback: () => resolve(),
-        html2canvas: { scale: 0.75 },
-      });
-    }).catch((err) => {
-      throw err;
-    });
-    return doc.output('blob');
-  } finally {
-    document.body.removeChild(container);
+  if (error) {
+    throw new Error(error.message || 'Falha ao converter o contrato em PDF.');
   }
+  if (!data?.pdfBase64) {
+    throw new Error(data?.error || 'Falha ao converter o contrato em PDF.');
+  }
+
+  return base64ToBlob(data.pdfBase64, 'application/pdf');
 }
 
 
