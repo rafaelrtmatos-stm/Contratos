@@ -290,6 +290,13 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   };
 
   const handleDownloadDocx = async () => {
+    // Defesa extra: nunca gerar o .docx "cru" se qualquer parte já assinou digitalmente
+    // (o botão já vem desabilitado nesse caso, mas evita chamada indevida por outro caminho).
+    if ((contract.assinaturas?.length || 0) > 0) {
+      setDownloadError('Não é possível baixar em Word: pelo menos uma parte já assinou digitalmente. Use o PDF.');
+      return;
+    }
+
     setIsDownloadingDocx(true);
     setDownloadError(null);
 
@@ -409,6 +416,11 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
   const isDigital = currentModality === 'digital';
   const isFullySigned = contract.modalidadeAssinatura === 'digital' && (contract.assinaturas?.length || 0) >= 2;
+  // Assim que QUALQUER uma das partes assina digitalmente, o selo eletrônico já foi
+  // embutido no documento - baixar o .docx "cru" (sem selo, com tags substituíveis)
+  // deixaria de refletir o estado real do contrato. Por isso o botão Word (.docx)
+  // fica desabilitado a partir da primeira assinatura digital, não só quando 100% assinado.
+  const hasAnyDigitalSignature = (contract.assinaturas?.length || 0) > 0;
   // Corretor (vendedor/"usuario") já assinou, mas o cliente ainda não -
   // nesse ponto o botão de assinatura vira "etapa 2": gerar/enviar o
   // link de assinatura pro cliente, em vez de reabrir o fluxo de
@@ -484,13 +496,18 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             <span>Imprimir</span>
           </button>
 
-          {/* Exportar WORD (.DOCX) - some depois que o contrato digital está 100% assinado */}
+          {/* Exportar WORD (.DOCX) - desabilitado assim que qualquer parte assina digitalmente
+              (o .docx "cru" não reflete mais o selo já aplicado); some de vez quando 100% assinado */}
           {!isFullySigned && (
             <button
               onClick={handleDownloadDocx}
-              disabled={isDownloadingDocx}
-              className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
-              title="Gera o arquivo Word (.docx) original substituindo apenas as TAGs com 100% de preservação de formatação"
+              disabled={isDownloadingDocx || hasAnyDigitalSignature}
+              className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 disabled:opacity-50 disabled:hover:bg-amber-50 disabled:cursor-not-allowed border border-amber-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
+              title={
+                hasAnyDigitalSignature
+                  ? 'Indisponível: pelo menos uma parte já assinou digitalmente. Baixe em PDF para ver o contrato com o selo aplicado.'
+                  : 'Gera o arquivo Word (.docx) original substituindo apenas as TAGs com 100% de preservação de formatação'
+              }
             >
               <FileDown className="w-4 h-4 text-amber-600 shrink-0" />
               <span>{isDownloadingDocx ? 'Gerando...' : 'Word (.docx)'}</span>

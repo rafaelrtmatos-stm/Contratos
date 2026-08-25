@@ -11,6 +11,14 @@ import { renderSignatureStampPng } from './signatureStampImage';
 
 const EMU_PER_MM = 36000;
 const STAMP_WIDTH_MM = 69.3; // 33% da largura da página A4 (210mm)
+const STAMP_HEIGHT_MM = 20.79; // 7% da altura da página A4 (297mm)
+
+// Fonte do tema do documento (Calibri via minorHAnsi), igual à declarada explicitamente
+// em quase todo run dos templates .docx. Sem isso, texto inserido dinamicamente (linha
+// de assinatura manual, aviso de pendência) herda o tema "por baixo" - o que o Word
+// resolve certo, mas o conversor DOCX->PDF usado no fluxo de download às vezes não,
+// caindo numa fonte serifada diferente do resto do contrato.
+const DOC_RFONTS = '<w:rFonts w:asciiTheme="minorHAnsi" w:hAnsiTheme="minorHAnsi"/>';
 
 /** Adiciona um PNG ao pacote DOCX (media + relacionamento + content type) e retorna o rId. */
 async function addImageToDocx(zip: JSZip, pngBytes: Uint8Array): Promise<string> {
@@ -236,8 +244,8 @@ async function insertDigitalSignatureStampImage(
   const rId = await addImageToDocx(zip, bytes);
   const picId = ++stampPicSeq;
 
-  const cx = Math.round(STAMP_WIDTH_MM * EMU_PER_MM); // 33% da largura da página
-  const cy = Math.round(cx * (heightPx / widthPx)); // altura proporcional ao desenho
+  const cx = Math.round(STAMP_WIDTH_MM * EMU_PER_MM); // 33% da largura da página A4
+  const cy = Math.round(STAMP_HEIGHT_MM * EMU_PER_MM); // 7% da altura da página A4
 
   const drawing = `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="120" w:after="120"/></w:pPr><w:r><w:rPr><w:noProof/></w:rPr><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="${picId}" name="SeloAssinatura${picId}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${picId}" name="SeloAssinatura${picId}.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${rId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
 
@@ -256,7 +264,7 @@ async function insertDigitalSignatureStampImage(
 function insertPendingSignatureNotice(xml: string, tag: string, info: PartySignatureInfo): string {
   const block = `<w:p>
       <w:pPr><w:jc w:val="center"/><w:spacing w:before="120" w:after="120"/></w:pPr>
-      <w:r><w:rPr><w:i/><w:color w:val="B45309"/><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:t xml:space="preserve">[Pendente de assinatura eletrônica]</w:t></w:r>
+      <w:r><w:rPr>${DOC_RFONTS}<w:i/><w:color w:val="B45309"/><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:t xml:space="preserve">[Pendente de assinatura eletrônica]</w:t></w:r>
     </w:p>`;
 
   return replaceEnclosingParagraph(xml, tag, block);
@@ -268,20 +276,23 @@ function insertPendingSignatureNotice(xml: string, tag: string, info: PartySigna
  */
 function insertSignatureSpace(xml: string, tag: string, info: PartySignatureInfo): string {
   const nome = escapeXml(info.nome || '');
-  const role = escapeXml(info.roleLabel || '');
+  const role = escapeXml((info.roleLabel || '').toUpperCase());
   const doc = escapeXml(info.documento || '');
 
+  // Mesmo padrão visual do bloco do CONTRATADO no template: sz 24 (12pt), negrito,
+  // sem itálico/cor - só o texto muda ("CPF nº" para ambos, mesmo se doc for CNPJ,
+  // igual o template já faz para o contratado).
   const signatureSpace = `<w:p>
       <w:pPr><w:jc w:val="center"/><w:spacing w:before="240" w:line="360" w:lineRule="auto"/></w:pPr>
-      <w:r><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">_____________________________________________</w:t></w:r>
+      <w:r><w:rPr>${DOC_RFONTS}<w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr><w:t xml:space="preserve">_____________________________________________</w:t></w:r>
     </w:p>
     <w:p>
       <w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>
-      <w:r><w:rPr><w:b/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr><w:t xml:space="preserve">${nome}</w:t></w:r>
+      <w:r><w:rPr>${DOC_RFONTS}<w:b/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr><w:t xml:space="preserve">${role}: ${nome}</w:t></w:r>
     </w:p>
     <w:p>
       <w:pPr><w:jc w:val="center"/></w:pPr>
-      <w:r><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">${role}${doc ? ` — CPF/CNPJ: ${doc}` : ''}</w:t></w:r>
+      <w:r><w:rPr>${DOC_RFONTS}<w:b/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr><w:t xml:space="preserve">CPF nº ${doc}</w:t></w:r>
     </w:p>`;
 
   return replaceEnclosingParagraph(xml, tag, signatureSpace);
