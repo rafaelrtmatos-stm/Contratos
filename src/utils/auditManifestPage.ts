@@ -35,7 +35,7 @@ const roleLabel = (role: string): string => {
 
 const formatDateTime = (iso: string): string => {
   try {
-    return new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour12: false }) + ' (horário de Brasília, fuso -03:00)';
+    return new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour12: true }) + ' (horário de Brasília)';
   } catch {
     return iso;
   }

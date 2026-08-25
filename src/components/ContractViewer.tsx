@@ -420,8 +420,10 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   // do corretor nunca era encontrada, e o painel voltava a pedir senha
   // como se ninguém tivesse assinado ainda.
   const roleCorretorAtual = isExcl ? 'comprador' : 'vendedor';
+  const roleClienteAtual = isExcl ? 'vendedor' : 'comprador';
   const sigVendedor = contract.assinaturas?.find((a) => a.role === roleCorretorAtual);
-  const vendedorJaAssinouAguardandoCliente = isDigital && !!sigVendedor && !isFullySigned;
+  const clienteJaAssinou = !!contract.assinaturas?.find((a) => a.role === roleClienteAtual);
+  const vendedorJaAssinouAguardandoCliente = isDigital && !!sigVendedor && !isFullySigned && !clienteJaAssinou;
 
   return (
     <div className="max-w-4xl mx-auto pb-16 space-y-6">
@@ -555,8 +557,10 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Opção 1: Assinatura Digital */}
           <label
-            onClick={() => handleModalityChange('digital')}
-            className={`flex items-start gap-3.5 p-3.5 rounded-xl border-2 transition-all cursor-pointer select-none ${
+            onClick={() => !hasAnyDigitalSignature && handleModalityChange('digital')}
+            className={`flex items-start gap-3.5 p-3.5 rounded-xl border-2 transition-all select-none ${
+              hasAnyDigitalSignature ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+            } ${
               isDigital
                 ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-xs'
                 : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/70'
@@ -566,6 +570,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               type="radio"
               name="modalidadeAssinatura"
               checked={isDigital}
+              disabled={hasAnyDigitalSignature}
               onChange={() => handleModalityChange('digital')}
               className="mt-1 w-4 h-4 text-amber-600 focus:ring-amber-500"
             />
@@ -581,10 +586,17 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             </div>
           </label>
 
-          {/* Opção 2: PDF para Assinatura Manual */}
+          {/* Opção 2: PDF para Assinatura Manual - trancada assim que QUALQUER
+              parte já assinou digitalmente: trocar de modalidade nesse ponto
+              deixaria o contrato com um selo digital já aplicado mas exigindo
+              testemunhas/assinatura manual, uma mistura que não faz sentido e
+              nunca deveria ter sido possível clicar. */}
           <label
-            onClick={() => handleModalityChange('manual')}
-            className={`flex items-start gap-3.5 p-3.5 rounded-xl border-2 transition-all cursor-pointer select-none ${
+            onClick={() => !hasAnyDigitalSignature && handleModalityChange('manual')}
+            title={hasAnyDigitalSignature ? 'Indisponível: pelo menos uma parte já assinou digitalmente.' : undefined}
+            className={`flex items-start gap-3.5 p-3.5 rounded-xl border-2 transition-all select-none ${
+              hasAnyDigitalSignature ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+            } ${
               !isDigital
                 ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-xs'
                 : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/70'
@@ -594,6 +606,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               type="radio"
               name="modalidadeAssinatura"
               checked={!isDigital}
+              disabled={hasAnyDigitalSignature}
               onChange={() => handleModalityChange('manual')}
               className="mt-1 w-4 h-4 text-amber-600 focus:ring-amber-500"
             />
@@ -610,6 +623,13 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           </label>
         </div>
 
+        {hasAnyDigitalSignature && (
+          <p className="text-xs text-amber-800 bg-amber-50/70 border border-amber-200 rounded-lg px-3 py-2 -mt-1">
+            Modalidade travada: pelo menos uma parte já assinou digitalmente. O PDF a partir daqui é só para
+            baixar o contrato já assinado — não é mais possível trocar para assinatura manual/mista.
+          </p>
+        )}
+
         {/* Ação Rápida de Assinatura se for Modalidade Digital */}
         {isDigital && (
           <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50/60 p-3 rounded-xl border border-amber-200/70">
@@ -621,6 +641,10 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               ) : vendedorJaAssinouAguardandoCliente ? (
                 <span>
                   ✅ Sua assinatura está registrada. Agora gere o link e envie para o cliente assinar.
+                </span>
+              ) : clienteJaAssinou ? (
+                <span>
+                  ✅ O cliente já assinou. Falta só a sua assinatura para concluir.
                 </span>
               ) : (
                 <span>

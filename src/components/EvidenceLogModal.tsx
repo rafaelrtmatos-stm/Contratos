@@ -18,7 +18,7 @@ const roleLabel = (role: string): string => {
 
 const formatDateTime = (iso: string): string => {
   try {
-    return new Date(iso).toLocaleString('pt-BR');
+    return new Date(iso).toLocaleString('pt-BR', { hour12: true, timeZone: 'America/Sao_Paulo' });
   } catch {
     return iso;
   }

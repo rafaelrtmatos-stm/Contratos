@@ -72,8 +72,8 @@ export const DigitalSignatureStamp: React.FC<DigitalSignatureStampProps> = ({
     : '22/08/2026';
 
   const formattedTime = !isNaN(dateObj.getTime())
-    ? dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    : '17:42:18';
+    ? dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'America/Sao_Paulo' })
+    : '05:42:18 PM';
 
   // ID da Assinatura (ex: 8F4A-92C1-7B35-4D81)
   const effectiveId = signature?.hashAutenticacao

@@ -209,10 +209,12 @@ export async function createAuditStamp(
     nomeAssinante,
     cpfCnpj,
     dataAssinatura: now.toISOString(),
-    horaAssinatura: now.toLocaleTimeString('pt-BR', { 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit' 
+    horaAssinatura: now.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+      timeZone: 'America/Sao_Paulo',
     }),
     hashDocumento,
     ipAssinatura: ipAssinatura || 'N/A',

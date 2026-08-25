@@ -1443,7 +1443,7 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
           signerName: sig.nomeSignatario,
           cpfCnpj: formatCpfCnpjDoc(sig.documentoSignatario),
           dateStr: dt.toLocaleDateString('pt-BR'),
-          timeStr: dt.toLocaleTimeString('pt-BR'),
+          timeStr: dt.toLocaleTimeString('pt-BR', { hour12: true, timeZone: 'America/Sao_Paulo' }),
           signatureId,
           hash: sig.hashAutenticacao,
           validationUrl: buildValidationUrl(contract.numeroContrato, signatureId),

@@ -123,12 +123,17 @@ export async function fetchContractForSignatureToken(token: string): Promise<{
     documentoStoragePath: row.documento_storage_path ?? undefined,
   };
 
-  // "Já assinado" considera tanto o link em si (reaberto depois de assinar
-  // por ele) quanto o CONTRATO já estar 100% assinado por outras vias -
-  // ex: link novo gerado só para o cliente rever/baixar um contrato que
-  // já foi finalizado. Em ambos os casos não faz sentido oferecer o
-  // fluxo de assinatura de novo.
-  const jaAssinado = data.link.status === 'signed' || contrato.status === 'assinado_total';
+  // "Já assinado" considera: o link em si (reaberto depois de assinar por
+  // ele), o CONTRATO já estar 100% assinado, OU a PARTE específica que
+  // este link atende (sempre o cliente: comprador, ou vendedor se
+  // exclusividade) já ter uma assinatura registrada em `assinaturas`.
+  // Sem essa terceira checagem, gerar um NOVO link/código pro mesmo
+  // cliente que já tinha assinado deixava ele assinar de novo, criando
+  // uma segunda entrada duplicada no manifesto de auditoria.
+  const isExclLink = contrato.tipo === 'exclusividade';
+  const roleClienteLink = isExclLink ? 'vendedor' : 'comprador';
+  const clienteJaAssinouEsteLink = (contrato.assinaturas || []).some((a: any) => a.role === roleClienteLink);
+  const jaAssinado = data.link.status === 'signed' || contrato.status === 'assinado_total' || clienteJaAssinouEsteLink;
 
   return {
     contrato,
