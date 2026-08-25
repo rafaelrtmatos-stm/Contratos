@@ -26,7 +26,8 @@ import {
 } from '../utils/dataTagsProcessor';
 import { saveContractDocumentToSupabase } from '../utils/contractDocumentsStorage';
 import { buildPdfFileName } from '../utils/pdfFileName';
-import { saveSignature } from '../utils/contractsRepository';
+import { saveSignature, fetchSignatures } from '../utils/contractsRepository';
+import { supabase } from '../utils/supabaseClient';
 import { AuditStamp, formatAuditStampText } from '../utils/signatureOtpUtils';
 import { DigitalSignatureFlowModal } from './DigitalSignatureFlowModal';
 import { GenerateSignatureCodeModal } from './GenerateSignatureCodeModal';
@@ -124,6 +125,55 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       cancelled = true;
     };
   }, [contract]);
+
+  // Assinatura em tempo real: se o cliente assina pelo link dele enquanto
+  // o corretor está com esta tela aberta em outro aparelho, o corretor
+  // precisa ver a atualização sozinho - sem isso, a tela ficava presa no
+  // estado antigo (ainda oferecendo "assinar"/gerar link de assinatura)
+  // até um F5 manual, mesmo já estando 100% assinado no banco.
+  useEffect(() => {
+    if (!contract.id) return;
+
+    const channel = supabase
+      .channel(`contract_signatures_${contract.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contract_signatures', filter: `contract_id=eq.${contract.id}` },
+        async () => {
+          try {
+            const assinaturasAtualizadas = await fetchSignatures(contract.id!);
+            if (!assinaturasAtualizadas) return;
+
+            const allCompradores = getAllCompradores(contract);
+            const hasVendedorRT = assinaturasAtualizadas.some((a) => a.role === 'vendedor');
+            const allBuyersSignedRT = allCompradores.every((comp, idx) =>
+              assinaturasAtualizadas.some(
+                (a) =>
+                  (a.role === 'comprador' && idx === 0) ||
+                  (a.role === 'comprador_adicional' && a.signerIndex === idx) ||
+                  a.documentoSignatario === comp.cpfCnpj
+              )
+            );
+            const isFullySignedRT = hasVendedorRT && allBuyersSignedRT;
+
+            onUpdateContract({
+              ...contract,
+              assinaturas: assinaturasAtualizadas,
+              status: isFullySignedRT ? 'assinado_total' : assinaturasAtualizadas.length > 0 ? 'assinado_parcial' : contract.status,
+            });
+          } catch {
+            // Falha ao buscar assinaturas atualizadas: mantém o estado atual
+            // na tela em vez de quebrar - o corretor ainda pode dar F5.
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contract.id]);
 
   const handleAddSignature = (signature: DigitalSignature) => {
     const filtered = contract.assinaturas.filter((a) => {
