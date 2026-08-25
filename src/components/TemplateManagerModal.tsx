@@ -15,7 +15,6 @@ import {
   X,
   Download,
   Upload,
-  Star,
   Trash2,
   FileText,
   AlertCircle,
@@ -31,13 +30,6 @@ import { extractTagsFromText, isKnownTag, describeTag } from '../utils/knownCont
 interface TemplateManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface TemplatePreferences {
-  venda_vista: string;
-  venda_parcelada: string;
-  exclusividade: string;
-  outros_bens: string;
 }
 
 type Tab = 'venda_vista' | 'venda_parcelada' | 'exclusividade' | 'outros_bens';
@@ -118,11 +110,6 @@ const TEMPLATE_GROUPS: Record<ContractType | 'outros_bens', Array<{
 
 export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<Tab>('venda_vista');
-  const [preferences, setPreferences] = useState<TemplatePreferences>({
-    venda_vista: 'venda_vista_assinatura_digital.docx',
-    venda_parcelada: 'parcelado_assinatura_digital_sem_testemunhas.docx',    exclusividade: 'exclusividade_digital_sem_testemunhas.docx',
-    outros_bens: '', // Vazio até serem adicionados templates
-  });
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -137,28 +124,6 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
   const [pendingTags, setPendingTags] = useState<string[]>([]);
   const [pendingSlotIdx, setPendingSlotIdx] = useState<number>(0);
   const [scanningTags, setScanningTags] = useState(false);
-
-  // Carregar preferências do localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('templatePreferences');
-    if (saved) {
-      try {
-        setPreferences(JSON.parse(saved));
-      } catch (e) {
-        console.warn('Erro ao carregar preferências:', e);
-      }
-    }
-  }, []);
-
-  // Salvar preferência de template padrão
-  const handleSetAsDefault = (templateFile: string, type: ContractType) => {
-    const newPrefs = { ...preferences, [type]: templateFile };
-    setPreferences(newPrefs);
-    localStorage.setItem('templatePreferences', JSON.stringify(newPrefs));
-    setMessage({ type: 'success', text: `Template padrão atualizado para ${type}` });
-    setTimeout(() => setMessage(null), 3000);
-  };
-
   // Fazer download de template
   const handleDownloadTemplate = async (templateFile: string) => {
     setDownloadingFile(templateFile);
@@ -251,10 +216,6 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
       const arrayBuffer = await pendingFile.arrayBuffer();
       const { sucesso, erro } = await uploadTemplate(slot.arquivo, arrayBuffer);
       if (!sucesso) throw new Error(erro || 'Falha ao enviar modelo');
-
-      const newPrefs = { ...preferences, [activeTab]: slot.arquivo };
-      setPreferences(newPrefs);
-      localStorage.setItem('templatePreferences', JSON.stringify(newPrefs));
 
       setMessage({
         type: 'success',
@@ -375,26 +336,15 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
             </h3>
 
             {TEMPLATE_GROUPS[activeTab].map((template, idx) => {
-              const isDefault = preferences[activeTab] === template.arquivo;
-
               return (
                 <div
                   key={idx}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    isDefault
-                      ? 'border-amber-400 bg-amber-50/50 shadow-xs'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
-                  }`}
+                  className="p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 transition-all"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-lg font-bold text-slate-900">{template.modalidade}</span>
-                        {isDefault && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500 text-slate-950 text-[10px] font-black rounded-full">
-                            <Star className="w-3 h-3 fill-slate-950" /> PADRÃO
-                          </span>
-                        )}
                       </div>
                       <p className="text-xs text-slate-600 mb-2">{template.descricao}</p>
                       <p className="text-xs font-mono text-slate-500 break-all">
@@ -407,20 +357,6 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
 
                     {/* Botões de Ação */}
                     <div className="flex gap-2 shrink-0">
-                      <button
-                        onClick={() => handleSetAsDefault(template.arquivo, activeTab)}
-                        disabled={isDefault}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                          isDefault
-                            ? 'bg-amber-100 text-amber-900 cursor-default'
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                        }`}
-                        title="Usar este como padrão"
-                      >
-                        <Star className={`w-3.5 h-3.5 inline mr-1 ${isDefault ? 'fill-amber-900' : ''}`} />
-                        {isDefault ? 'Padrão' : 'Usar'}
-                      </button>
-
                       <button
                         onClick={() => handleDownloadTemplate(template.arquivo)}
                         disabled={downloadingFile === template.arquivo}
