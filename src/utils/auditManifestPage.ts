@@ -24,9 +24,9 @@ function escapeXml(value: string): string {
 }
 
 const roleLabel = (role: string): string => {
-  if (role === 'vendedor') return 'Contratado';
-  if (role === 'comprador') return 'Contratante';
-  if (role === 'comprador_adicional') return 'Contratante Adicional';
+  if (role === 'vendedor') return 'Contratante';
+  if (role === 'comprador') return 'Contratado';
+  if (role === 'comprador_adicional') return 'Contratado Adicional';
   if (role === 'ambos') return 'Contratante/Contratado';
   if (role === 'testemunha1') return 'Testemunha 1';
   if (role === 'testemunha2') return 'Testemunha 2';
