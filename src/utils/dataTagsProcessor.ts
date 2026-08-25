@@ -13,6 +13,18 @@ interface TagMapping {
 }
 
 /**
+ * Reconhece se o documento informado é CPF (11 dígitos) ou CNPJ (14 dígitos)
+ * e devolve o rótulo correto para exibir no contrato - evita a duplicidade
+ * "CPF(MF) ou CNPJ(MF)" quando já se sabe qual dos dois é.
+ * Default "CPF Nº" quando o campo ainda não foi preenchido/está fora do padrão.
+ */
+function getDocLabel(doc: string): string {
+  const clean = (doc || '').replace(/\D/g, '');
+  if (clean.length === 14) return 'CNPJ Nº';
+  return 'CPF Nº';
+}
+
+/**
  * Gera mapa de tags baseado nos dados do contrato
  */
 export function generateContractTags(contract: ContractData): TagMapping {
@@ -97,11 +109,13 @@ export function generateContractTags(contract: ContractData): TagMapping {
       contratante: ex.CONTRATANTE_NOME,
       estado_civil_contratante: ex.CONTRATANTE_ESTADO_CIVIL,
       cpf_contratante: ex.CONTRATANTE_CPF,
+      doc_label_contratante: getDocLabel(ex.CONTRATANTE_CPF),
       rg_contratante: ex.CONTRATANTE_RG,
       endereco_contratante: ex.CONTRATANTE_ENDERECO,
 
       contratado: ex.VENDEDOR_NOME,
       cpf_contratado: ex.VENDEDOR_CPF,
+      doc_label_contratado: getDocLabel(ex.VENDEDOR_CPF),
       creci_contratado: ex.VENDEDOR_CRECI,
       endereco_contratado: ex.VENDEDOR_ENDERECO,
       telefone_contratado: ex.VENDEDOR_TELEFONE,
