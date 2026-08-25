@@ -90,6 +90,11 @@ export interface DigitalSignature {
   hashAutenticacao: string;
   ipAssinatura?: string;
   metadadosNavegador: string;
+  /** Meio usado para autenticar o signatário no momento da assinatura
+   *  (ex: "Login e senha (Supabase Auth)", "Link de assinatura: CPF + código OTP").
+   *  Campo próprio no banco (contract_signatures.meio_autenticacao) - não
+   *  fica mais embutido como texto livre dentro de metadadosNavegador. */
+  meioAutenticacao?: string;
 }
 
 export interface ContractData {

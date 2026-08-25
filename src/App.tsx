@@ -215,6 +215,7 @@ function MainApp() {
       hashAutenticacao: auditStamp.hashDocumento,
       ipAssinatura: auditStamp.ipAssinatura,
       metadadosNavegador: auditStamp.userAgent || navigator.userAgent,
+      meioAutenticacao: 'Login e senha (revalidação via Supabase Auth)',
     };
 
     const filtered = quickSignContract.assinaturas.filter((a) => a.role !== signature.role);

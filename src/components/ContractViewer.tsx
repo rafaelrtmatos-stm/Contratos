@@ -225,6 +225,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       hashAutenticacao: auditStamp.hashDocumento,
       ipAssinatura: auditStamp.ipAssinatura,
       metadadosNavegador: auditStamp.userAgent || navigator.userAgent,
+      meioAutenticacao: 'Login e senha (revalidação via Supabase Auth)',
     };
 
     try {

@@ -92,6 +92,9 @@ export const ValidatePage: React.FC = () => {
                   <p><strong>Assinado por:</strong> {resultado.nomeSignatario} ({roleLabel(resultado.papel)})</p>
                   <p><strong>Data/Hora:</strong> {resultado.assinadoEm ? new Date(resultado.assinadoEm).toLocaleString('pt-BR') : '-'}</p>
                   <p><strong>Contrato nº:</strong> {resultado.numeroContrato} — {tipoLabel(resultado.tipoContrato)}</p>
+                  {resultado.meioAutenticacao && (
+                    <p><strong>Meio de autenticação:</strong> {resultado.meioAutenticacao}</p>
+                  )}
                   <p className="break-all font-mono text-[10px] text-emerald-700 pt-1">
                     Hash: {resultado.hashCompleto}
                   </p>

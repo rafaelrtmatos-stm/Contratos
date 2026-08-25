@@ -251,6 +251,7 @@ export interface SignatureValidationResult {
   numeroContrato?: string;
   tipoContrato?: string;
   hashCompleto?: string;
+  meioAutenticacao?: string;
 }
 
 /**

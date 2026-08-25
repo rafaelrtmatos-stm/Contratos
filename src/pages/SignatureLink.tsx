@@ -164,6 +164,7 @@ export const SignatureLink: React.FC = () => {
         hashAutenticacao: hash,
         ipAssinatura: ip,
         metadadosNavegador: navigator.userAgent,
+        meioAutenticacao: 'Link de assinatura: CPF (4 últimos dígitos) + código OTP',
       },
     ];
 

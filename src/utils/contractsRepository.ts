@@ -159,6 +159,7 @@ export async function fetchContracts(): Promise<ContractData[]> {
           hashAutenticacao: row.hash_autenticacao,
           ipAssinatura: row.ip_assinatura ?? undefined,
           metadadosNavegador: row.metadados_navegador,
+          meioAutenticacao: row.meio_autenticacao ?? undefined,
         };
         const list = byContract.get(row.contract_id) ?? [];
         list.push(sig);
@@ -249,6 +250,7 @@ export async function saveSignature(
       hash_autenticacao: signature.hashAutenticacao,
       ip_assinatura: signature.ipAssinatura ?? null,
       metadados_navegador: signature.metadadosNavegador,
+      meio_autenticacao: signature.meioAutenticacao ?? null,
     })
     .select('assinado_em')
     .single();
@@ -276,5 +278,6 @@ export async function fetchSignatures(contractId: string): Promise<ContractData[
     hashAutenticacao: row.hash_autenticacao,
     ipAssinatura: row.ip_assinatura ?? undefined,
     metadadosNavegador: row.metadados_navegador,
+    meioAutenticacao: row.meio_autenticacao ?? undefined,
   }));
 }

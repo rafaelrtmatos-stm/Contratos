@@ -1,6 +1,6 @@
 import React from 'react';
 import { ContractData, DigitalSignature } from '../types/contract';
-import { X, ShieldCheck, Fingerprint, Globe, Monitor, Clock } from 'lucide-react';
+import { X, ShieldCheck, Fingerprint, Globe, Monitor, Clock, KeyRound } from 'lucide-react';
 
 interface EvidenceLogModalProps {
   contract: ContractData;
@@ -71,6 +71,10 @@ export const EvidenceLogModal: React.FC<EvidenceLogModalProps> = ({ contract, on
                   <div className="flex items-center gap-1.5">
                     <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span>IP: {a.ipAssinatura || 'não capturado'}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 sm:col-span-2">
+                    <KeyRound className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>Meio de autenticação: {a.meioAutenticacao || 'não registrado'}</span>
                   </div>
                   <div className="flex items-center gap-1.5 sm:col-span-2">
                     <Fingerprint className="w-3.5 h-3.5 text-slate-400 shrink-0" />
