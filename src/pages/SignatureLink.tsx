@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Lock, FileText, AlertCircle, CheckCircle2, Loader } from 'lucide-react';
+import { Lock, FileText, AlertCircle, CheckCircle2, Loader, Loader2 } from 'lucide-react';
 import { ClientSignatureModal } from '../components/ClientSignatureModal';
 import { ContractData } from '../types/contract';
 import {
@@ -35,6 +35,7 @@ export const SignatureLink: React.FC = () => {
   const [renderLoading, setRenderLoading] = useState(true);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   useEffect(() => {
     if (!token) {
@@ -208,10 +209,13 @@ export const SignatureLink: React.FC = () => {
   const handleDownload = async () => {
     if (!contract || downloading) return;
     setDownloading(true);
+    setDownloadProgress(0);
     try {
       // Se já existe o documento final salvo no Storage (ex: o corretor
       // baixou o Word depois de assinar), abre exatamente esse arquivo -
       // gera um link assinado novo na hora (o antigo pode ter expirado).
+      // Abertura é praticamente instantânea aqui - não faz sentido simular
+      // barra de progresso, é só pro caminho que realmente gera o PDF.
       if (contract.documentoStoragePath) {
         const signedUrl = await getSignedDocumentUrl(contract.documentoStoragePath, 60 * 10);
         if (signedUrl) {
@@ -222,7 +226,35 @@ export const SignatureLink: React.FC = () => {
         // PDF gerado na hora a partir dos dados do contrato.
       }
 
+      // Mesma simulação de progresso do botão do corretor (ContractViewer) -
+      // a lib de geração de PDF não expõe eventos reais de andamento, então
+      // simulamos em degraus: 0 -> 15 -> 50 -> 85 -> 90 -> 95 -> 97 -> 99 em
+      // ~4,5s, só fechando em 100% quando a geração de fato terminar.
+      let cancelado = false;
+      const avancarProgressoSimulado = async () => {
+        const degraus = [
+          { alvo: 15, base: 500 },
+          { alvo: 50, base: 1000 },
+          { alvo: 85, base: 1200 },
+          { alvo: 90, base: 700 },
+          { alvo: 95, base: 400 },
+          { alvo: 97, base: 350 },
+          { alvo: 99, base: 350 },
+        ];
+        for (const { alvo, base } of degraus) {
+          const variacao = base * (0.8 + Math.random() * 0.4);
+          await new Promise((r) => setTimeout(r, variacao));
+          if (cancelado) return;
+          setDownloadProgress(alvo);
+        }
+      };
+      avancarProgressoSimulado();
+
       const pdfBlob = await renderContractDocumentPdf(contract);
+      cancelado = true;
+      setDownloadProgress(100);
+      await new Promise((r) => setTimeout(r, 300));
+
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
@@ -239,6 +271,7 @@ export const SignatureLink: React.FC = () => {
       console.error('Erro ao baixar contrato:', err);
     } finally {
       setDownloading(false);
+      setDownloadProgress(0);
     }
   };
 
@@ -443,6 +476,28 @@ export const SignatureLink: React.FC = () => {
                 >
                   {downloading ? 'Gerando PDF...' : '📥 Baixar Contrato Assinado'}
                 </button>
+              )}
+
+              {/* Barra de progresso do download - mesmo padrão da tela do
+                  corretor (ContractViewer). Só aparece quando o PDF está
+                  sendo gerado de verdade (não no atalho de link já salvo,
+                  que abre na hora). */}
+              {downloading && downloadProgress > 0 && (
+                <div className="mt-3 bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                      <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                      Gerando PDF...
+                    </span>
+                    <span className="text-sm font-bold text-blue-600 tabular-nums">{downloadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="h-full bg-blue-600 transition-all duration-500 ease-out"
+                      style={{ width: `${downloadProgress}%` }}
+                    />
+                  </div>
+                </div>
               )}
             </div>
 

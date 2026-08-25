@@ -208,15 +208,17 @@ export async function processSignatureTags(
 
     // Processar cada tag de assinatura
     for (const config of tagsConfig) {
-      const jaAssinouDigital = config.tipo === 'digital' && config.info.assinou && !!config.info.signature;
       const isManual = config.tipo === 'manual';
 
-      // Remove o bloco de texto fixo duplicado (nome/CPF) que alguns
-      // templates têm logo depois da tag - só quando o selo digital ou a
-      // linha manual abaixo já vão trazer essa informação sozinhos. No
-      // caso "pendente" (digital, ainda sem assinatura), esse bloco é a
-      // ÚNICA fonte do nome/CPF no documento e precisa continuar ali.
-      if (jaAssinouDigital || isManual) {
+      // Remove o bloco de texto fixo duplicado (nome/CPF) SÓ no caso manual,
+      // onde insertSignatureSpace já gera seu próprio texto de nome/CPF por
+      // código (aí sim duplicaria). No caso digital JÁ ASSINADO, o formato
+      // correto é manter esse texto do template (selo em cima, "PAPEL: Nome"
+      // embaixo, CPF na linha seguinte) - é ele que fornece nome/CPF de
+      // forma legível junto do selo, não deve ser removido. No caso
+      // "pendente" (digital, ainda sem assinatura) esse bloco também
+      // precisa continuar, pelo mesmo motivo de sempre.
+      if (isManual) {
         documentXml = removeRedundantRoleNameCpfBlock(documentXml, config.tag);
       }
 
