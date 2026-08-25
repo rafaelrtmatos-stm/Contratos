@@ -57,11 +57,13 @@ function stripNextMatchingParagraph(
 }
 
 // Padrões do bloco de texto fixo do template que fica logo depois da tag de
-// assinatura ({NOME_PAPEL_X} - {X} / "CPF nº {cpf_x}" ou "{doc_label_x} {cpf_x}")
+// assinatura ({NOME_PAPEL_X} - {X} / "CPF nº {cpf_x}" ou "{doc_label_x} {cpf_x}",
+// e em alguns templates o papel vem como texto fixo direto: "CONTRATANTE - {x}")
 // - hoje redundante: o selo digital já mostra nome+CPF na própria imagem, e
 // a linha manual (insertSignatureSpace) já gera seu próprio texto de
 // nome+CPF por código.
-const ROLE_NAME_LINE_PATTERN = /\{NOME_PAPEL_[A-Za-z_]+\}/;
+const ROLE_NAME_LINE_PATTERN =
+  /\{NOME_PAPEL_[A-Za-z_]+\}|\b(CONTRATANTE|CONTRATADO|VENDEDOR|COMPRADOR)\s*-\s*\{[A-Za-z_]+\}/i;
 const CPF_LINE_PATTERN = /(CPF\s*n[ºo]\.?\s*\{[a-zA-Z_]+\})|(\{doc_label_[a-zA-Z_]+\})|(\{cpf_[a-zA-Z_]+\})/i;
 
 /**

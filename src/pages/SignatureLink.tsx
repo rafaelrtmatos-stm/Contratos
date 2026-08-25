@@ -30,7 +30,7 @@ export const SignatureLink: React.FC = () => {
   const [signed, setSigned] = useState(false);
   const [previouslySigned, setPreviouslySigned] = useState(false);
   const [clientName, setClientName] = useState('');
-  const [accepted, setAccepted] = useState({ leu: true, concorda: true });
+  const [accepted, setAccepted] = useState({ leu: false, concorda: false });
   const [renderedHtml, setRenderedHtml] = useState<string | null>(null);
   const [renderLoading, setRenderLoading] = useState(true);
   const [renderError, setRenderError] = useState<string | null>(null);
