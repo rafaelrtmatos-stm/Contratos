@@ -49,7 +49,12 @@ export const SignatureLink: React.FC = () => {
         setContract(contrato);
         setOtpCode(otpCode);
         setVendedorNome(vendedorNome);
-        setClientName(contrato.comprador?.nome || '');
+        // Na exclusividade os campos são invertidos: o cliente real (quem
+        // assina pelo link) fica em "vendedor", não em "comprador" - mesma
+        // convenção usada no resto do fluxo (ver comentário em
+        // signatureLinksRepository.ts e ContractViewer.tsx).
+        const dadosClienteLink = contrato.tipo === 'exclusividade' ? contrato.vendedor : contrato.comprador;
+        setClientName(dadosClienteLink?.nome || '');
         if (jaAssinado) {
           // Reabrindo o mesmo link depois de já ter assinado: pula
           // direto pro modo visualização/download, sem bloquear com erro.
@@ -121,8 +126,18 @@ export const SignatureLink: React.FC = () => {
   const handleSign = async (otpDigitado: string) => {
     if (!token || !contract) return;
 
-    const documento = contract.comprador?.cpfCnpj || '';
-    const nome = clientName || contract.comprador?.nome || 'Cliente';
+    // Na exclusividade os campos são invertidos: "comprador" guarda o
+    // CORRETOR e "vendedor" guarda o CONTRATANTE (cliente real que está
+    // assinando por este link) - mesma convenção usada em
+    // signatureLinksRepository.ts e ContractViewer.tsx. Usar sempre
+    // contract.comprador aqui fazia o cliente assinar com os dados do
+    // corretor num contrato de exclusividade.
+    const isExclSign = contract.tipo === 'exclusividade';
+    const dadosClienteSign = isExclSign ? contract.vendedor : contract.comprador;
+    const roleClienteSign: 'vendedor' | 'comprador' = isExclSign ? 'vendedor' : 'comprador';
+
+    const documento = dadosClienteSign?.cpfCnpj || '';
+    const nome = clientName || dadosClienteSign?.nome || 'Cliente';
     const ip = await getClientIpAddress();
     // Hash do CONTEÚDO REAL do contrato preenchido (mesma lógica do lado
     // do corretor) - prova de integridade de verdade.
@@ -153,7 +168,7 @@ export const SignatureLink: React.FC = () => {
     const novasAssinaturas = [
       ...(contract.assinaturas || []),
       {
-        role: 'comprador' as const,
+        role: roleClienteSign,
         nomeSignatario: nome,
         documentoSignatario: documento,
         assinaturaDataUrl: '',
