@@ -4,8 +4,8 @@ import { validateSignatureCode, SignatureValidationResult } from '../utils/signa
 import { ShieldCheck, ShieldAlert, Search, Loader2 } from 'lucide-react';
 
 const roleLabel = (role?: string): string => {
-  if (role === 'vendedor') return 'Contratado';
-  if (role === 'comprador') return 'Contratante';
+  if (role === 'vendedor') return 'Contratante';
+  if (role === 'comprador') return 'Contratado';
   if (role === 'testemunha1') return 'Testemunha 1';
   if (role === 'testemunha2') return 'Testemunha 2';
   return role || '';
