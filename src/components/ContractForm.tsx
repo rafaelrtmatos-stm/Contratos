@@ -596,6 +596,43 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     onSave(contractData);
   };
 
+  // Depois que o banner "campos obrigatórios faltando" já apareceu (usuário
+  // tentou gerar e faltava algo), recalcula a lista a cada alteração nos
+  // campos do formulário. Assim, à medida que o usuário vai preenchendo o
+  // que faltava, o item some da lista sozinho - sem precisar clicar em
+  // "Gerar Contrato" de novo pra ver a lista atualizar. Só recalcula
+  // enquanto o banner está visível (missingFields.length > 0) pra não gastar
+  // processamento em formulário que ainda não foi submetido nenhuma vez.
+  useEffect(() => {
+    if (missingFields.length === 0) return;
+    setMissingFields(getMissingFields());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    vendedor,
+    comprador,
+    imovel,
+    bemOutros,
+    titulo,
+    documentoPropriedade,
+    matricula,
+    inscricaoPrefeitura,
+    outrosDadosImovel,
+    condicoesPagamento,
+    valorTotal,
+    valorTotalExtenso,
+    dadosBancariosRecebedor,
+    dataInicioExcl,
+    cidadeForo,
+    ufForo,
+    cidadeAssinatura,
+    ufAssinatura,
+    diaAssinatura,
+    mesExtensoAssinatura,
+    anoAssinatura,
+    tipo,
+    subcategoria,
+  ]);
+
   return (
     <div className="max-w-5xl mx-auto pb-16">
       <form onSubmit={handleSubmit} className="space-y-6">
