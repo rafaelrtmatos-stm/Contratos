@@ -240,7 +240,12 @@ export async function getClientIpAddress(): Promise<string> {
  * Exemplo: "Assinado digitalmente por: João Silva (CPF 123.456.789-00) em 24/08/2026 às 14:30:00 (IP: 192.168.1.1)"
  */
 export function formatAuditStampText(stamp: AuditStamp): string {
-  const dataFormatada = new Date(stamp.dataAssinatura).toLocaleDateString('pt-BR');
+  // Sempre horário de Brasília, independente do fuso do dispositivo/servidor
+  // que está renderizando - sem isso um ambiente rodando em UTC mostra a
+  // hora 3h à frente do horário real (ex: 9h vira 12h).
+  const dataFormatada = new Date(stamp.dataAssinatura).toLocaleDateString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+  });
   return `Assinado digitalmente por: ${stamp.nomeAssinante} (${stamp.cpfCnpj}) em ${dataFormatada} às ${stamp.horaAssinatura} (ID: ${stamp.signatureId})`;
 }
 

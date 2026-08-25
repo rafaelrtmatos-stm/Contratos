@@ -1442,7 +1442,7 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
         y = await drawDigitalSignatureStamp(doc, y, pageWidth, {
           signerName: sig.nomeSignatario,
           cpfCnpj: formatCpfCnpjDoc(sig.documentoSignatario),
-          dateStr: dt.toLocaleDateString('pt-BR'),
+          dateStr: dt.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
           timeStr: dt.toLocaleTimeString('pt-BR', { hour12: true, timeZone: 'America/Sao_Paulo' }),
           signatureId,
           hash: sig.hashAutenticacao,

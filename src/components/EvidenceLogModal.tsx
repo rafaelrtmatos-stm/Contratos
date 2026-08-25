@@ -18,6 +18,7 @@ const roleLabel = (role: string): string => {
 
 const formatDateTime = (iso: string): string => {
   try {
+    // Sempre horário de Brasília, independente do fuso do dispositivo.
     return new Date(iso).toLocaleString('pt-BR', { hour12: true, timeZone: 'America/Sao_Paulo' });
   } catch {
     return iso;

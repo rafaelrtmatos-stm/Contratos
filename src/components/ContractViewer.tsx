@@ -82,6 +82,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   const [copied, setCopied] = useState(false);
   const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [renderedHtml, setRenderedHtml] = useState<string | null>(null);
   const [renderLoading, setRenderLoading] = useState(true);
@@ -165,8 +166,38 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   const handleDownloadPdf = async () => {
     if (isDownloadingPdf) return;
     setIsDownloadingPdf(true);
+    setPdfProgress(0);
+
+    // Não existe progresso real do gerador de PDF (a lib não expõe eventos
+    // de andamento), então simulamos em degraus enquanto o arquivo é
+    // montado: 0 -> 15 -> 50 -> 85 -> 90 em ~4s (com pequena variação),
+    // e só fecha em 100% quando a geração de fato terminar - assim a
+    // barra nunca "mente" dizendo que já acabou antes da hora, mas também
+    // não fica parada em 0% enquanto o usuário espera.
+    let cancelado = false;
+    const avancarProgressoSimulado = async () => {
+      const degraus = [
+        { alvo: 15, base: 500 },
+        { alvo: 50, base: 1100 },
+        { alvo: 85, base: 1300 },
+        { alvo: 90, base: 900 },
+      ];
+      for (const { alvo, base } of degraus) {
+        const variacao = base * (0.8 + Math.random() * 0.4); // ±20%
+        await new Promise((r) => setTimeout(r, variacao));
+        if (cancelado) return;
+        setPdfProgress(alvo);
+      }
+    };
+    avancarProgressoSimulado();
+
     try {
       const pdfBlob = await renderContractDocumentPdf(contract);
+      cancelado = true;
+      setPdfProgress(100);
+      // deixa o 100% visível brevemente antes de fechar a barra
+      await new Promise((r) => setTimeout(r, 300));
+
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
@@ -179,7 +210,9 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
     } catch (err) {
       console.error('Erro ao gerar PDF:', err);
     } finally {
+      cancelado = true;
       setIsDownloadingPdf(false);
+      setPdfProgress(0);
     }
   };
 
@@ -427,6 +460,25 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto pb-16 space-y-6">
+      {/* Barra de progresso do download do PDF (fixa, sobre o conteúdo) */}
+      {isDownloadingPdf && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm bg-white border border-slate-200 rounded-xl shadow-lg p-4 print:hidden">
+          <div className="flex items-center justify-between mb-2">
+            <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+              <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+              Gerando PDF...
+            </span>
+            <span className="text-sm font-bold text-rose-600 tabular-nums">{pdfProgress}%</span>
+          </div>
+          <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+            <div
+              className="h-full bg-rose-500 transition-all duration-500 ease-out"
+              style={{ width: `${pdfProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Top Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs print:hidden">
         <button

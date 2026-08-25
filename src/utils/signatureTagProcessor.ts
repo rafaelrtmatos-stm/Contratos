@@ -217,7 +217,7 @@ async function insertDigitalSignatureStampImage(
 ): Promise<string> {
   const sig = info.signature!;
   const dt = new Date(sig.assinadoEm);
-  const dataStr = isNaN(dt.getTime()) ? sig.assinadoEm : dt.toLocaleDateString('pt-BR');
+  const dataStr = isNaN(dt.getTime()) ? sig.assinadoEm : dt.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
   const horaStr = isNaN(dt.getTime()) ? '' : dt.toLocaleTimeString('pt-BR', { hour12: true, timeZone: 'America/Sao_Paulo' });
   const hash = (sig.hashAutenticacao || '').toUpperCase();
   const signatureId = signatureIdFromHash(sig.hashAutenticacao);
