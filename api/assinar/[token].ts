@@ -29,6 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const token = typeof req.query.token === 'string' ? req.query.token : '';
 
   let clienteNome = '';
+  let objetoContrato = '';
 
   try {
     const supabaseUrl = process.env.VITE_SUPABASE_URL as string;
@@ -44,6 +45,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Venda à vista / parcelada: cliente = comprador.
         const isExcl = contrato.tipo === 'exclusividade';
         clienteNome = (isExcl ? contrato.vendedor?.nome : contrato.comprador?.nome) || '';
+
+        // Objeto do contrato: nome do empreendimento + lote/quadra quando
+        // existir (venda à vista/parcelada de lote), senão a descrição
+        // livre do bem (bemOutros/objetoDescricao), senão cai pro título
+        // genérico do contrato (ex: "Contrato de Exclusividade").
+        const imovel = contrato.imovel;
+        if (imovel?.nomeEmpreendimento) {
+          const partes = [imovel.nomeEmpreendimento];
+          if (imovel.numeroLote) partes.push(`Lote ${imovel.numeroLote}`);
+          if (imovel.numeroQuadra) partes.push(`Quadra ${imovel.numeroQuadra}`);
+          objetoContrato = partes.join(' - ');
+        } else if (contrato.bemOutros?.descricao) {
+          objetoContrato = contrato.bemOutros.descricao;
+        } else if (contrato.objetoDescricao) {
+          objetoContrato = contrato.objetoDescricao;
+        } else if (contrato.titulo) {
+          objetoContrato = contrato.titulo;
+        }
       }
     }
   } catch {
@@ -53,7 +72,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const title = clienteNome ? `Contrato - ${clienteNome}` : 'Assinatura de Contrato';
   const description = clienteNome
-    ? `${clienteNome}, você tem um contrato aguardando revisão e assinatura.`
+    ? objetoContrato
+      ? `${clienteNome}, você tem um contrato aguardando revisão e assinatura: ${objetoContrato}.`
+      : `${clienteNome}, você tem um contrato aguardando revisão e assinatura.`
     : 'Revise e assine seu contrato com segurança.';
 
   let html: string;
