@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import JSZip from 'jszip';
 import * as mammoth from 'mammoth';
-import { downloadTemplateWithCache, uploadTemplate, deleteTemplate } from '../utils/supabaseTemplateStorage';
+import { downloadTemplateWithCache, uploadTemplate, deleteTemplate, listTemplates } from '../utils/supabaseTemplateStorage';
 import { TEMPLATE_MAP } from '../utils/templateResolver';
 import { extractTagsFromText, isKnownTag, describeTag } from '../utils/knownContractTags';
 
@@ -132,6 +132,22 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
   const [pendingTags, setPendingTags] = useState<string[]>([]);
   const [pendingSlotIdx, setPendingSlotIdx] = useState<number>(0);
   const [scanningTags, setScanningTags] = useState(false);
+
+  // Quais arquivos REALMENTE existem no bucket agora (o card de cada
+  // modalidade é uma "vaga" fixa - existe sempre, tenha ou não um
+  // arquivo enviado nela; sem isso, apagar um arquivo não tirava o card
+  // da lista, porque a lista nunca conferia se o arquivo ainda existia).
+  const [existingFiles, setExistingFiles] = useState<Set<string> | null>(null);
+
+  const refreshExistingFiles = async () => {
+    const { sucesso, templates } = await listTemplates();
+    if (sucesso && templates) setExistingFiles(new Set(templates));
+  };
+
+  useEffect(() => {
+    if (isOpen) refreshExistingFiles();
+  }, [isOpen]);
+
   // Fazer download de template
   // Prévia do arquivo matriz: converte o .docx real (design, cabeçalhos,
   // tabelas) pra HTML com mammoth - mostra exatamente como o modelo está
@@ -190,6 +206,7 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
     try {
       const { sucesso, erro } = await deleteTemplate(templateFile);
       if (!sucesso) throw new Error(erro || 'Falha ao excluir template');
+      await refreshExistingFiles();
       setMessage({ type: 'success', text: `Template ${templateFile} excluído do bucket.` });
       setTimeout(() => setMessage(null), 3000);
     } catch (error: any) {
@@ -247,6 +264,7 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
       const arrayBuffer = await pendingFile.arrayBuffer();
       const { sucesso, erro } = await uploadTemplate(slot.arquivo, arrayBuffer);
       if (!sucesso) throw new Error(erro || 'Falha ao enviar modelo');
+      await refreshExistingFiles();
 
       setMessage({
         type: 'success',
@@ -367,65 +385,84 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
             </h3>
 
             {TEMPLATE_GROUPS[activeTab].map((template, idx) => {
+              // null = ainda carregando a lista real do bucket (não afirma nada
+              // ainda); depois disso, existe de fato ou não.
+              const fileExists = existingFiles === null ? true : existingFiles.has(template.arquivo);
+
               return (
                 <div
                   key={idx}
-                  className="p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 transition-all"
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    fileExists ? 'border-slate-200 bg-white hover:border-slate-300' : 'border-dashed border-slate-300 bg-slate-50'
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-lg font-bold text-slate-900">{template.modalidade}</span>
+                        {!fileExists && (
+                          <span className="px-2 py-0.5 bg-slate-200 text-slate-600 text-[10px] font-bold rounded-full">
+                            SEM ARQUIVO
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-slate-600 mb-2">{template.descricao}</p>
                       <p className="text-xs font-mono text-slate-500 break-all">
                         arquivo: {template.arquivo}
                       </p>
+                      {!fileExists && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          Nenhum arquivo enviado nesta modalidade ainda - envie um pelo assistente de importação
+                          abaixo.
+                        </p>
+                      )}
                       {template.testemunhas && (
                         <p className="text-xs text-amber-800 font-medium mt-1">Inclui 2 espaços para testemunhas</p>
                       )}
                     </div>
 
-                    {/* Botões de Ação */}
-                    <div className="flex gap-2 shrink-0">
-                      <button
-                        onClick={() => handlePreviewTemplate(template.arquivo)}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                        title="Ver prévia do modelo (design, cabeçalhos e formatação reais)"
-                      >
-                        <Eye className="w-3.5 h-3.5 inline mr-1" />
-                        Prévia
-                      </button>
+                    {/* Botões de Ação - só fazem sentido se o arquivo existe de verdade */}
+                    {fileExists && (
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          onClick={() => handlePreviewTemplate(template.arquivo)}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                          title="Ver prévia do modelo (design, cabeçalhos e formatação reais)"
+                        >
+                          <Eye className="w-3.5 h-3.5 inline mr-1" />
+                          Prévia
+                        </button>
 
-                      <button
-                        onClick={() => handleDownloadTemplate(template.arquivo)}
-                        disabled={downloadingFile === template.arquivo}
-                        className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
-                        title="Baixar este template"
-                      >
-                        {downloadingFile === template.arquivo ? (
-                          <Loader2 className="w-3.5 h-3.5 inline animate-spin" />
-                        ) : (
-                          <>
-                            <Download className="w-3.5 h-3.5 inline mr-1" />
-                            Baixar
-                          </>
-                        )}
-                      </button>
+                        <button
+                          onClick={() => handleDownloadTemplate(template.arquivo)}
+                          disabled={downloadingFile === template.arquivo}
+                          className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
+                          title="Baixar este template"
+                        >
+                          {downloadingFile === template.arquivo ? (
+                            <Loader2 className="w-3.5 h-3.5 inline animate-spin" />
+                          ) : (
+                            <>
+                              <Download className="w-3.5 h-3.5 inline mr-1" />
+                              Baixar
+                            </>
+                          )}
+                        </button>
 
-                      <button
-                        onClick={() => setConfirmDeleteFile(template.arquivo)}
-                        disabled={deletingFile === template.arquivo}
-                        className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
-                        title="Excluir este template do bucket"
-                      >
-                        {deletingFile === template.arquivo ? (
-                          <Loader2 className="w-3.5 h-3.5 inline animate-spin" />
-                        ) : (
-                          <Trash2 className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-                    </div>
+                        <button
+                          onClick={() => setConfirmDeleteFile(template.arquivo)}
+                          disabled={deletingFile === template.arquivo}
+                          className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
+                          title="Excluir este template do bucket"
+                        >
+                          {deletingFile === template.arquivo ? (
+                            <Loader2 className="w-3.5 h-3.5 inline animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {confirmDeleteFile === template.arquivo && (
