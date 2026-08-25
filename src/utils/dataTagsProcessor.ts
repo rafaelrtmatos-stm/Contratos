@@ -290,10 +290,25 @@ function escapeXml(value: string): string {
  * ao redor permanecem intactos.
  */
 function replaceTagsPreservingFormat(xml: string, tags: TagMapping): string {
+  // Normaliza uma tag "crua" (ainda com marcação XML de runs quebrados e
+  // possíveis caracteres invisíveis) pro nome de tag limpo que deve bater
+  // com as chaves do dicionário. Criado depois de um caso real: um modelo
+  // .docx recém-enviado tinha {cidade_assinatura} visualmente idêntico ao
+  // esperado, mas a tag nunca era substituída - o Word, ao editar o
+  // documento, às vezes insere espaços/caracteres de largura zero entre
+  // fragmentos de texto que não aparecem na tela, mas quebram a comparação
+  // exata. Removendo esses caracteres invisíveis e qualquer espaço interno
+  // antes de comparar, a tag passa a ser reconhecida normalmente.
+  const normalizeTagName = (raw: string): string =>
+    raw
+      .replace(/<[^>]+>/g, '')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '') // caracteres de largura zero (invisíveis)
+      .replace(/\u00A0/g, ' ') // espaço não separável -> espaço normal
+      .replace(/\s+/g, ''); // remove qualquer espaço restante, inclusive no meio
+
   // Casa {{ ... }} (duplo) mesmo com marcação XML de runs quebrados no meio (non-greedy)
   let result = xml.replace(/\{\{([\s\S]*?)\}\}/g, (fullMatch, innerRaw: string) => {
-    // Remove qualquer marcação XML que o Word tenha inserido entre os fragmentos da tag
-    const cleanTag = innerRaw.replace(/<[^>]+>/g, '').trim();
+    const cleanTag = normalizeTagName(innerRaw);
 
     if (!cleanTag || !/^[A-Za-z0-9_À-ÿ]+$/.test(cleanTag)) {
       // Não parece ser uma tag válida (ex: chaves de código/fórmula) — não mexe
@@ -326,7 +341,7 @@ function replaceTagsPreservingFormat(xml: string, tags: TagMapping): string {
 
   // Casa { ... } (simples) - usado pelos templates de exclusividade (ex: {contratante}, {tipo_imovel})
   result = result.replace(/\{([\s\S]*?)\}/g, (fullMatch, innerRaw: string) => {
-    const cleanTag = innerRaw.replace(/<[^>]+>/g, '').trim();
+    const cleanTag = normalizeTagName(innerRaw);
 
     if (!cleanTag || !/^[A-Za-z0-9_À-ÿ]+$/.test(cleanTag)) {
       return fullMatch;
