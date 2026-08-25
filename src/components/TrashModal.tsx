@@ -74,8 +74,14 @@ export const TrashModal: React.FC<TrashModalProps> = ({ isOpen, onClose, onContr
   const handlePermanentDelete = async (item: TrashedContract) => {
     setBusyId(item.contract.id);
     try {
-      await permanentlyDeleteContract(item.contract.id);
+      // ORDEM IMPORTA: a permissão de exclusão no Storage confere se o
+      // contrato ainda existe no banco (pelo owner_id) - por isso os
+      // arquivos precisam ser apagados ANTES de apagar a linha do
+      // contrato, nunca depois. Na ordem invertida, a exclusão do
+      // arquivo falhava silenciosamente (sem erro visível) porque a
+      // checagem de dono já não encontrava mais o contrato.
       await deleteContractDocuments(item.contract.id);
+      await permanentlyDeleteContract(item.contract.id);
       setItems((prev) => prev.filter((i) => i.contract.id !== item.contract.id));
     } catch (e: any) {
       setError(e.message || 'Falha ao excluir definitivamente.');
