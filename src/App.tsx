@@ -231,7 +231,12 @@ function MainApp() {
     };
 
     try {
-      await saveSignature(quickSignContract.id, signature);
+      const assinadoEmServidor = await saveSignature(quickSignContract.id, signature);
+      // Horário do dispositivo (auditStamp.dataAssinatura) é só um provisório
+      // até aqui; o que vale para PDF/manifesto/log é o do servidor.
+      signature.assinadoEm = assinadoEmServidor;
+      const idx = updatedContract.assinaturas.findIndex((a) => a === signature);
+      if (idx !== -1) updatedContract.assinaturas[idx] = { ...signature };
       await handleUpdateContractFromViewer(updatedContract);
     } catch (e: any) {
       console.error('Falha ao registrar assinatura no Supabase', e);

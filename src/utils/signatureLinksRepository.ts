@@ -161,7 +161,7 @@ export async function signContractViaLink(params: {
   documentoSignatario: string;
   hashAutenticacao: string;
   ip: string;
-}): Promise<{ sucesso: boolean; contractId?: string; erro?: string }> {
+}): Promise<{ sucesso: boolean; contractId?: string; assinadoEm?: string; erro?: string }> {
   const { data, error } = await supabase.rpc('sign_contract_via_link', {
     p_token: params.token,
     p_otp: params.otp,

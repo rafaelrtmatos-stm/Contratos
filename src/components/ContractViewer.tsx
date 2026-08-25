@@ -218,19 +218,26 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       nomeSignatario: signFlowParte === 'usuario' ? dadosCorretorSig.nome : contract.comprador.nome,
       documentoSignatario: signFlowParte === 'usuario' ? dadosCorretorSig.cpfCnpj : contract.comprador.cpfCnpj,
       assinaturaDataUrl: auditStamp.signatureId,
+      // Valor provisório (relógio do dispositivo). Substituído abaixo pelo
+      // horário do servidor assim que a persistência confirma - é ele que
+      // deve aparecer em qualquer PDF/manifesto/log gerado a partir daqui.
       assinadoEm: auditStamp.dataAssinatura,
       hashAutenticacao: auditStamp.hashDocumento,
       ipAssinatura: auditStamp.ipAssinatura,
       metadadosNavegador: auditStamp.userAgent || navigator.userAgent,
     };
 
-    handleAddSignature(signature);
-
     try {
-      await saveSignature(contract.id, signature);
+      const assinadoEmServidor = await saveSignature(contract.id, signature);
+      signature.assinadoEm = assinadoEmServidor;
     } catch (err: any) {
-      console.warn('⚠️ Assinatura registrada localmente, mas falhou ao persistir:', err.message);
+      console.warn(
+        '⚠️ Assinatura registrada localmente com horário do dispositivo (fallback), mas falhou ao persistir/confirmar horário do servidor:',
+        err.message
+      );
     }
+
+    handleAddSignature(signature);
 
     console.log(formatAuditStampText(auditStamp));
   };

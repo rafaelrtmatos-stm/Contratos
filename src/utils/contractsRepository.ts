@@ -223,20 +223,37 @@ export async function deleteContract(contractId: string): Promise<void> {
 // Assinaturas digitais
 // ============================================================
 
-export async function saveSignature(contractId: string, signature: ContractData['assinaturas'][number]) {
+/**
+ * Persiste a assinatura e retorna o `assinadoEm` REAL gravado pelo banco
+ * (coluna com DEFAULT NOW() / trigger no servidor - ver
+ * fix_assinado_em_server_authoritative.sql). Isso propositalmente ignora
+ * qualquer `assinadoEm` que já exista no objeto `signature` recebido:
+ * o horário do dispositivo de quem assina não é confiável (relógio local
+ * pode ser alterado), então o servidor é sempre quem manda no timestamp
+ * que acaba aparecendo no PDF/manifesto/log de evidências.
+ */
+export async function saveSignature(
+  contractId: string,
+  signature: ContractData['assinaturas'][number]
+): Promise<string> {
   await getSession();
-  const { error } = await supabase.from('contract_signatures').insert({
-    contract_id: contractId,
-    role: signature.role,
-    signer_index: signature.signerIndex ?? null,
-    nome_signatario: signature.nomeSignatario,
-    documento_signatario: signature.documentoSignatario,
-    assinatura_url: signature.assinaturaDataUrl, // recomendado migrar para Storage futuramente
-    hash_autenticacao: signature.hashAutenticacao,
-    ip_assinatura: signature.ipAssinatura ?? null,
-    metadados_navegador: signature.metadadosNavegador,
-  });
+  const { data, error } = await supabase
+    .from('contract_signatures')
+    .insert({
+      contract_id: contractId,
+      role: signature.role,
+      signer_index: signature.signerIndex ?? null,
+      nome_signatario: signature.nomeSignatario,
+      documento_signatario: signature.documentoSignatario,
+      assinatura_url: signature.assinaturaDataUrl, // recomendado migrar para Storage futuramente
+      hash_autenticacao: signature.hashAutenticacao,
+      ip_assinatura: signature.ipAssinatura ?? null,
+      metadados_navegador: signature.metadadosNavegador,
+    })
+    .select('assinado_em')
+    .single();
   if (error) throw error;
+  return data.assinado_em;
 }
 
 export async function fetchSignatures(contractId: string): Promise<ContractData['assinaturas']> {

@@ -157,7 +157,10 @@ export const SignatureLink: React.FC = () => {
         nomeSignatario: nome,
         documentoSignatario: documento,
         assinaturaDataUrl: '',
-        assinadoEm: new Date().toISOString(),
+        // Horário gravado pelo servidor no INSERT (ver sign_contract_via_link
+        // na migração fix_assinado_em_server_authoritative.sql) - nunca o
+        // relógio do dispositivo de quem está assinando pelo link.
+        assinadoEm: result.assinadoEm || new Date().toISOString(),
         hashAutenticacao: hash,
         ipAssinatura: ip,
         metadadosNavegador: navigator.userAgent,
