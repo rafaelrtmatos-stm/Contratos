@@ -188,7 +188,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   return (
-    <div className="space-y-5 sm:space-y-6 pb-24 md:pb-12 max-w-7xl mx-auto">
+    <div className="space-y-5 sm:space-y-6 pb-24 md:pb-12 max-w-7xl mx-auto mobile-safe-content-bottom">
       {/* 1. CARD PRINCIPAL (PAINEL PRINCIPAL) */}
       <section className="bg-white rounded-[2rem] p-6 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
@@ -1020,7 +1020,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </section>
 
       {/* 7. BARRA DE NAVEGAÇÃO INFERIOR MOBILE FIXA (ESTILO APP) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-1.5 shadow-2xl flex items-center justify-around">
+      <div className="mobile-safe-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-1.5 shadow-2xl flex items-center justify-around">
         {/* Início */}
         <button
           onClick={() => {
