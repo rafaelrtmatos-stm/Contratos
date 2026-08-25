@@ -46,15 +46,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2.5 sm:gap-3 cursor-pointer group select-none shrink-0"
             title="Ir para o Dashboard"
           >
-            {/* Ícone com fundo preto/grafite e destaque dourado - usa o
-                mesmo arquivo do favicon/ícone iOS (public/icon-512.png),
-                antes era um ícone genérico (FileSignature) diferente do
-                que aparece na tela inicial do celular */}
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-slate-900 border border-slate-700/80 flex items-center justify-center p-1 shadow-md shrink-0 group-hover:border-yellow-400/60 transition-colors overflow-hidden">
+            {/* Ícone igual ao favicon/ícone iOS (public/icon-512.png) -
+                a imagem já tem fundo navy + círculo dourado "RT", então
+                é exibida direto preenchendo o espaço, sem uma segunda
+                caixa/moldura escura por cima (isso fazia o círculo
+                aparecer pequeno e "flutuando" dentro de outro quadrado,
+                em vez de igual ao ícone real do app) */}
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl shadow-md shrink-0 overflow-hidden ring-1 ring-slate-700/80 group-hover:ring-yellow-400/60 transition-all">
               <img
                 src="/icon-512.png"
                 alt="Logo Contratos"
-                className="w-full h-full rounded-xl object-cover"
+                className="w-full h-full object-cover"
               />
             </div>
             
