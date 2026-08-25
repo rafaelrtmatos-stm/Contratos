@@ -30,9 +30,12 @@ import { appendAuditManifestPage } from './auditManifestPage';
  * contrato, e retorna o .docx final PREENCHIDO (buffer bruto) - sem
  * nenhuma conversão. É a base tanto do preview em HTML (mammoth) quanto
  * do PDF fiel (conversão externa via iLoveAPI, que preserva o layout
- * original do Word - fonte, espaçamento, indentação, tabelas).
+ * original do Word - fonte, espaçamento, indentação, tabelas), quanto
+ * do próprio download em .docx (ver downloadDocxContract em
+ * docxProcessor.ts) - um único caminho, sem depender de nenhum modelo
+ * customizado que o usuário precisasse enviar à parte.
  */
-async function buildFilledDocx(contract: ContractData): Promise<ArrayBuffer> {
+export async function buildFilledDocx(contract: ContractData): Promise<ArrayBuffer> {
   const isExcl = contract.tipo === 'exclusividade';
 
   // "usuario" (selo {{USUARIO_ASSINATURA_DIGITAL}}) é sempre o CORRETOR/CONTRATADO.

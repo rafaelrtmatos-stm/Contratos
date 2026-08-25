@@ -73,6 +73,51 @@ const SignedDot: React.FC<{ signed: boolean }> = ({ signed }) => (
   />
 );
 
+/** Círculo de progresso (estilo "donut") com a porcentagem escrita no centro. */
+const CircularProgress: React.FC<{
+  percentage: number;
+  colorClass: string; // cor do traço/número (classes tailwind, ex: 'text-yellow-600')
+  trackClass?: string; // cor do trilho de fundo
+  size?: number;
+}> = ({ percentage, colorClass, trackClass = 'text-slate-200', size = 40 }) => {
+  const clamped = Math.max(0, Math.min(100, percentage));
+  const stroke = 4;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - clamped / 100);
+
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          strokeWidth={stroke}
+          fill="none"
+          className={trackClass}
+          stroke="currentColor"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          strokeWidth={stroke}
+          fill="none"
+          strokeLinecap="round"
+          className={`${colorClass} transition-all duration-700 ease-out`}
+          stroke="currentColor"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <div className={`absolute inset-0 flex items-center justify-center text-[10px] font-extrabold ${colorClass}`}>
+        {Math.round(clamped)}%
+      </div>
+    </div>
+  );
+};
+
 export const Dashboard: React.FC<DashboardProps> = ({
   contracts,
   onSelectContract,
@@ -126,6 +171,28 @@ export const Dashboard: React.FC<DashboardProps> = ({
       cancelarProgresso();
       setDownloadingPdfId(null);
       setDownloadPdfProgress(0);
+    }
+  };
+
+  // Baixar Word (.docx) direto da lista/card - mesma barra de progresso
+  // simulada dos outros botões de download.
+  const [downloadingDocxId, setDownloadingDocxId] = useState<string | null>(null);
+  const [downloadDocxProgress, setDownloadDocxProgress] = useState(0);
+  const handleDownloadDocxDashboard = async (contract: ContractData) => {
+    setDownloadingDocxId(contract.id);
+    setDownloadDocxProgress(0);
+    const cancelarProgresso = startSimulatedPdfProgress(setDownloadDocxProgress);
+    try {
+      await downloadDocxContract(contract);
+      cancelarProgresso();
+      setDownloadDocxProgress(100);
+      await new Promise((r) => setTimeout(r, 300));
+    } catch (err) {
+      console.error('Erro ao gerar Word:', err);
+    } finally {
+      cancelarProgresso();
+      setDownloadingDocxId(null);
+      setDownloadDocxProgress(0);
     }
   };
 
@@ -419,11 +486,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           {/* Coluna Direita: Grade 2x2 de Indicadores */}
           <div className="md:col-span-6 grid grid-cols-2 gap-x-4 gap-y-4 sm:gap-x-6 sm:gap-y-4">
-            {/* 1. Contratos Gerados */}
+            {/* 1. Contratos Gerados - referência (sempre 100%, é o total) */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-700 flex items-center justify-center shrink-0 border border-yellow-200">
-                <FileText className="w-5 h-5" />
-              </div>
+              <CircularProgress percentage={contracts.length > 0 ? 100 : 0} colorClass="text-yellow-600" />
               <div>
                 <div className="text-lg font-extrabold text-slate-950 leading-tight">
                   {contracts.length}
@@ -436,9 +501,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* 2. Vendas Concluídas */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center shrink-0">
-                <CheckCircle className="w-5 h-5" />
-              </div>
+              <CircularProgress
+                percentage={contracts.length > 0 ? (countVendasConcluidas / contracts.length) * 100 : 0}
+                colorClass="text-emerald-600"
+              />
               <div>
                 <div className="text-lg font-extrabold text-slate-950 leading-tight">
                   {countVendasConcluidas}
@@ -451,9 +517,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* 3. Prazos de Exclusividade */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-700 flex items-center justify-center shrink-0 border border-yellow-200">
-                <Clock className="w-5 h-5" />
-              </div>
+              <CircularProgress
+                percentage={contracts.length > 0 ? (activeExclusivities.length / contracts.length) * 100 : 0}
+                colorClass="text-yellow-600"
+              />
               <div>
                 <div className="text-lg font-extrabold text-slate-950 leading-tight">
                   {activeExclusivities.length}
@@ -466,9 +533,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* 4. Assinaturas Pendentes */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
-                <PenTool className="w-5 h-5" />
-              </div>
+              <CircularProgress
+                percentage={contracts.length > 0 ? (pendingSignaturesCount / contracts.length) * 100 : 0}
+                colorClass="text-rose-600"
+              />
               <div>
                 <div className="text-lg font-extrabold text-slate-950 leading-tight">
                   {pendingSignaturesCount}
@@ -805,8 +873,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </button>
 
                       <button
-                        onClick={() => !isFullySigned && downloadDocxContract(contract)}
-                        disabled={isFullySigned}
+                        onClick={() => !isFullySigned && handleDownloadDocxDashboard(contract)}
+                        disabled={isFullySigned || downloadingDocxId === contract.id}
                         className={`min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 rounded-xl text-[10px] font-bold transition-colors ${
                           isFullySigned
                             ? 'bg-slate-50 text-slate-300 cursor-not-allowed'
@@ -814,8 +882,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         }`}
                         title={isFullySigned ? 'Indisponível: contrato já assinado digitalmente (use o PDF)' : 'Baixar Word (.docx)'}
                       >
-                        <FileDown className={`w-4 h-4 ${isFullySigned ? 'text-slate-300' : 'text-slate-700'}`} />
-                        <span>Word</span>
+                        {downloadingDocxId === contract.id ? (
+                          <CircularProgress percentage={downloadDocxProgress} colorClass="text-slate-700" size={28} />
+                        ) : (
+                          <>
+                            <FileDown className={`w-4 h-4 ${isFullySigned ? 'text-slate-300' : 'text-slate-700'}`} />
+                            <span>Word</span>
+                          </>
+                        )}
                       </button>
 
                       <button
@@ -824,8 +898,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-slate-100 hover:bg-slate-200 disabled:opacity-60 text-slate-700 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
                         title="Baixar PDF"
                       >
-                        <FileText className="w-4 h-4 text-slate-700" />
-                        <span>{downloadingPdfId === contract.id ? `${downloadPdfProgress}%` : 'PDF'}</span>
+                        {downloadingPdfId === contract.id ? (
+                          <CircularProgress percentage={downloadPdfProgress} colorClass="text-slate-700" size={28} />
+                        ) : (
+                          <>
+                            <FileText className="w-4 h-4 text-slate-700" />
+                            <span>PDF</span>
+                          </>
+                        )}
                       </button>
 
                       {isFullySigned ? (
@@ -975,16 +1055,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             </button>
 
                             <button
-                              onClick={() => !isFullySigned && downloadDocxContract(contract)}
-                              disabled={isFullySigned}
-                              className={`p-2 rounded-xl transition-colors ${
+                              onClick={() => !isFullySigned && handleDownloadDocxDashboard(contract)}
+                              disabled={isFullySigned || downloadingDocxId === contract.id}
+                              className={`p-2 min-w-[32px] rounded-xl transition-colors flex items-center justify-center ${
                                 isFullySigned
                                   ? 'text-slate-300 cursor-not-allowed'
                                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer'
                               }`}
                               title={isFullySigned ? 'Indisponível: contrato já assinado digitalmente (use o PDF)' : 'Baixar Word (.docx)'}
                             >
-                              <FileDown className="w-4 h-4" />
+                              {downloadingDocxId === contract.id ? (
+                                <CircularProgress percentage={downloadDocxProgress} colorClass="text-slate-700" size={24} />
+                              ) : (
+                                <FileDown className="w-4 h-4" />
+                              )}
                             </button>
 
                             <button
@@ -994,7 +1078,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                               title="Baixar PDF (.pdf)"
                             >
                               {downloadingPdfId === contract.id ? (
-                                <span className="text-[10px] font-bold tabular-nums">{downloadPdfProgress}%</span>
+                                <CircularProgress percentage={downloadPdfProgress} colorClass="text-slate-700" size={24} />
                               ) : (
                                 <FileText className="w-4 h-4" />
                               )}

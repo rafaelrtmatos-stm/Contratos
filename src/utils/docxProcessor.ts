@@ -11,6 +11,7 @@ import {
   getContractExclusividadeTags,
 } from './contractGenerators';
 import { supabase } from './supabaseClient';
+import { buildFilledDocx } from './renderContractFromDocx';
 
 // Chaves de armazenamento de templates Word personalizados por modalidade de contrato
 export type CustomTemplateKey =
@@ -424,9 +425,14 @@ export async function generateFilledDocx(contract: ContractData): Promise<Uint8A
 
 // Construtor do documento base .docx oficial nativo com formatação jurídica e tabelas OpenXML
 
-// Faz o download no navegador do arquivo .docx preenchido
+// Faz o download no navegador do arquivo .docx preenchido - usa a MESMA
+// pipeline real do PDF (buildFilledDocx: template do bucket compartilhado
+// + selos de assinatura + dados do contrato), em vez de depender de um
+// modelo customizado que o usuário precisasse enviar à parte por fora
+// (era o que causava "Template não encontrado para X" sempre que
+// ninguém tivesse subido esse modelo específico antes).
 export async function downloadDocxContract(contract: ContractData): Promise<void> {
-  const filledBytes = await generateFilledDocx(contract);
+  const filledBytes = await buildFilledDocx(contract);
   const blob = new Blob([filledBytes], {
     type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   });
