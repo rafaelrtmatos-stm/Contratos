@@ -34,7 +34,10 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({ contract, moda
           contract.tipo,
           'download_depois_assinar',
           estadoAssinatura,
-          contract.tipo === 'exclusividade' ? (contract.varianteExclusividade || 'normal') : undefined
+          // Ver comentário em ContractViewer.tsx: varianteExclusividade nunca
+          // é preenchido em lugar nenhum, então o default precisa ser
+          // 'sem_conjuge' (não 'normal') até existir essa escolha na UI.
+          contract.tipo === 'exclusividade' ? (contract.varianteExclusividade || 'sem_conjuge') : undefined
         );
 
         const { sucesso, blob, erro } = await downloadTemplateWithCache(templateResolved.arquivo);

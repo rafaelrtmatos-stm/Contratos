@@ -331,7 +331,13 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
         contract.tipo,
         'download_depois_assinar',
         estadoAssinatura,
-        contract.tipo === 'exclusividade' ? (contract.varianteExclusividade || 'normal') : undefined
+        // varianteExclusividade nunca é preenchido em lugar nenhum (não existe
+        // campo no formulário nem coluna no banco pra ele) - sempre chegava
+        // aqui undefined e caía no default 'normal', que usa o template COM
+        // cláusula de cônjuge mesmo sem ter como o usuário escolher isso.
+        // Até existir essa escolha na UI, o padrão correto é 'sem_conjuge'
+        // (o template dedicado que já é o que deve sair no dia a dia).
+        contract.tipo === 'exclusividade' ? (contract.varianteExclusividade || 'sem_conjuge') : undefined
       );
 
       console.log('📋 Template selecionado:', templateResolved.arquivo);

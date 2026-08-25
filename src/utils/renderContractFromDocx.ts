@@ -69,7 +69,10 @@ async function buildFilledDocx(contract: ContractData): Promise<ArrayBuffer> {
     contract.tipo,
     'download_depois_assinar',
     estadoAssinatura,
-    isExcl ? (contract.varianteExclusividade || 'normal') : undefined
+    // Ver comentário em ContractViewer.tsx: varianteExclusividade nunca é
+    // preenchido em lugar nenhum, então o default precisa ser 'sem_conjuge'
+    // (não 'normal') até existir essa escolha na UI.
+    isExcl ? (contract.varianteExclusividade || 'sem_conjuge') : undefined
   );
 
   const { sucesso, blob, erro } = await downloadTemplateWithCache(templateResolved.arquivo);
