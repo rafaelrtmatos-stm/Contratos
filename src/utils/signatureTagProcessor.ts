@@ -276,20 +276,23 @@ function insertPendingSignatureNotice(xml: string, tag: string, info: PartySigna
  */
 function insertSignatureSpace(xml: string, tag: string, info: PartySignatureInfo): string {
   const nome = escapeXml(info.nome || '');
-  const role = escapeXml(info.roleLabel || '');
+  const role = escapeXml((info.roleLabel || '').toUpperCase());
   const doc = escapeXml(info.documento || '');
 
+  // Mesmo padrão visual do bloco do CONTRATADO no template: sz 24 (12pt), negrito,
+  // sem itálico/cor - só o texto muda ("CPF nº" para ambos, mesmo se doc for CNPJ,
+  // igual o template já faz para o contratado).
   const signatureSpace = `<w:p>
       <w:pPr><w:jc w:val="center"/><w:spacing w:before="240" w:line="360" w:lineRule="auto"/></w:pPr>
-      <w:r><w:rPr>${DOC_RFONTS}<w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">_____________________________________________</w:t></w:r>
+      <w:r><w:rPr>${DOC_RFONTS}<w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr><w:t xml:space="preserve">_____________________________________________</w:t></w:r>
     </w:p>
     <w:p>
       <w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>
-      <w:r><w:rPr>${DOC_RFONTS}<w:b/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr><w:t xml:space="preserve">${nome}</w:t></w:r>
+      <w:r><w:rPr>${DOC_RFONTS}<w:b/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr><w:t xml:space="preserve">${role}: ${nome}</w:t></w:r>
     </w:p>
     <w:p>
       <w:pPr><w:jc w:val="center"/></w:pPr>
-      <w:r><w:rPr>${DOC_RFONTS}<w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">${role}${doc ? ` — CPF/CNPJ: ${doc}` : ''}</w:t></w:r>
+      <w:r><w:rPr>${DOC_RFONTS}<w:b/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr><w:t xml:space="preserve">CPF nº ${doc}</w:t></w:r>
     </w:p>`;
 
   return replaceEnclosingParagraph(xml, tag, signatureSpace);
