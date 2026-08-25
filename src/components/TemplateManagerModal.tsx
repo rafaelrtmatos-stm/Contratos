@@ -23,6 +23,7 @@ import {
   Eye,
 } from 'lucide-react';
 import JSZip from 'jszip';
+import * as mammoth from 'mammoth';
 import { downloadTemplateWithCache, uploadTemplate, deleteTemplate } from '../utils/supabaseTemplateStorage';
 import { TEMPLATE_MAP } from '../utils/templateResolver';
 import { extractTagsFromText, isKnownTag, describeTag } from '../utils/knownContractTags';
@@ -118,6 +119,13 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
   const [confirmDeleteFile, setConfirmDeleteFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Prévia do arquivo matriz (o .docx real, com design/cabeçalhos/tags
+  // visíveis como estão no template - sem preencher com nenhum contrato).
+  const [previewFile, setPreviewFile] = useState<string | null>(null);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+
   // Assistente de importação: arquivo escolhido, tags encontradas nele, e
   // em qual "slot" (modalidade) do tipo ativo ele vai substituir
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -125,6 +133,29 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
   const [pendingSlotIdx, setPendingSlotIdx] = useState<number>(0);
   const [scanningTags, setScanningTags] = useState(false);
   // Fazer download de template
+  // Prévia do arquivo matriz: converte o .docx real (design, cabeçalhos,
+  // tabelas) pra HTML com mammoth - mostra exatamente como o modelo está
+  // formatado, com as tags {tag} ainda visíveis como estão no arquivo
+  // (isso aqui é o modelo em si, não um contrato preenchido).
+  const handlePreviewTemplate = async (templateFile: string) => {
+    setPreviewFile(templateFile);
+    setPreviewHtml(null);
+    setPreviewError(null);
+    setPreviewLoading(true);
+    try {
+      const { sucesso, blob, erro } = await downloadTemplateWithCache(templateFile);
+      if (!sucesso || !blob) throw new Error(erro || 'Falha ao carregar o modelo.');
+
+      const arrayBuffer = await blob.arrayBuffer();
+      const result = await mammoth.convertToHtml({ arrayBuffer });
+      setPreviewHtml(result.value);
+    } catch (error: any) {
+      setPreviewError(error.message || 'Falha ao gerar a prévia do modelo.');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
   const handleDownloadTemplate = async (templateFile: string) => {
     setDownloadingFile(templateFile);
     try {
@@ -358,6 +389,15 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
                     {/* Botões de Ação */}
                     <div className="flex gap-2 shrink-0">
                       <button
+                        onClick={() => handlePreviewTemplate(template.arquivo)}
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                        title="Ver prévia do modelo (design, cabeçalhos e formatação reais)"
+                      >
+                        <Eye className="w-3.5 h-3.5 inline mr-1" />
+                        Prévia
+                      </button>
+
+                      <button
                         onClick={() => handleDownloadTemplate(template.arquivo)}
                         disabled={downloadingFile === template.arquivo}
                         className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
@@ -575,6 +615,60 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
           </button>
         </div>
       </div>
+
+      {/* Modal de Prévia do arquivo matriz */}
+      {previewFile && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setPreviewFile(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 shrink-0">
+              <div className="min-w-0">
+                <h3 className="font-bold text-slate-900">Prévia do modelo</h3>
+                <p className="text-xs font-mono text-slate-500 truncate">{previewFile}</p>
+              </div>
+              <button
+                onClick={() => setPreviewFile(null)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer shrink-0"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+
+            <div className="px-5 py-2 bg-amber-50/60 border-b border-amber-100 shrink-0">
+              <p className="text-[11px] text-amber-950">
+                Isto é o arquivo matriz em si - as tags {'{tag}'} aparecem como estão no modelo, sem preencher com
+                nenhum contrato específico.
+              </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-5 bg-slate-50">
+              {previewLoading && (
+                <div className="flex items-center justify-center gap-2 text-slate-500 py-10">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Carregando prévia...
+                </div>
+              )}
+              {previewError && !previewLoading && (
+                <div className="text-xs font-semibold text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {previewError}
+                </div>
+              )}
+              {!previewLoading && !previewError && previewHtml && (
+                <div
+                  className="bg-white rounded-lg shadow-sm p-8 mx-auto max-w-2xl prose prose-sm text-slate-800 leading-relaxed [&_p]:mb-2 [&_p]:text-justify [&_strong]:font-bold"
+                  dangerouslySetInnerHTML={{ __html: previewHtml }}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
