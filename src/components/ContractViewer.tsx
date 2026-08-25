@@ -8,9 +8,6 @@ import {
 } from '../utils/contractGenerators';
 import {
   downloadDocxContract,
-  getCustomWordTemplateMeta,
-  resolveTemplateKey,
-  CustomTemplateMeta,
 } from '../utils/docxProcessor';
 import { resolveTemplate } from '../utils/templateResolver';
 import { downloadTemplateWithCache } from '../utils/supabaseTemplateStorage';
@@ -35,7 +32,6 @@ import { DigitalSignatureFlowModal } from './DigitalSignatureFlowModal';
 import { GenerateSignatureCodeModal } from './GenerateSignatureCodeModal';
 import { DigitalSignatureStamp } from './DigitalSignatureStamp';
 import { EvidenceLogModal } from './EvidenceLogModal';
-import { WordTemplateModal } from './WordTemplateModal';
 import {
   FileDown,
   FileText,
@@ -45,8 +41,6 @@ import {
   Calendar,
   Copy,
   Check,
-  FileCheck,
-  Settings,
   ShieldCheck,
   Users,
   PrinterCheck,
@@ -81,7 +75,6 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   onEdit,
   onUpdateContract,
 }) => {
-  const [isWordTemplateModalOpen, setIsWordTemplateModalOpen] = useState(false);
   const [isDigitalSignFlowOpen, setIsDigitalSignFlowOpen] = useState(false);
   const [isEvidenceLogOpen, setIsEvidenceLogOpen] = useState(false);
   const [isShareLinkOpen, setIsShareLinkOpen] = useState(false);
@@ -108,7 +101,6 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   const legal = generateContractLegalText(contract);
   const exclusivityInfo = getExclusivityStatus(contract);
   const tags = legal.tagsMapping;
-  const [customTemplateMeta, setCustomTemplateMeta] = useState<CustomTemplateMeta | null>(null);
 
   // Renderiza a visualização em tela a partir do MESMO .docx que o botão
   // "Word (.docx)" baixa - selos e dados já processados - em vez de um
@@ -131,16 +123,6 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       cancelled = true;
     };
   }, [contract]);
-
-  useEffect(() => {
-    let cancelled = false;
-    getCustomWordTemplateMeta(resolveTemplateKey(contract.tipo, contract.subcategoria)).then((meta) => {
-      if (!cancelled) setCustomTemplateMeta(meta);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [contract.tipo, contract.subcategoria]);
 
   const handleAddSignature = (signature: DigitalSignature) => {
     const filtered = contract.assinaturas.filter((a) => {
@@ -454,28 +436,6 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
         </button>
 
         <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 flex-wrap w-full sm:w-auto">
-          {/* Indicador de Modelo Word Mestre Ativo */}
-          <button
-            onClick={() => setIsWordTemplateModalOpen(true)}
-            className={`col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-              customTemplateMeta
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-            }`}
-            title="Gerenciar modelo institucional Word (.docx)"
-          >
-            {customTemplateMeta ? (
-              <FileCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            ) : (
-              <Settings className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-            )}
-            <span className="truncate max-w-[200px]">
-              {customTemplateMeta
-                ? `Word: ${customTemplateMeta.fileName}`
-                : 'Modelo Word (.docx)'}
-            </span>
-          </button>
-
           <button
             onClick={onEdit}
             className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
@@ -780,15 +740,6 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           />
         )}
       </div>
-
-      {/* Modal de Gerenciamento de Modelos Word (.docx) */}
-      {isWordTemplateModalOpen && (
-        <WordTemplateModal
-          isOpen={isWordTemplateModalOpen}
-          initialType={contract.tipo}
-          onClose={() => setIsWordTemplateModalOpen(false)}
-        />
-      )}
 
       {/* Modal de Assinatura Digital com OTP (Novo Fluxo) */}
       {isDigitalSignFlowOpen && (
