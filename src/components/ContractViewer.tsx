@@ -479,9 +479,14 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           <button
             onClick={onEdit}
             className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+            title={
+              hasAnyDigitalSignature
+                ? 'Este contrato já tem assinatura registrada e não pode ser alterado - editar cria uma CÓPIA nova, sem assinaturas, e mantém este original intacto.'
+                : 'Editar contrato'
+            }
           >
             <Edit3 className="w-3.5 h-3.5 shrink-0" />
-            <span>Editar</span>
+            <span>{hasAnyDigitalSignature ? 'Editar (cria cópia)' : 'Editar'}</span>
           </button>
 
           <button

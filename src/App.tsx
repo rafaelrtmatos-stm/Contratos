@@ -101,6 +101,32 @@ function MainApp() {
   };
 
   const handleEditContract = () => {
+    // Regra de integridade: um contrato que já tem QUALQUER assinatura
+    // (parcial ou total) nunca pode ser sobrescrito por uma edição - o
+    // hash/selo gravado na assinatura foi calculado em cima do texto
+    // como estava NAQUELE momento; editar o mesmo registro deixaria a
+    // assinatura "pendurada" em um conteúdo que não é mais o que foi
+    // de fato assinado. Em vez disso, "Editar" nesse caso cria uma
+    // CÓPIA nova (id novo, sem assinaturas, status voltando a
+    // rascunho) e o contrato assinado original permanece intocado.
+    if (selectedContract && (selectedContract.assinaturas?.length || 0) > 0) {
+      const confirmado = window.confirm(
+        'Este contrato já tem assinatura registrada e não pode ser alterado diretamente.\n\n' +
+          'Vou criar uma CÓPIA nova com os mesmos dados, sem nenhuma assinatura, para você editar. ' +
+          'O contrato original assinado permanece salvo e inalterado.\n\nContinuar?'
+      );
+      if (!confirmado) return;
+
+      const { id, numeroContrato, assinaturas, status, documentoUrl, documentoStoragePath, ...resto } = selectedContract;
+      setSelectedContract({
+        ...resto,
+        id: '',
+        numeroContrato: '',
+        assinaturas: [],
+        status: 'rascunho',
+      } as ContractData);
+    }
+
     setCurrentView('form');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -312,7 +338,11 @@ function MainApp() {
             onSave={handleSaveContractFromForm}
             onSaveDraft={handleSaveDraftFromForm}
             onCancel={() => {
-              if (selectedContract) {
+              // selectedContract sem id acontece quando "Editar" criou uma
+              // cópia (contrato original já assinado) e o usuário cancelou
+              // antes de salvar - não há nada pra visualizar ainda, então
+              // volta pro dashboard em vez de uma tela de viewer vazia.
+              if (selectedContract?.id) {
                 setCurrentView('viewer');
               } else {
                 setCurrentView('dashboard');
