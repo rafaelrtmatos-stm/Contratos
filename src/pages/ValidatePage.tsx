@@ -90,7 +90,7 @@ export const ValidatePage: React.FC = () => {
                 </div>
                 <div className="text-xs text-emerald-800 space-y-1 pt-1">
                   <p><strong>Assinado por:</strong> {resultado.nomeSignatario} ({roleLabel(resultado.papel)})</p>
-                  <p><strong>Data/Hora:</strong> {resultado.assinadoEm ? new Date(resultado.assinadoEm).toLocaleString('pt-BR') : '-'}</p>
+                  <p><strong>Data/Hora:</strong> {resultado.assinadoEm ? new Date(resultado.assinadoEm).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '-'}</p>
                   <p><strong>Contrato nº:</strong> {resultado.numeroContrato} — {tipoLabel(resultado.tipoContrato)}</p>
                   {resultado.meioAutenticacao && (
                     <p><strong>Meio de autenticação:</strong> {resultado.meioAutenticacao}</p>

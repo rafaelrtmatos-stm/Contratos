@@ -14,9 +14,9 @@ export function buildPdfFileName(nomeCliente: string | undefined | null): string
       .replace(/\s+/g, '_') || 'contrato';
 
   const agora = new Date();
-  const data = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
+  const data = agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).replace(/\//g, '-');
   const hora = agora
-    .toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    .toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })
     .replace(':', 'h');
 
   return `${slug}_${data}_${hora}.pdf`;

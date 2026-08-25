@@ -68,11 +68,11 @@ export const DigitalSignatureStamp: React.FC<DigitalSignatureStampProps> = ({
   const dateObj = signature?.assinadoEm ? new Date(signature.assinadoEm) : new Date();
 
   const formattedDate = !isNaN(dateObj.getTime())
-    ? dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    ? dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Sao_Paulo' })
     : '22/08/2026';
 
   const formattedTime = !isNaN(dateObj.getTime())
-    ? dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    ? dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'America/Sao_Paulo' })
     : '17:42:18';
 
   // ID da Assinatura (ex: 8F4A-92C1-7B35-4D81)

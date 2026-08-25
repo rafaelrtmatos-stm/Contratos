@@ -203,7 +203,7 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
                 <p className="text-xs font-mono text-slate-600">{carimbo.signatureId}</p>
                 <p className="text-xs font-bold text-slate-700 mt-2">Data/Hora:</p>
                 <p className="text-xs text-slate-600">
-                  {new Date(carimbo.dataAssinatura).toLocaleString('pt-BR')}
+                  {new Date(carimbo.dataAssinatura).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                 </p>
               </div>
 
