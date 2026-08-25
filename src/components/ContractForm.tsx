@@ -212,13 +212,16 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   const [valorEntrada, setValorEntrada] = useState<number>(initialData?.valorEntrada || 50000);
   const [numeroParcelas, setNumeroParcelas] = useState<number>(initialData?.numeroParcelas || 36);
   const [valorParcela, setValorParcela] = useState<number>(initialData?.valorParcela || 3611.11);
-  // Qual dos 3 campos (Total / Entrada / Valor da Parcela) o sistema deve
-  // calcular sozinho a partir dos outros dois - cálculo bilateral: o
-  // usuário escolhe qual quer que seja a "resposta", os outros dois viram
-  // as entradas livres. Ex: fixando Entrada=500 e Parcela=300x50 ->
-  // calcula Total=15.500; ou fixando Total=15.500 e Parcela=300x50 ->
-  // calcula Entrada=500.
-  const [modoCalculoParcelado, setModoCalculoParcelado] = useState<'total' | 'entrada' | 'parcela'>('parcela');
+  // Cálculo bilateral SEM seletor manual: os 2 campos editados mais
+  // recentemente (entre Entrada / Valor da Parcela / Total) são tratados
+  // como "dados conhecidos", e o terceiro é sempre recalculado sozinho -
+  // mesma lógica de calculadora de conversão (os últimos 2 mexidos
+  // "prendem" o valor, o que sobra se ajusta). Todos os 4 campos (Entrada,
+  // Parcelas, Valor da Parcela, Total) ficam sempre editáveis.
+  const [ultimosTocados, setUltimosTocados] = useState<Array<'entrada' | 'parcela' | 'total'>>(['entrada', 'parcela']);
+  const tocarCampoParcelado = (campo: 'entrada' | 'parcela' | 'total') => {
+    setUltimosTocados((prev) => [...prev.filter((f) => f !== campo), campo].slice(-2) as typeof prev);
+  };
   const [formaPagamentoParcelas, setFormaPagamentoParcelas] = useState<string>(
     initialData?.formaPagamentoParcelas || 'Boleto Bancário'
   );
@@ -257,6 +260,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   const handleValorTotalChange = (val: number) => {
     setValorTotal(val);
     setValorTotalExtenso(numeroPorExtensoReais(val));
+    if (tipo === 'venda_parcelada') tocarCampoParcelado('total');
   };
 
   const updateDefaultTitle = (t: ContractType, sub: ContractSubtype) => {
@@ -306,28 +310,30 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     }
   }, [tipo, subcategoria]);
 
-  // Cálculo bilateral do parcelamento: recalcula SÓ o campo escolhido em
-  // modoCalculoParcelado, a partir dos outros dois - nunca sobrescreve um
-  // campo que o próprio usuário está preenchendo livremente.
+  // Cálculo bilateral do parcelamento: o campo que NÃO está entre os 2
+  // últimos tocados é sempre o recalculado (ver tocarCampoParcelado acima).
   useEffect(() => {
     if (tipo !== 'venda_parcelada' || numeroParcelas <= 0) return;
 
-    if (modoCalculoParcelado === 'parcela') {
+    const derivado = (['entrada', 'parcela', 'total'] as const).find((f) => !ultimosTocados.includes(f));
+    if (!derivado) return;
+
+    if (derivado === 'parcela') {
       const saldo = Math.max(0, valorTotal - valorEntrada);
       const novaParcela = Number((saldo / numeroParcelas).toFixed(2));
       if (novaParcela !== valorParcela) setValorParcela(novaParcela);
-    } else if (modoCalculoParcelado === 'total') {
+    } else if (derivado === 'total') {
       const novoTotal = Number((valorEntrada + numeroParcelas * valorParcela).toFixed(2));
       if (novoTotal !== valorTotal) {
         setValorTotal(novoTotal);
         setValorTotalExtenso(numeroPorExtensoReais(novoTotal));
       }
-    } else if (modoCalculoParcelado === 'entrada') {
+    } else if (derivado === 'entrada') {
       const novaEntrada = Number((valorTotal - numeroParcelas * valorParcela).toFixed(2));
       if (novaEntrada !== valorEntrada) setValorEntrada(Math.max(0, novaEntrada));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valorTotal, valorEntrada, numeroParcelas, valorParcela, modoCalculoParcelado, tipo]);
+  }, [valorTotal, valorEntrada, numeroParcelas, valorParcela, ultimosTocados, tipo]);
 
   // Título de Identificação Interna automático (venda à vista/parcelada,
   // imóvel): sempre no formato L{lote}_Q{quadra}_{empreendimento}_
@@ -2008,46 +2014,17 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   Entrada & Condições de Parcelamento
                 </h3>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Cálculo automático — qual campo o sistema deve calcular?
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {(
-                      [
-                        { value: 'parcela', label: 'Valor da Parcela', hint: 'a partir do Total e da Entrada' },
-                        { value: 'total', label: 'Valor Total', hint: 'a partir da Entrada e das Parcelas' },
-                        { value: 'entrada', label: 'Valor de Entrada', hint: 'a partir do Total e das Parcelas' },
-                      ] as const
-                    ).map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setModoCalculoParcelado(opt.value)}
-                        className={`text-left p-2 rounded-lg border-2 transition-colors cursor-pointer ${
-                          modoCalculoParcelado === opt.value
-                            ? 'border-amber-400 bg-amber-50 text-amber-950'
-                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="text-xs font-bold">{opt.label}</div>
-                        <div className="text-[10px] mt-0.5">{opt.hint}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Valor da Entrada (R$) {modoCalculoParcelado === 'entrada' && '(calculado)'}
-                    </label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Valor da Entrada (R$)</label>
                     <input
                       type="number"
                       value={valorEntrada}
-                      disabled={modoCalculoParcelado === 'entrada'}
-                      onChange={(e) => setValorEntrada(parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white disabled:bg-slate-100 disabled:text-slate-500"
+                      onChange={(e) => {
+                        setValorEntrada(parseFloat(e.target.value) || 0);
+                        tocarCampoParcelado('entrada');
+                      }}
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
                     />
                   </div>
                   <div>
@@ -2061,26 +2038,33 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Valor de Cada Parcela (R$) {modoCalculoParcelado === 'parcela' && '(calculado)'}
-                    </label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Valor de Cada Parcela (R$)</label>
                     <input
                       type="number"
                       value={valorParcela}
-                      disabled={modoCalculoParcelado === 'parcela'}
-                      onChange={(e) => setValorParcela(parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white disabled:bg-slate-100 disabled:text-slate-500"
+                      onChange={(e) => {
+                        setValorParcela(parseFloat(e.target.value) || 0);
+                        tocarCampoParcelado('parcela');
+                      }}
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Valor Total (R$)</label>
+                    <input
+                      type="number"
+                      value={valorTotal}
+                      onChange={(e) => handleValorTotalChange(parseFloat(e.target.value) || 0)}
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
                     />
                   </div>
                 </div>
 
                 <p className="text-[11px] text-amber-900">
-                  {modoCalculoParcelado === 'parcela' &&
-                    `${numeroParcelas}x de R$ ${valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} = saldo de R$ ${(valorTotal - valorEntrada).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (Total - Entrada)`}
-                  {modoCalculoParcelado === 'total' &&
-                    `Total calculado: R$ ${valorEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} de entrada + ${numeroParcelas}x de R$ ${valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} = R$ ${valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                  {modoCalculoParcelado === 'entrada' &&
-                    `Entrada calculada: R$ ${valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} total - ${numeroParcelas}x de R$ ${valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} = R$ ${valorEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} de entrada`}
+                  R$ {valorEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} de entrada + {numeroParcelas}x
+                  de R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} = R${' '}
+                  {valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} no total. Mexa em qualquer 2
+                  desses 3 campos (Entrada / Valor da Parcela / Total) que o terceiro se ajusta sozinho.
                 </p>
 
                 <div>
