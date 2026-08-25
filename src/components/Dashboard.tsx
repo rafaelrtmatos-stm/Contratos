@@ -266,7 +266,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
             <div className="min-w-0 text-left">
               <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-950 leading-snug">
-                1. Venda à Vista
+                Venda à Vista
               </h2>
               <p className="text-slate-900/90 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
                 Contratos à vista para Imóveis e Outros Bens (veículos, etc.)
@@ -294,7 +294,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
             <div className="min-w-0 text-left">
               <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-snug">
-                2. Venda Parcelada
+                Venda Parcelada
               </h2>
               <p className="text-slate-300 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
                 Contratos parcelados com reserva de domínio (Imóveis e Bens Móveis)
@@ -322,7 +322,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
             <div className="min-w-0 text-left">
               <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-snug">
-                3. Exclusividade
+                Exclusividade
               </h2>
               <p className="text-slate-300 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
                 Crie contratos de exclusividade com corretor e gerencie prazos de vigência.

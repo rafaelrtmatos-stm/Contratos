@@ -177,6 +177,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </div>
                     </button>
 
+                    {onOpenTemplateManager && (
+                      <div className="sm:hidden">
+                        <button
+                          onClick={() => {
+                            setIsNewMenuOpen(false);
+                            onOpenTemplateManager();
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-yellow-50 hover:text-yellow-900 rounded-xl transition-colors cursor-pointer"
+                        >
+                          <Settings2 className="w-4 h-4 text-yellow-600 shrink-0" />
+                          <span>Gerenciar Modelos (Bucket)</span>
+                        </button>
+                      </div>
+                    )}
+
                     {onOpenWordTemplates && (
                       <div className="pt-1.5 border-t border-slate-100 mt-1">
                         <button

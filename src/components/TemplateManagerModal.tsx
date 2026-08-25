@@ -23,8 +23,10 @@ import {
   Loader2,
   Eye,
 } from 'lucide-react';
-import { downloadTemplateWithCache, uploadTemplate } from '../utils/supabaseTemplateStorage';
+import JSZip from 'jszip';
+import { downloadTemplateWithCache, uploadTemplate, deleteTemplate } from '../utils/supabaseTemplateStorage';
 import { TEMPLATE_MAP } from '../utils/templateResolver';
+import { extractTagsFromText, isKnownTag, describeTag } from '../utils/knownContractTags';
 
 interface TemplateManagerModalProps {
   isOpen: boolean;
@@ -125,7 +127,16 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [downloadingFile, setDownloadingFile] = useState<string | null>(null);
+  const [deletingFile, setDeletingFile] = useState<string | null>(null);
+  const [confirmDeleteFile, setConfirmDeleteFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Assistente de importação: arquivo escolhido, tags encontradas nele, e
+  // em qual "slot" (modalidade) do tipo ativo ele vai substituir
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingTags, setPendingTags] = useState<string[]>([]);
+  const [pendingSlotIdx, setPendingSlotIdx] = useState<number>(0);
+  const [scanningTags, setScanningTags] = useState(false);
 
   // Carregar preferências do localStorage
   useEffect(() => {
@@ -176,7 +187,27 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
     }
   };
 
-  // Upload de template customizado
+  // Excluir template do bucket (afeta TODOS os contratos que usam esse
+  // arquivo - por isso exige confirmação explícita antes)
+  const handleDeleteTemplate = async (templateFile: string) => {
+    setDeletingFile(templateFile);
+    try {
+      const { sucesso, erro } = await deleteTemplate(templateFile);
+      if (!sucesso) throw new Error(erro || 'Falha ao excluir template');
+      setMessage({ type: 'success', text: `Template ${templateFile} excluído do bucket.` });
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error: any) {
+      setMessage({ type: 'error', text: `Erro ao excluir: ${error.message}` });
+      setTimeout(() => setMessage(null), 4000);
+    } finally {
+      setDeletingFile(null);
+      setConfirmDeleteFile(null);
+    }
+  };
+
+  // Passo 1: usuário escolhe o arquivo .docx - lemos e escaneamos as tags
+  // dele ANTES de subir, pra ele poder conferir se o sistema reconhece
+  // cada tag (evita repetir o problema de contrato saindo com {tag} cru)
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -186,28 +217,57 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
       return;
     }
 
-    setLoading(true);
+    setScanningTags(true);
+    setMessage(null);
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const nome = file.name;
+      const zip = await JSZip.loadAsync(arrayBuffer);
+      const xml = await zip.file('word/document.xml')?.async('string');
+      const plainText = (xml || '').replace(/<[^>]+>/g, '');
+      const tags = extractTagsFromText(plainText);
 
-      await uploadTemplate(nome, arrayBuffer);
+      setPendingFile(file);
+      setPendingTags(tags);
+      setPendingSlotIdx(0);
+    } catch (error: any) {
+      setMessage({ type: 'error', text: `Não foi possível ler o arquivo: ${error.message}` });
+    } finally {
+      setScanningTags(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
-      // Atualizar preferência para o novo template
-      const newPrefs = { ...preferences, [activeTab]: nome };
+  // Passo 2: depois de conferir as tags, o corretor confirma em qual
+  // modalidade (Digital/Manual/Mista) o modelo entra - o upload SEMPRE
+  // usa o nome de arquivo canônico do slot (não o nome original enviado),
+  // porque é esse nome fixo que o sistema de geração de contrato lê
+  const handleConfirmUpload = async () => {
+    if (!pendingFile) return;
+    const slot = TEMPLATE_GROUPS[activeTab][pendingSlotIdx];
+    if (!slot) return;
+
+    setLoading(true);
+    try {
+      const arrayBuffer = await pendingFile.arrayBuffer();
+      const { sucesso, erro } = await uploadTemplate(slot.arquivo, arrayBuffer);
+      if (!sucesso) throw new Error(erro || 'Falha ao enviar modelo');
+
+      const newPrefs = { ...preferences, [activeTab]: slot.arquivo };
       setPreferences(newPrefs);
       localStorage.setItem('templatePreferences', JSON.stringify(newPrefs));
 
-      setMessage({ type: 'success', text: `Template ${nome} enviado e definido como padrão` });
-      setTimeout(() => setMessage(null), 3000);
+      setMessage({
+        type: 'success',
+        text: `Modelo salvo como "${slot.modalidade}" de ${getTypeLabel(activeTab)}.`,
+      });
+      setTimeout(() => setMessage(null), 4000);
+      setPendingFile(null);
+      setPendingTags([]);
     } catch (error: any) {
       setMessage({ type: 'error', text: `Erro ao enviar: ${error.message}` });
-      setTimeout(() => setMessage(null), 3000);
+      setTimeout(() => setMessage(null), 4000);
     } finally {
       setLoading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     }
   };
 
@@ -376,49 +436,189 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOp
                           </>
                         )}
                       </button>
+
+                      <button
+                        onClick={() => setConfirmDeleteFile(template.arquivo)}
+                        disabled={deletingFile === template.arquivo}
+                        className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
+                        title="Excluir este template do bucket"
+                      >
+                        {deletingFile === template.arquivo ? (
+                          <Loader2 className="w-3.5 h-3.5 inline animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
+                      </button>
                     </div>
                   </div>
+
+                  {confirmDeleteFile === template.arquivo && (
+                    <div className="mt-3 pt-3 border-t border-red-100 bg-red-50 -mx-4 -mb-4 px-4 pb-4 rounded-b-xl">
+                      <p className="text-xs font-bold text-red-800 mb-2">
+                        Excluir "{template.arquivo}" do bucket? Isso afeta TODOS os contratos que usam essa
+                        modalidade — eles vão parar de conseguir gerar Word/PDF até um novo arquivo ser enviado
+                        nesse mesmo slot.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setConfirmDeleteFile(null)}
+                          className="flex-1 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-bold cursor-pointer"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTemplate(template.arquivo)}
+                          className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold cursor-pointer"
+                        >
+                          Sim, excluir
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
 
-          {/* Upload Custom Template */}
-          <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center">
-            <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-            <h4 className="font-bold text-slate-900 mb-1">Importar Modelo Institucional (.docx)</h4>
-            <p className="text-xs text-slate-600 mb-4">
-              Envie o arquivo Word oficial do seu escritório ou imobiliária. O sistema utilizará a sua estrutura
-              gráfica e tipográfica original.
-            </p>
+          {/* Assistente de Importação: Passo 1 selecionar arquivo, Passo 2 conferir tags */}
+          {!pendingFile ? (
+            <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center">
+              <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <h4 className="font-bold text-slate-900 mb-1">Importar Modelo Institucional (.docx)</h4>
+              <p className="text-xs text-slate-600 mb-4">
+                Envie o arquivo Word oficial do seu escritório ou imobiliária. Antes de salvar, o sistema mostra
+                quais tags do arquivo ele reconhece, pra você conferir.
+              </p>
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".docx"
-              onChange={handleFileSelect}
-              disabled={loading}
-              className="hidden"
-            />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".docx"
+                onChange={handleFileSelect}
+                disabled={scanningTags}
+                className="hidden"
+              />
 
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={loading}
-              className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:bg-slate-300 text-slate-950 font-bold text-sm rounded-lg transition-colors flex items-center gap-2 justify-center mx-auto cursor-pointer shadow-xs"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4 text-slate-950" />
-                  Selecionar Arquivo Word (.docx)
-                </>
-              )}
-            </button>
-          </div>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={scanningTags}
+                className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:bg-slate-300 text-slate-950 font-bold text-sm rounded-lg transition-colors flex items-center gap-2 justify-center mx-auto cursor-pointer shadow-xs"
+              >
+                {scanningTags ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Lendo arquivo...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 text-slate-950" />
+                    Selecionar Arquivo Word (.docx)
+                  </>
+                )}
+              </button>
+            </div>
+          ) : (
+            <div className="border-2 border-amber-300 rounded-xl p-5 space-y-4">
+              <div>
+                <h4 className="font-bold text-slate-900">Conferir modelo antes de salvar</h4>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Arquivo: <span className="font-mono">{pendingFile.name}</span>
+                </p>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                  Em qual modalidade este modelo entra?
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {TEMPLATE_GROUPS[activeTab].map((slot, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setPendingSlotIdx(idx)}
+                      className={`p-2.5 rounded-lg border-2 text-left text-xs transition-colors cursor-pointer ${
+                        pendingSlotIdx === idx
+                          ? 'border-amber-400 bg-amber-50 text-amber-950'
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="font-bold">{slot.modalidade}</div>
+                      <div className="text-[10px] mt-0.5">
+                        {slot.testemunhas ? 'Com testemunhas' : 'Sem testemunhas'}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                  Tags encontradas no arquivo ({pendingTags.length})
+                </label>
+                {pendingTags.length === 0 ? (
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                    Nenhuma tag do tipo {'{tag}'} ou {'{{TAG}}'} foi encontrada neste arquivo.
+                  </p>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto space-y-1 border border-slate-200 rounded-lg p-2">
+                    {pendingTags.map((tag) => {
+                      const status = isKnownTag(tag);
+                      return (
+                        <div
+                          key={tag}
+                          className={`flex items-start gap-2 px-2.5 py-1.5 rounded-lg text-xs ${
+                            status === 'unknown' ? 'bg-red-50' : 'bg-slate-50'
+                          }`}
+                        >
+                          {status === 'unknown' ? (
+                            <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />
+                          ) : (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                          )}
+                          <div className="min-w-0">
+                            <span className="font-mono font-bold text-slate-800">{'{' + tag + '}'}</span>
+                            <span className="text-slate-500"> — {describeTag(tag)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <p className="text-[11px] text-slate-500 mt-1.5">
+                  Em vermelho: tags que o sistema não reconhece — no contrato gerado, elas saem em branco.
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setPendingFile(null);
+                    setPendingTags([]);
+                  }}
+                  disabled={loading}
+                  className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmUpload}
+                  disabled={loading}
+                  className="flex-1 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:bg-slate-300 text-slate-950 font-bold text-sm rounded-lg transition-colors flex items-center gap-2 justify-center cursor-pointer shadow-xs"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      Confirmar e Salvar
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Info */}
           <div className="bg-amber-50/60 border border-amber-200 rounded-lg p-3 text-xs text-amber-950">
