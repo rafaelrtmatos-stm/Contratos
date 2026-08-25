@@ -151,9 +151,16 @@ export async function renderContractDocumentPdf(contract: ContractData): Promise
   const docxFilled = await buildFilledDocx(contract);
   // Item 1 do checklist de conformidade: a prova de assinatura (IP, hash,
   // meio de autenticação, horário de servidor) precisa viajar junto com o
-  // PDF, não só existir dentro do sistema. Anexa a página de manifesto
-  // como última página antes de converter.
-  const docxFinal = await appendAuditManifestPage(docxFilled, contract);
+  // PDF, não só existir dentro do sistema. Mas isso só faz sentido quando
+  // existe DE FATO alguma assinatura eletrônica no contrato - se o usuário
+  // só preencheu o formulário e já baixou o PDF (regra: todas as
+  // assinaturas serão manuais/físicas), não há nenhuma trilha de
+  // auditoria digital pra registrar, então a página de manifesto nem é
+  // anexada.
+  const temAssinaturaDigital = (contract.assinaturas?.length || 0) > 0;
+  const docxFinal = temAssinaturaDigital
+    ? await appendAuditManifestPage(docxFilled, contract)
+    : docxFilled;
   const docxBase64 = arrayBufferToBase64(docxFinal);
 
   const { data, error } = await supabase.functions.invoke('convert-docx-to-pdf', {
