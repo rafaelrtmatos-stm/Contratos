@@ -11,6 +11,7 @@ import {
   processSignatureTags,
   PartySignatureInfo,
 } from './signatureTagProcessor';
+import { appendAuditManifestPage } from './auditManifestPage';
 
 /**
  * Fonte única de verdade para qualquer exibição do contrato fora do
@@ -144,7 +145,12 @@ function base64ToBlob(base64: string, type: string): Blob {
  * (mammoth -> HTML -> jsPDF), que descartava a maior parte da formatação.
  */
 export async function renderContractDocumentPdf(contract: ContractData): Promise<Blob> {
-  const docxFinal = await buildFilledDocx(contract);
+  const docxFilled = await buildFilledDocx(contract);
+  // Item 1 do checklist de conformidade: a prova de assinatura (IP, hash,
+  // meio de autenticação, horário de servidor) precisa viajar junto com o
+  // PDF, não só existir dentro do sistema. Anexa a página de manifesto
+  // como última página antes de converter.
+  const docxFinal = await appendAuditManifestPage(docxFilled, contract);
   const docxBase64 = arrayBufferToBase64(docxFinal);
 
   const { data, error } = await supabase.functions.invoke('convert-docx-to-pdf', {
