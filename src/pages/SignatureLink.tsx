@@ -285,7 +285,7 @@ export const SignatureLink: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
@@ -374,7 +374,7 @@ export const SignatureLink: React.FC = () => {
               </div>
 
               {/* Contrato em Leitura - renderizado a partir do .docx real */}
-              <div className="bg-slate-50 border-2 border-slate-200 rounded-lg p-6 mb-6 max-h-96 overflow-y-auto">
+              <div className="bg-slate-50 border-2 border-slate-200 rounded-lg p-6 mb-6 max-h-[75vh] overflow-y-auto">
                 {renderLoading && (
                   <div className="flex items-center justify-center py-8 gap-2 text-slate-500">
                     <Loader className="w-4 h-4 animate-spin" />
@@ -386,7 +386,7 @@ export const SignatureLink: React.FC = () => {
                 )}
                 {!renderLoading && !renderError && renderedHtml && (
                   <div
-                    className="prose prose-sm text-slate-700 text-xs leading-relaxed [&_p]:mb-2 [&_p]:text-justify [&_strong]:font-bold [&_img]:w-[33%]! [&_img]:h-auto! [&_img]:max-w-[33%]!"
+                    className="prose prose-base text-slate-800 text-base leading-relaxed [&_p]:mb-3 [&_p]:text-justify [&_strong]:font-bold [&_img]:w-[33%]! [&_img]:h-auto! [&_img]:max-w-[33%]!"
                     dangerouslySetInnerHTML={{ __html: renderedHtml }}
                   />
                 )}
