@@ -308,7 +308,13 @@ function replaceTagsPreservingFormat(xml: string, tags: TagMapping): string {
     }
 
     const upperTag = cleanTag.toUpperCase();
-    const matchKey = Object.keys(tags).find((k) => k.toUpperCase() === upperTag);
+    // Usa a ÚLTIMA chave inserida que bate (case-insensitive), não a
+    // primeira: quando o mesmo tag existe em mais de uma variação de
+    // caixa (ex: VALOR_TOTAL cru no bloco genérico e valor_total
+    // formatado certo no bloco específico de venda_vista/parcelada,
+    // inserido depois), a versão mais recente/específica é a correta.
+    const matchingKeys = Object.keys(tags).filter((k) => k.toUpperCase() === upperTag);
+    const matchKey = matchingKeys.length > 0 ? matchingKeys[matchingKeys.length - 1] : undefined;
 
     if (matchKey === undefined) {
       // Tag desconhecida: remove para não deixar {{...}} residual no documento final
@@ -333,7 +339,8 @@ function replaceTagsPreservingFormat(xml: string, tags: TagMapping): string {
     }
 
     const upperTag = cleanTag.toUpperCase();
-    const matchKey = Object.keys(tags).find((k) => k.toUpperCase() === upperTag);
+    const matchingKeys = Object.keys(tags).filter((k) => k.toUpperCase() === upperTag);
+    const matchKey = matchingKeys.length > 0 ? matchingKeys[matchingKeys.length - 1] : undefined;
 
     if (matchKey === undefined) {
       // Tag simples desconhecida: deixa como está (pode ser texto legítimo entre chaves)
