@@ -122,6 +122,14 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     initialData?.numeroContrato || `CT-${tipo === 'venda_vista' ? 'VISTA' : tipo === 'venda_parcelada' ? 'PARC' : 'EXCL'}-${Date.now().toString().slice(-4)}`
   );
 
+  // Data/hora fixa pro título automático (venda à vista/parcelada) -
+  // capturada uma única vez quando o formulário abre, nunca recalculada
+  // a cada re-render (senão o título ficaria mudando de segundo em
+  // segundo enquanto o corretor digita outros campos).
+  const [tituloTimestamp] = useState<Date>(() =>
+    initialData?.dataCriacao ? new Date(initialData.dataCriacao) : new Date()
+  );
+
   // Foro e Assinatura
   const [cidadeForo, setCidadeForo] = useState(initialData?.cidadeForo || 'Santarém');
   const [ufForo, setUfForo] = useState(initialData?.ufForo || 'PA');
@@ -320,6 +328,32 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [valorTotal, valorEntrada, numeroParcelas, valorParcela, modoCalculoParcelado, tipo]);
+
+  // Título de Identificação Interna automático (venda à vista/parcelada,
+  // imóvel): sempre no formato L{lote}_Q{quadra}_{empreendimento}_
+  // {nome do cliente}_{data}_{hora} - a data/hora usada é fixa (capturada
+  // uma vez ao abrir o formulário), só o lote/quadra/empreendimento/nome
+  // do cliente atualizam ao vivo enquanto o corretor preenche.
+  useEffect(() => {
+    if (tipo === 'exclusividade' || subcategoria === 'outros_bens') return;
+
+    const slug = (s: string) => (s || '').trim().replace(/\s+/g, '_');
+    const dataStr = tituloTimestamp.toLocaleDateString('pt-BR').replace(/\//g, '-');
+    const horaStr = tituloTimestamp
+      .toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false })
+      .replace(/:/g, 'h');
+
+    const partes = [
+      imovel.numeroLote ? `L${slug(imovel.numeroLote)}` : '',
+      imovel.numeroQuadra ? `Q${slug(imovel.numeroQuadra)}` : '',
+      slug(imovel.nomeEmpreendimento),
+      slug(comprador.nome),
+      dataStr,
+      horaStr,
+    ].filter(Boolean);
+
+    if (partes.length > 0) setTitulo(partes.join('_'));
+  }, [tipo, subcategoria, imovel.numeroLote, imovel.numeroQuadra, imovel.nomeEmpreendimento, comprador.nome, tituloTimestamp]);
 
   // Preenchimento de exemplo rápido
   const preencherExemplo = () => {
@@ -887,18 +921,28 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <div className="md:col-span-2">
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Título de Identificação Interna do Contrato
+                  {tipo !== 'exclusividade' && subcategoria !== 'outros_bens' && (
+                    <span className="font-normal text-slate-400"> (gerado automaticamente)</span>
+                  )}
                 </label>
                 <input
                   type="text"
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
+                  readOnly={tipo !== 'exclusividade' && subcategoria !== 'outros_bens'}
                   placeholder={
                     subcategoria === 'outros_bens' && tipo !== 'exclusividade'
                       ? 'Ex: Compra e Venda Toyota Corolla XEi 2024 - Placa QEZ-8A90'
                       : 'Ex: Compra e Venda Lote 14 Quadra 08 - Loteamento Tapajós'
                   }
-                  className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                  className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden read-only:bg-slate-100 read-only:text-slate-600"
                 />
+                {tipo !== 'exclusividade' && subcategoria !== 'outros_bens' && (
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Segue sempre o padrão Lote_Quadra_Empreendimento_Cliente_Data_Hora, a partir dos dados
+                    preenchidos abaixo e do comprador.
+                  </p>
+                )}
               </div>
 
               {/* RENDERIZAÇÃO CONDICIONAL: EXCLUSIVIDADE vs IMÓVEL vs OUTROS BENS */}
