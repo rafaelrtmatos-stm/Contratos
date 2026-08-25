@@ -47,11 +47,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             title="Ir para o Dashboard"
           >
             {/* Ícone igual ao favicon/ícone iOS (public/icon-512.png) -
-                a imagem já tem fundo navy + círculo dourado "RT", então
-                é exibida direto preenchendo o espaço, sem uma segunda
-                caixa/moldura escura por cima (isso fazia o círculo
-                aparecer pequeno e "flutuando" dentro de outro quadrado,
-                em vez de igual ao ícone real do app) */}
+                documento com caneta (gradiente dourado), o mesmo desenho
+                que já era usado no app antes da logo "RT" ter sido
+                colocada por engano. Exibida direto preenchendo o espaço,
+                sem uma segunda caixa/moldura escura por cima. */}
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl shadow-md shrink-0 overflow-hidden ring-1 ring-slate-700/80 group-hover:ring-yellow-400/60 transition-all">
               <img
                 src="/icon-512.png"
