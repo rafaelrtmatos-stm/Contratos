@@ -486,9 +486,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           {/* Coluna Direita: Grade 2x2 de Indicadores */}
           <div className="md:col-span-6 grid grid-cols-2 gap-x-4 gap-y-4 sm:gap-x-6 sm:gap-y-4">
-            {/* 1. Contratos Gerados - referência (sempre 100%, é o total) */}
+            {/* 1. Contratos Gerados */}
             <div className="flex items-center gap-3">
-              <CircularProgress percentage={contracts.length > 0 ? 100 : 0} colorClass="text-yellow-600" />
+              <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-700 flex items-center justify-center shrink-0 border border-yellow-200">
+                <FileText className="w-5 h-5" />
+              </div>
               <div>
                 <div className="text-lg font-extrabold text-slate-950 leading-tight">
                   {contracts.length}
@@ -501,10 +503,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* 2. Vendas Concluídas */}
             <div className="flex items-center gap-3">
-              <CircularProgress
-                percentage={contracts.length > 0 ? (countVendasConcluidas / contracts.length) * 100 : 0}
-                colorClass="text-emerald-600"
-              />
+              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center shrink-0">
+                <CheckCircle className="w-5 h-5" />
+              </div>
               <div>
                 <div className="text-lg font-extrabold text-slate-950 leading-tight">
                   {countVendasConcluidas}
@@ -517,10 +518,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* 3. Prazos de Exclusividade */}
             <div className="flex items-center gap-3">
-              <CircularProgress
-                percentage={contracts.length > 0 ? (activeExclusivities.length / contracts.length) * 100 : 0}
-                colorClass="text-yellow-600"
-              />
+              <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-700 flex items-center justify-center shrink-0 border border-yellow-200">
+                <Clock className="w-5 h-5" />
+              </div>
               <div>
                 <div className="text-lg font-extrabold text-slate-950 leading-tight">
                   {activeExclusivities.length}
@@ -533,10 +533,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* 4. Assinaturas Pendentes */}
             <div className="flex items-center gap-3">
-              <CircularProgress
-                percentage={contracts.length > 0 ? (pendingSignaturesCount / contracts.length) * 100 : 0}
-                colorClass="text-rose-600"
-              />
+              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                <PenTool className="w-5 h-5" />
+              </div>
               <div>
                 <div className="text-lg font-extrabold text-slate-950 leading-tight">
                   {pendingSignaturesCount}
