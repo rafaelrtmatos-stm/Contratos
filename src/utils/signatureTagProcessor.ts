@@ -20,7 +20,87 @@ const STAMP_HEIGHT_MM = 20.79; // 7% da altura da página A4 (297mm)
 // caindo numa fonte serifada diferente do resto do contrato.
 const DOC_RFONTS = '<w:rFonts w:asciiTheme="minorHAnsi" w:hAnsiTheme="minorHAnsi"/>';
 
-/** Adiciona um PNG ao pacote DOCX (media + relacionamento + content type) e retorna o rId. */
+/**
+ * Extrai o texto visível (concatenando todos os <w:t>) de um bloco <w:p>...</w:p>.
+ */
+function extractParagraphText(paragraphXml: string): string {
+  const matches = paragraphXml.match(/<w:t[^>]*>([\s\S]*?)<\/w:t>/g) || [];
+  return matches.map((m) => m.replace(/<w:t[^>]*>/, '').replace(/<\/w:t>/, '')).join('');
+}
+
+/**
+ * A partir de `searchFrom`, acha o primeiro parágrafo <w:p>...</w:p> cujo
+ * texto bate com `matcher`, pulando por cima de parágrafos em branco pelo
+ * caminho. Para (sem remover nada) assim que encontra um parágrafo NÃO
+ * vazio que não bate com o padrão - evita apagar conteúdo de mais adiante
+ * no documento que não tem relação nenhuma com o que estamos procurando.
+ */
+function stripNextMatchingParagraph(
+  xml: string,
+  searchFrom: number,
+  matcher: RegExp
+): { xml: string; removed: boolean } {
+  const pRegex = /<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g;
+  pRegex.lastIndex = searchFrom;
+  let match: RegExpExecArray | null;
+  while ((match = pRegex.exec(xml)) !== null) {
+    const text = extractParagraphText(match[0]);
+    if (matcher.test(text)) {
+      return { xml: xml.slice(0, match.index) + xml.slice(match.index + match[0].length), removed: true };
+    }
+    if (text.trim().length > 0) {
+      // Achou outro parágrafo com texto, mas não é o que procurávamos - para.
+      break;
+    }
+  }
+  return { xml, removed: false };
+}
+
+// Padrões do bloco de texto fixo do template que fica logo depois da tag de
+// assinatura ({NOME_PAPEL_X} - {X} / "CPF nº {cpf_x}" ou "{doc_label_x} {cpf_x}")
+// - hoje redundante: o selo digital já mostra nome+CPF na própria imagem, e
+// a linha manual (insertSignatureSpace) já gera seu próprio texto de
+// nome+CPF por código.
+const ROLE_NAME_LINE_PATTERN = /\{NOME_PAPEL_[A-Za-z_]+\}/;
+const CPF_LINE_PATTERN = /(CPF\s*n[ºo]\.?\s*\{[a-zA-Z_]+\})|(\{doc_label_[a-zA-Z_]+\})|(\{cpf_[a-zA-Z_]+\})/i;
+
+/**
+ * Remove o bloco duplicado "{NOME_PAPEL_X} - {X}" / "CPF nº {cpf_x}" que
+ * alguns templates ainda têm logo após a tag de assinatura - sobra de uma
+ * versão anterior do template, de antes de existir o selo/linha gerados
+ * por código. Roda ANTES de processar a tag em si (a posição da tag não
+ * muda, já que esse bloco vem depois dela no documento).
+ */
+function removeRedundantRoleNameCpfBlock(xml: string, tag: string): string {
+  let result = xml;
+  let searchFrom = 0;
+
+  while (true) {
+    const tagIndex = result.indexOf(tag, searchFrom);
+    if (tagIndex === -1) break;
+
+    const closeIndex = result.indexOf('</w:p>', tagIndex);
+    if (closeIndex === -1) {
+      searchFrom = tagIndex + tag.length;
+      continue;
+    }
+    const afterTagParagraph = closeIndex + '</w:p>'.length;
+
+    const afterName = stripNextMatchingParagraph(result, afterTagParagraph, ROLE_NAME_LINE_PATTERN);
+    if (afterName.removed) {
+      const afterCpf = stripNextMatchingParagraph(afterName.xml, afterTagParagraph, CPF_LINE_PATTERN);
+      result = afterCpf.xml;
+    } else {
+      result = afterName.xml;
+    }
+
+    searchFrom = tagIndex + tag.length;
+  }
+
+  return result;
+}
+
+
 async function addImageToDocx(zip: JSZip, pngBytes: Uint8Array): Promise<string> {
   const mediaFiles = Object.keys(zip.files).filter((f) => f.startsWith('word/media/'));
   let maxImgIdx = 0;
@@ -126,6 +206,18 @@ export async function processSignatureTags(
 
     // Processar cada tag de assinatura
     for (const config of tagsConfig) {
+      const jaAssinouDigital = config.tipo === 'digital' && config.info.assinou && !!config.info.signature;
+      const isManual = config.tipo === 'manual';
+
+      // Remove o bloco de texto fixo duplicado (nome/CPF) que alguns
+      // templates têm logo depois da tag - só quando o selo digital ou a
+      // linha manual abaixo já vão trazer essa informação sozinhos. No
+      // caso "pendente" (digital, ainda sem assinatura), esse bloco é a
+      // ÚNICA fonte do nome/CPF no documento e precisa continuar ali.
+      if (jaAssinouDigital || isManual) {
+        documentXml = removeRedundantRoleNameCpfBlock(documentXml, config.tag);
+      }
+
       if (config.tipo === 'digital') {
         if (config.info.assinou && config.info.signature) {
           // DIGITAL + JÁ ASSINADO: insere o selo visual (imagem PNG) com os dados reais da assinatura
