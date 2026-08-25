@@ -8,6 +8,7 @@ interface EstadoCivilSelectProps {
   genero: string;
   label?: string;
   required?: boolean;
+  error?: boolean;
 }
 
 export const EstadoCivilSelect: React.FC<EstadoCivilSelectProps> = ({
@@ -16,6 +17,7 @@ export const EstadoCivilSelect: React.FC<EstadoCivilSelectProps> = ({
   genero,
   label = 'Estado Civil',
   required = false,
+  error = false,
 }) => {
   const options = getEstadoCivilOptions(genero);
 
@@ -34,8 +36,10 @@ export const EstadoCivilSelect: React.FC<EstadoCivilSelectProps> = ({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none px-3 py-2.5 pr-8 text-xs font-bold border-2 border-slate-300 rounded-lg bg-white
-            focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all cursor-pointer"
+          className={`w-full appearance-none px-3 py-2.5 pr-8 text-xs font-bold border-2 rounded-lg bg-white
+            focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all cursor-pointer ${
+              error ? 'border-red-500' : 'border-slate-300'
+            }`}
         >
           {!value && <option value="">Selecione...</option>}
           {!hasCurrentValue && value && <option value={value}>{value}</option>}

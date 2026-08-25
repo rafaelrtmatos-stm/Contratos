@@ -6,6 +6,7 @@ interface GenderSelectProps {
   onChange: (value: string) => void;
   label?: string;
   required?: boolean;
+  error?: boolean;
 }
 
 export const GenderSelect: React.FC<GenderSelectProps> = ({
@@ -13,6 +14,7 @@ export const GenderSelect: React.FC<GenderSelectProps> = ({
   onChange,
   label = 'Gênero',
   required = false,
+  error = false,
 }) => {
   const options = [
     { value: 'M', label: 'Masculino', icon: User, bgColor: 'bg-blue-100', textColor: 'text-blue-700' },
@@ -35,7 +37,9 @@ export const GenderSelect: React.FC<GenderSelectProps> = ({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none pl-11 pr-8 py-2.5 text-sm font-bold border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all cursor-pointer bg-white"
+          className={`w-full appearance-none pl-11 pr-8 py-2.5 text-sm font-bold border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all cursor-pointer bg-white ${
+            error ? 'border-red-500' : 'border-slate-300'
+          }`}
         >
           <option value="">Selecione...</option>
           {options.map((option) => (

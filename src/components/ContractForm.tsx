@@ -563,6 +563,17 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     return missing;
   };
 
+  // Marca em vermelho o card do campo que estiver faltando (além do banner
+  // de alerta que já existia) - some sozinho assim que o campo deixa de
+  // estar vazio, porque missingFields é recalculado ao vivo enquanto o
+  // banner estiver visível (ver useEffect abaixo).
+  const missingLabelsSet = new Set(missingFields.map((f) => f.label));
+  const errCls = (label: string) => (missingLabelsSet.has(label) ? 'border-red-500! ring-1 ring-red-500' : '');
+  // Mesmos rótulos usados dentro de getMissingFields(), só que acessíveis
+  // aqui no JSX pra montar as mesmas chaves passadas pro errCls().
+  const vLabelUI = tipo === 'exclusividade' ? 'Contratante' : 'Vendedor';
+  const cLabelUI = tipo === 'exclusividade' ? 'Contratado' : 'Comprador';
+
   const buildContractData = (): ContractData => ({
     id: contractId,
     numeroContrato,
@@ -963,7 +974,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.tipoImovel || ''}
                       onChange={(e) => setImovel({ ...imovel, tipoImovel: e.target.value })}
                       placeholder="Ex: Terreno urbano, Casa, Apartamento, Sala comercial"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Tipo do Imóvel')}`}
                     />
                   </div>
 
@@ -976,7 +987,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.localizacaoImovel}
                       onChange={(e) => setImovel({ ...imovel, localizacaoImovel: e.target.value })}
                       placeholder="Ex: Rua das Palmeiras, nº 120, Bairro Aldeia"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Localização do Imóvel')}`}
                     />
                   </div>
 
@@ -989,7 +1000,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.cidadeImovel}
                       onChange={(e) => setImovel({ ...imovel, cidadeImovel: e.target.value })}
                       placeholder="Ex: Santarém"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Cidade do Imóvel')}`}
                     />
                   </div>
 
@@ -1003,7 +1014,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       onChange={(e) => setImovel({ ...imovel, ufImovel: e.target.value.toUpperCase() })}
                       placeholder="Ex: PA"
                       maxLength={2}
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden uppercase"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden uppercase ${errCls('UF do Imóvel')}`}
                     />
                   </div>
 
@@ -1016,7 +1027,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={documentoPropriedade}
                       onChange={(e) => setDocumentoPropriedade(e.target.value)}
                       placeholder="Ex: Título Definitivo de Propriedade nº 1234/2020"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Documento de Propriedade')}`}
                     />
                   </div>
 
@@ -1029,7 +1040,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={matricula}
                       onChange={(e) => setMatricula(e.target.value)}
                       placeholder="Ex: Sob o nº 12.345 do 1º Ofício de Registro de Imóveis"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Matrícula')}`}
                     />
                   </div>
 
@@ -1042,7 +1053,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={inscricaoPrefeitura}
                       onChange={(e) => setInscricaoPrefeitura(e.target.value)}
                       placeholder="Ex: Cadastrado sob o nº 00.00.000.0000.000"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Inscrição na Prefeitura')}`}
                     />
                   </div>
 
@@ -1055,7 +1066,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={outrosDadosImovel}
                       onChange={(e) => setOutrosDadosImovel(e.target.value)}
                       placeholder="Descrição, dimensões e confrontações"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Outros Dados do Imóvel')}`}
                     />
                   </div>
 
@@ -1068,7 +1079,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={condicoesPagamento}
                       onChange={(e) => setCondicoesPagamento(e.target.value)}
                       placeholder="Ex: À vista, em moeda corrente nacional, via PIX ou transferência bancária"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Condições de Pagamento')}`}
                     />
                   </div>
                 </>
@@ -1101,7 +1112,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={bemOutros.descricao}
                       onChange={(e) => setBemOutros({ ...bemOutros, descricao: e.target.value })}
                       placeholder="Ex: Veículo automotor Toyota Corolla XEi 2.0 Automático"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Descrição Principal do Bem')}`}
                     />
                   </div>
 
@@ -1114,7 +1125,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={bemOutros.marca}
                       onChange={(e) => setBemOutros({ ...bemOutros, marca: e.target.value })}
                       placeholder="Ex: Toyota, Honda, Yamaha, Volkswagen..."
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Marca / Fabricante')}`}
                     />
                   </div>
 
@@ -1127,7 +1138,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={bemOutros.modelo}
                       onChange={(e) => setBemOutros({ ...bemOutros, modelo: e.target.value })}
                       placeholder="Ex: Corolla XEi 2.0 Flex"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Modelo / Versão')}`}
                     />
                   </div>
 
@@ -1141,7 +1152,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                         value={bemOutros.anoFabricacao}
                         onChange={(e) => setBemOutros({ ...bemOutros, anoFabricacao: e.target.value })}
                         placeholder="Ex: 2023"
-                        className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                        className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Ano Fabricação')}`}
                       />
                     </div>
                     <div>
@@ -1153,7 +1164,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                         value={bemOutros.anoModelo}
                         onChange={(e) => setBemOutros({ ...bemOutros, anoModelo: e.target.value })}
                         placeholder="Ex: 2024"
-                        className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                        className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Ano Modelo')}`}
                       />
                     </div>
                   </div>
@@ -1167,7 +1178,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={bemOutros.cor}
                       onChange={(e) => setBemOutros({ ...bemOutros, cor: e.target.value })}
                       placeholder="Ex: Prata Metálico, Preto..."
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Cor Predominante')}`}
                     />
                   </div>
 
@@ -1180,7 +1191,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={bemOutros.placa}
                       onChange={(e) => setBemOutros({ ...bemOutros, placa: e.target.value.toUpperCase() })}
                       placeholder="Ex: QEZ-8A90"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden uppercase"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden uppercase ${errCls('Placa / Identificação')}`}
                     />
                   </div>
 
@@ -1193,7 +1204,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={bemOutros.renavam}
                       onChange={(e) => setBemOutros({ ...bemOutros, renavam: e.target.value })}
                       placeholder="Ex: 01298471203"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('RENAVAM')}`}
                     />
                   </div>
 
@@ -1206,7 +1217,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={bemOutros.chassi}
                       onChange={(e) => setBemOutros({ ...bemOutros, chassi: e.target.value.toUpperCase() })}
                       placeholder="Ex: 9BRBL42E4N0198421"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden uppercase"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden uppercase ${errCls('Chassi')}`}
                     />
                   </div>
 
@@ -1219,7 +1230,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={bemOutros.numeroSerie}
                       onChange={(e) => setBemOutros({ ...bemOutros, numeroSerie: e.target.value })}
                       placeholder="Ex: 2ZR-FE-9842"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Número de Série / Motor')}`}
                     />
                   </div>
 
@@ -1232,7 +1243,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={bemOutros.quilometragemOuUso}
                       onChange={(e) => setBemOutros({ ...bemOutros, quilometragemOuUso: e.target.value })}
                       placeholder="Ex: 18.500 km rodados"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Quilometragem / Horímetro / Uso')}`}
                     />
                   </div>
 
@@ -1245,7 +1256,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={bemOutros.estadoConservacao}
                       onChange={(e) => setBemOutros({ ...bemOutros, estadoConservacao: e.target.value })}
                       placeholder="Ex: Em perfeito estado de conservação e funcionamento"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Estado de Conservação')}`}
                     />
                   </div>
 
@@ -1258,7 +1269,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={bemOutros.acessoriosInclusos}
                       onChange={(e) => setBemOutros({ ...bemOutros, acessoriosInclusos: e.target.value })}
                       placeholder="Ex: Chave reserva, manual do proprietário, estepe, kit multimídia..."
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Acessórios e Itens Inclusos')}`}
                     />
                   </div>
 
@@ -1271,7 +1282,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={bemOutros.documentacaoSituacao}
                       onChange={(e) => setBemOutros({ ...bemOutros, documentacaoSituacao: e.target.value })}
                       placeholder="Ex: IPVA 2026 quitado, livre e desembaraçado de multas, restrições e gravames."
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Situação Documental')}`}
                     />
                   </div>
                 </>
@@ -1286,7 +1297,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.nomeEmpreendimento}
                       onChange={(e) => setImovel({ ...imovel, nomeEmpreendimento: e.target.value })}
                       placeholder="Ex: Loteamento Residencial Tapajós"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Nome do Empreendimento / Loteamento')}`}
                     />
                   </div>
 
@@ -1299,7 +1310,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.localizacaoImovel}
                       onChange={(e) => setImovel({ ...imovel, localizacaoImovel: e.target.value })}
                       placeholder="Ex: Rodovia Fernando Guilhon, Km 06"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Localização do Imóvel')}`}
                     />
                   </div>
 
@@ -1312,7 +1323,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.cidadeImovel}
                       onChange={(e) => setImovel({ ...imovel, cidadeImovel: e.target.value })}
                       placeholder="Ex: Santarém"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Cidade do Imóvel')}`}
                     />
                   </div>
 
@@ -1326,7 +1337,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       onChange={(e) => setImovel({ ...imovel, ufImovel: e.target.value.toUpperCase() })}
                       placeholder="Ex: PA"
                       maxLength={2}
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden uppercase"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden uppercase ${errCls('UF do Imóvel')}`}
                     />
                   </div>
 
@@ -1339,7 +1350,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.numeroLote}
                       onChange={(e) => setImovel({ ...imovel, numeroLote: e.target.value })}
                       placeholder="Ex: 14"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Número do Lote')}`}
                     />
                   </div>
 
@@ -1352,7 +1363,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.numeroQuadra}
                       onChange={(e) => setImovel({ ...imovel, numeroQuadra: e.target.value })}
                       placeholder="Ex: 08"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Número da Quadra')}`}
                     />
                   </div>
 
@@ -1365,7 +1376,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.enderecoLote}
                       onChange={(e) => setImovel({ ...imovel, enderecoLote: e.target.value })}
                       placeholder="Ex: Rua das Palmeiras, Quadra 08, Lote 14"
-                      className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                      className={`w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden ${errCls('Endereço Completo do Lote')}`}
                     />
                   </div>
                 </>
@@ -1388,7 +1399,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.metragemFrente}
                       onChange={(e) => setImovel({ ...imovel, metragemFrente: e.target.value })}
                       placeholder="12,00"
-                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      className={`w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls('Metragem Frente')}`}
                     />
                   </div>
 
@@ -1401,7 +1412,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.metragemLateralDireita}
                       onChange={(e) => setImovel({ ...imovel, metragemLateralDireita: e.target.value })}
                       placeholder="30,00"
-                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      className={`w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls('Metragem Lateral Direita')}`}
                     />
                   </div>
 
@@ -1414,7 +1425,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.metragemLateralEsquerda}
                       onChange={(e) => setImovel({ ...imovel, metragemLateralEsquerda: e.target.value })}
                       placeholder="30,00"
-                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      className={`w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls('Metragem Lateral Esquerda')}`}
                     />
                   </div>
 
@@ -1427,7 +1438,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.metragemFundos}
                       onChange={(e) => setImovel({ ...imovel, metragemFundos: e.target.value })}
                       placeholder="12,00"
-                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      className={`w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls('Metragem Fundos')}`}
                     />
                   </div>
 
@@ -1440,7 +1451,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.areaTotalM2}
                       onChange={(e) => setImovel({ ...imovel, areaTotalM2: e.target.value })}
                       placeholder="360,00"
-                      className="w-full px-3 py-1.5 text-xs border border-green-300 bg-green-50/50 font-bold text-green-900 rounded-lg focus:ring-2 focus:ring-green-500"
+                      className={`w-full px-3 py-1.5 text-xs border border-green-300 bg-green-50/50 font-bold text-green-900 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls('Área Total (m²)')}`}
                     />
                   </div>
                 </div>
@@ -1499,7 +1510,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={vendedor.nome}
                     onChange={(e) => setVendedor({ ...vendedor, nome: e.target.value })}
                     placeholder="Ex: José Maria Figueira de Alencar"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls(`${vLabelUI}: Nome`)}`}
                   />
                 </div>
 
@@ -1515,6 +1526,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       })
                     }
                     label="Gênero"
+                    error={missingLabelsSet.has(`${vLabelUI}: Gênero`)}
                   />
                 </div>
 
@@ -1525,6 +1537,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     onChange={(val) => setVendedor({ ...vendedor, cpfCnpj: val })}
                     label="CPF"
                     placeholder="000.000.000-00"
+                    className={errCls(`${vLabelUI}: CPF`)}
                   />
                 </div>
 
@@ -1537,7 +1550,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={vendedor.nacionalidade}
                     onChange={(e) => setVendedor({ ...vendedor, nacionalidade: e.target.value })}
                     placeholder="brasileiro(a)"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls(`${vLabelUI}: Nacionalidade`)}`}
                   />
                 </div>
 
@@ -1546,6 +1559,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={vendedor.estadoCivil}
                     onChange={(val) => setVendedor({ ...vendedor, estadoCivil: val })}
                     genero={vendedor.genero || ''}
+                    error={missingLabelsSet.has(`${vLabelUI}: Estado Civil`)}
                   />
                 </div>
 
@@ -1556,6 +1570,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     onChange={(val) => setVendedor({ ...vendedor, rg: val })}
                     label="RG nº"
                     placeholder="Ex: 3456789"
+                    className={errCls(`${vLabelUI}: RG`)}
                   />
                 </div>
 
@@ -1568,7 +1583,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={vendedor.rgOrgao}
                     onChange={(e) => setVendedor({ ...vendedor, rgOrgao: e.target.value })}
                     placeholder="SSP/PA"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls(`${vLabelUI}: Órgão Emissor`)}`}
                   />
                 </div>
 
@@ -1579,6 +1594,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     onChange={(val) => setVendedor({ ...vendedor, telefone: val })}
                     label="Telefone / WhatsApp"
                     placeholder="(93) 99122-3344"
+                    className={errCls(`${vLabelUI}: Telefone`)}
                   />
                 </div>
 
@@ -1591,7 +1607,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={vendedor.endereco}
                     onChange={(e) => setVendedor({ ...vendedor, endereco: e.target.value })}
                     placeholder="Ex: Av. Mendonça Furtado"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls(`${vLabelUI}: Endereço`)}`}
                   />
                 </div>
 
@@ -1604,7 +1620,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={vendedor.numero}
                     onChange={(e) => setVendedor({ ...vendedor, numero: e.target.value })}
                     placeholder="1420"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls(`${vLabelUI}: Número`)}`}
                   />
                 </div>
 
@@ -1617,7 +1633,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={vendedor.bairro}
                     onChange={(e) => setVendedor({ ...vendedor, bairro: e.target.value })}
                     placeholder="Aldeia"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls(`${vLabelUI}: Bairro`)}`}
                   />
                 </div>
 
@@ -1640,7 +1656,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={vendedor.cidade}
                       onChange={(e) => setVendedor({ ...vendedor, cidade: e.target.value })}
                       placeholder="Santarém"
-                      className="w-2/3 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      className={`w-2/3 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls(`${vLabelUI}: Cidade`)}`}
                     />
                     <input
                       type="text"
@@ -1648,7 +1664,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       onChange={(e) => setVendedor({ ...vendedor, uf: e.target.value.toUpperCase() })}
                       placeholder="PA"
                       maxLength={2}
-                      className="w-1/3 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 uppercase"
+                      className={`w-1/3 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 uppercase ${errCls(`${vLabelUI}: UF`)}`}
                     />
                   </div>
                 </div>
@@ -1706,7 +1722,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={comprador.nome}
                     onChange={(e) => setComprador({ ...comprador, nome: e.target.value })}
                     placeholder="Ex: Cláudia Beatriz Menezes Silva"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 ${errCls(`${cLabelUI}: Nome`)}`}
                   />
                 </div>
 
@@ -1722,6 +1738,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       })
                     }
                     label="Gênero"
+                    error={missingLabelsSet.has(`${cLabelUI}: Gênero`)}
                   />
                 </div>
 
@@ -1732,6 +1749,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     onChange={(val) => setComprador({ ...comprador, cpfCnpj: val })}
                     label="CPF"
                     placeholder="000.000.000-00"
+                    className={errCls(`${cLabelUI}: CPF`)}
                   />
                 </div>
 
@@ -1745,7 +1763,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={comprador.creci || ''}
                       onChange={(e) => setComprador({ ...comprador, creci: e.target.value })}
                       placeholder="Ex: 1234-J"
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 ${errCls(`${cLabelUI}: CRECI`)}`}
                     />
                   </div>
                 )}
@@ -1759,7 +1777,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={comprador.nacionalidade}
                     onChange={(e) => setComprador({ ...comprador, nacionalidade: e.target.value })}
                     placeholder="brasileiro(a)"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 ${errCls(`${cLabelUI}: Nacionalidade`)}`}
                   />
                 </div>
 
@@ -1768,6 +1786,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={comprador.estadoCivil}
                     onChange={(val) => setComprador({ ...comprador, estadoCivil: val })}
                     genero={comprador.genero || ''}
+                    error={missingLabelsSet.has(`${cLabelUI}: Estado Civil`)}
                   />
                 </div>
 
@@ -1778,6 +1797,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     onChange={(val) => setComprador({ ...comprador, rg: val })}
                     label="RG nº"
                     placeholder="Ex: 4567890"
+                    className={errCls(`${cLabelUI}: RG`)}
                   />
                 </div>
 
@@ -1790,7 +1810,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={comprador.rgOrgao}
                     onChange={(e) => setComprador({ ...comprador, rgOrgao: e.target.value })}
                     placeholder="SSP/PA"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 ${errCls(`${cLabelUI}: Órgão Emissor`)}`}
                   />
                 </div>
 
@@ -1801,6 +1821,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     onChange={(val) => setComprador({ ...comprador, telefone: val })}
                     label="Telefone / WhatsApp"
                     placeholder="(93) 98400-5566"
+                    className={errCls(`${cLabelUI}: Telefone`)}
                   />
                 </div>
 
@@ -1812,6 +1833,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       onChange={(val) => setComprador({ ...comprador, telefone2: val })}
                       label="Telefone Secundário"
                       placeholder="(93) 98400-9999"
+                      className={errCls(`${cLabelUI}: Telefone Secundário`)}
                     />
                   </div>
                 )}
@@ -1825,7 +1847,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={comprador.endereco}
                     onChange={(e) => setComprador({ ...comprador, endereco: e.target.value })}
                     placeholder="Ex: Travessa dos Mártires"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 ${errCls(`${cLabelUI}: Endereço`)}`}
                   />
                 </div>
 
@@ -1838,7 +1860,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={comprador.numero}
                     onChange={(e) => setComprador({ ...comprador, numero: e.target.value })}
                     placeholder="580"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 ${errCls(`${cLabelUI}: Número`)}`}
                   />
                 </div>
 
@@ -1851,7 +1873,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     value={comprador.bairro}
                     onChange={(e) => setComprador({ ...comprador, bairro: e.target.value })}
                     placeholder="Centro"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 ${errCls(`${cLabelUI}: Bairro`)}`}
                   />
                 </div>
 
@@ -1874,7 +1896,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={comprador.cidade}
                       onChange={(e) => setComprador({ ...comprador, cidade: e.target.value })}
                       placeholder="Santarém"
-                      className="w-2/3 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                      className={`w-2/3 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 ${errCls(`${cLabelUI}: Cidade`)}`}
                     />
                     <input
                       type="text"
@@ -1882,7 +1904,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       onChange={(e) => setComprador({ ...comprador, uf: e.target.value.toUpperCase() })}
                       placeholder="PA"
                       maxLength={2}
-                      className="w-1/3 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 uppercase"
+                      className={`w-1/3 px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 uppercase ${errCls(`${cLabelUI}: UF`)}`}
                     />
                   </div>
                 </div>
@@ -1928,7 +1950,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     step="100"
                     value={valorTotal}
                     onChange={(e) => handleValorTotalChange(parseFloat(e.target.value) || 0)}
-                    className="w-full pl-9 pr-3 py-2 text-sm font-bold text-slate-900 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                    className={`w-full pl-9 pr-3 py-2 text-sm font-bold text-slate-900 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 ${errCls('Valor Total da Negociação')}`}
                   />
                 </div>
                 <span className="text-[11px] text-slate-500 mt-1 block">
@@ -1945,7 +1967,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   value={valorTotalExtenso}
                   onChange={(e) => setValorTotalExtenso(e.target.value)}
                   placeholder="cento e oitenta mil reais"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                  className={`w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 ${errCls('Valor por Extenso')}`}
                 />
                 <span className="text-[11px] text-slate-500 mt-1 block">
                   Formatado automaticamente em conformidade jurídica.
@@ -1965,7 +1987,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     <select
                       value={formaPagamentoVista}
                       onChange={(e) => setFormaPagamentoVista(e.target.value as any)}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white ${errCls('Forma de Pagamento')}`}
                     >
                       <option value="PIX">PIX</option>
                       <option value="Cartão">Cartão</option>
@@ -2000,7 +2022,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       onChange={(e) => setDetalhesPagamentoMesclado(e.target.value)}
                       placeholder="Ex: R$ 50.000,00 via PIX na assinatura + R$ 130.000,00 em dinheiro na entrega das chaves"
                       rows={2}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white ${errCls('Detalhes do Pagamento Mesclado')}`}
                     />
                   </div>
                 )}
@@ -2109,7 +2131,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       type="date"
                       value={dataInicioExcl}
                       onChange={(e) => setDataInicioExcl(e.target.value)}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white ${errCls('Data Início da Exclusividade')}`}
                     />
                   </div>
                   <div>
@@ -2194,7 +2216,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={cidadeForo}
                       onChange={(e) => setCidadeForo(e.target.value)}
                       placeholder="Santarém"
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg ${errCls('Cidade do Foro')}`}
                     />
                   </div>
                   <div>
@@ -2205,7 +2227,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       onChange={(e) => setUfForo(e.target.value.toUpperCase())}
                       placeholder="PA"
                       maxLength={2}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg uppercase"
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg uppercase ${errCls('UF do Foro')}`}
                     />
                   </div>
                 </div>
@@ -2229,7 +2251,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={cidadeAssinatura}
                       onChange={(e) => setCidadeAssinatura(e.target.value)}
                       placeholder="Santarém"
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg ${errCls('Cidade da Assinatura')}`}
                     />
                   </div>
                   <div>
@@ -2242,7 +2264,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       onChange={(e) => setUfAssinatura(e.target.value.toUpperCase())}
                       placeholder="PA"
                       maxLength={2}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg uppercase"
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg uppercase ${errCls('UF da Assinatura')}`}
                     />
                   </div>
                 </div>
@@ -2257,7 +2279,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={diaAssinatura}
                       onChange={(e) => setDiaAssinatura(e.target.value)}
                       placeholder="23"
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg ${errCls('Dia da Assinatura')}`}
                     />
                   </div>
                   <div>
@@ -2269,7 +2291,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={mesExtensoAssinatura}
                       onChange={(e) => setMesExtensoAssinatura(e.target.value)}
                       placeholder="agosto"
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg ${errCls('Mês da Assinatura')}`}
                     />
                   </div>
                   <div>
@@ -2281,7 +2303,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={anoAssinatura}
                       onChange={(e) => setAnoAssinatura(e.target.value)}
                       placeholder="2026"
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg ${errCls('Ano da Assinatura')}`}
                     />
                   </div>
                 </div>
