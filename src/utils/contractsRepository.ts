@@ -130,6 +130,7 @@ export async function fetchContracts(): Promise<ContractData[]> {
     supabase
       .from('contracts')
       .select('*')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
   );
 
@@ -214,7 +215,57 @@ export async function saveContract(contract: ContractData): Promise<ContractData
   return persisted;
 }
 
+// ============================================================
+// Lixeira: exclusão só marca deleted_at (soft-delete). O contrato some
+// da lista normal (fetchContracts já filtra deleted_at IS NULL), mas
+// continua recuperável por até 30 dias - depois disso, o expurgo
+// automático (purge_expired_trashed_contracts, agendado via pg_cron e
+// também disparado de forma preguiçosa em fetchTrashedContracts) apaga
+// definitivamente.
+// ============================================================
+
 export async function deleteContract(contractId: string): Promise<void> {
+  await getSession();
+  const { error } = await withRetry(() =>
+    supabase.from('contracts').update({ deleted_at: new Date().toISOString() }).eq('id', contractId)
+  );
+  if (error) throw error;
+}
+
+export interface TrashedContract {
+  contract: ContractData;
+  deletedAt: string;
+}
+
+export async function fetchTrashedContracts(): Promise<TrashedContract[]> {
+  await getSession();
+
+  // Expurgo preguiçoso: aproveita a visita à lixeira pra descartar de
+  // vez o que já passou de 30 dias. Não é problema se isso falhar (ex:
+  // função ainda não existe no banco) - só não limpa dessa vez.
+  try {
+    await supabase.rpc('purge_expired_trashed_contracts');
+  } catch {
+    // segue mesmo assim
+  }
+
+  const { data, error } = await withRetry(() =>
+    supabase.from('contracts').select('*').not('deleted_at', 'is', null).order('deleted_at', { ascending: false })
+  );
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({ contract: fromRow(row), deletedAt: row.deleted_at }));
+}
+
+export async function restoreContract(contractId: string): Promise<void> {
+  await getSession();
+  const { error } = await withRetry(() =>
+    supabase.from('contracts').update({ deleted_at: null }).eq('id', contractId)
+  );
+  if (error) throw error;
+}
+
+export async function permanentlyDeleteContract(contractId: string): Promise<void> {
   await getSession();
   const { error } = await withRetry(() => supabase.from('contracts').delete().eq('id', contractId));
   if (error) throw error;

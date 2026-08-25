@@ -11,6 +11,7 @@ import {
 import { renderContractDocumentHtml, renderContractDocumentPdf, renderContractDocumentPlainText } from '../utils/renderContractFromDocx';
 import { getSignedDocumentUrl, saveClientSignedPdfToSupabase } from '../utils/contractDocumentsStorage';
 import { buildPdfFileName } from '../utils/pdfFileName';
+import { startSimulatedPdfProgress } from '../utils/pdfProgressSimulator';
 import { sha256Hex, getClientIpAddress } from '../utils/signatureOtpUtils';
 
 export const SignatureLink: React.FC = () => {
@@ -226,35 +227,10 @@ export const SignatureLink: React.FC = () => {
         // PDF gerado na hora a partir dos dados do contrato.
       }
 
-      // Mesma simulação de progresso do botão do corretor (ContractViewer) -
-      // a lib de geração de PDF não expõe eventos reais de andamento, então
-      // simulamos em 10 degraus mais graduais ao longo de ~5s, só fechando
-      // em 100% quando a geração de fato terminar.
-      let cancelado = false;
-      const avancarProgressoSimulado = async () => {
-        const degraus = [
-          { alvo: 15, base: 500 },
-          { alvo: 28, base: 500 },
-          { alvo: 40, base: 500 },
-          { alvo: 52, base: 500 },
-          { alvo: 63, base: 500 },
-          { alvo: 73, base: 500 },
-          { alvo: 82, base: 500 },
-          { alvo: 90, base: 500 },
-          { alvo: 96, base: 500 },
-          { alvo: 99, base: 500 },
-        ];
-        for (const { alvo, base } of degraus) {
-          const variacao = base * (0.8 + Math.random() * 0.4);
-          await new Promise((r) => setTimeout(r, variacao));
-          if (cancelado) return;
-          setDownloadProgress(alvo);
-        }
-      };
-      avancarProgressoSimulado();
+      const cancelarProgresso = startSimulatedPdfProgress(setDownloadProgress);
 
       const pdfBlob = await renderContractDocumentPdf(contract);
-      cancelado = true;
+      cancelarProgresso();
       setDownloadProgress(100);
       await new Promise((r) => setTimeout(r, 300));
 
@@ -263,7 +239,7 @@ export const SignatureLink: React.FC = () => {
       a.href = url;
       const nomeClientePdf =
         (contract.tipo === 'exclusividade' ? contract.vendedor?.nome : contract.comprador?.nome) ||
-        contract.nomeLote ||
+        contract.imovel?.nomeEmpreendimento ||
         'documento';
       a.download = buildPdfFileName(nomeClientePdf);
       document.body.appendChild(a);

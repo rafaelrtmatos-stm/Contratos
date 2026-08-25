@@ -11,6 +11,7 @@ import {
   Settings2,
   Sliders,
   FileText,
+  Trash2,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -20,6 +21,7 @@ interface NavbarProps {
   onOpenTemplateManager?: () => void;
   onOpenSettings?: () => void;
   onOpenWordTemplates?: () => void;
+  onOpenTrash?: () => void;
   contractCount: number;
   onSignOut?: () => void;
 }
@@ -31,6 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenTemplateManager,
   onOpenSettings,
   onOpenWordTemplates,
+  onOpenTrash,
   contractCount,
   onSignOut,
 }) => {
@@ -91,6 +94,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Gerenciar Templates Padrão do Supabase"
             >
               <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+
+            {/* Botão da Lixeira - escondido no mobile pra caber Sair/Novo (fica no menu "Novo" lá embaixo) */}
+            <button
+              onClick={onOpenTrash}
+              className="hidden sm:flex p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer items-center justify-center hover:border-slate-700"
+              title="Lixeira (contratos excluídos - restauráveis por 30 dias)"
+            >
+              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             {/* Botão de Configurações */}
@@ -193,6 +205,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                         >
                           <Settings2 className="w-4 h-4 text-yellow-600 shrink-0" />
                           <span>Gerenciar Modelos (Bucket)</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {onOpenTrash && (
+                      <div className="sm:hidden">
+                        <button
+                          onClick={() => {
+                            setIsNewMenuOpen(false);
+                            onOpenTrash();
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-yellow-50 hover:text-yellow-900 rounded-xl transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4 text-yellow-600 shrink-0" />
+                          <span>Lixeira</span>
                         </button>
                       </div>
                     )}

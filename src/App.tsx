@@ -10,11 +10,11 @@ import { AuditStamp } from './utils/signatureOtpUtils';
 
 import { TemplateManagerModal } from './components/TemplateManagerModal';
 import { WordTemplateModal } from './components/WordTemplateModal';
+import { TrashModal } from './components/TrashModal';
 import { SettingsPanel } from './components/SettingsPanel';
 import { LoginScreen } from './components/LoginScreen';
 import { AuthProvider, useAuth } from './utils/authContext';
 import { fetchContracts, saveContract, deleteContract, saveSignature } from './utils/contractsRepository';
-import { deleteContractDocuments } from './utils/contractDocumentsStorage';
 import { SignatureLink } from './pages/SignatureLink';
 import { ValidatePage } from './pages/ValidatePage';
 
@@ -70,6 +70,7 @@ function MainApp() {
   // Modal de gestão de templates
   const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
   const [isWordTemplateModalOpen, setIsWordTemplateModalOpen] = useState(false);
+  const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
 
   // Modal de assinatura rápida acionada diretamente pelo dashboard
@@ -188,10 +189,11 @@ function MainApp() {
 
   const handleDeleteContract = async (contractId: string) => {
     try {
+      // Agora é soft-delete (fica na Lixeira por 30 dias, restaurável) -
+      // por isso os arquivos do Storage (docx/pdf) NÃO são apagados aqui.
+      // Eles só são removidos de fato quando o contrato é excluído
+      // definitivamente (na Lixeira) ou expurgado automaticamente.
       await deleteContract(contractId);
-      // Apaga também os arquivos do contrato no Storage (docx do corretor
-      // e PDF do cliente), pra não deixar arquivo órfão no bucket.
-      await deleteContractDocuments(contractId);
       setContracts((prev) => prev.filter((c) => c.id !== contractId));
       if (selectedContract?.id === contractId) {
         setSelectedContract(null);
@@ -203,11 +205,17 @@ function MainApp() {
     }
   };
 
+  const handleContractRestored = (contract: ContractData) => {
+    setContracts((prev) => (prev.some((c) => c.id === contract.id) ? prev : [contract, ...prev]));
+  };
+
   const handleDeleteAllContracts = async () => {
     try {
+      // Mesma lógica do delete individual: agora é soft-delete, então vai
+      // tudo pra Lixeira (restaurável por 30 dias) em vez de apagar os
+      // arquivos na hora.
       for (const contract of contracts) {
         await deleteContract(contract.id);
-        await deleteContractDocuments(contract.id);
       }
       setContracts([]);
       setSelectedContract(null);
@@ -298,6 +306,7 @@ function MainApp() {
         onOpenTemplateManager={() => setIsTemplateManagerOpen(true)}
         onOpenSettings={() => setIsSettingsPanelOpen(true)}
         onOpenWordTemplates={() => setIsWordTemplateModalOpen(true)}
+        onOpenTrash={() => setIsTrashModalOpen(true)}
         contractCount={contracts.length}
         onSignOut={signOut}
       />
@@ -378,6 +387,15 @@ function MainApp() {
         <WordTemplateModal
           isOpen={isWordTemplateModalOpen}
           onClose={() => setIsWordTemplateModalOpen(false)}
+        />
+      )}
+
+      {/* Lixeira - contratos excluídos, restauráveis por 30 dias */}
+      {isTrashModalOpen && (
+        <TrashModal
+          isOpen={isTrashModalOpen}
+          onClose={() => setIsTrashModalOpen(false)}
+          onContractRestored={handleContractRestored}
         />
       )}
 

@@ -26,6 +26,7 @@ import {
 } from '../utils/dataTagsProcessor';
 import { saveContractDocumentToSupabase } from '../utils/contractDocumentsStorage';
 import { buildPdfFileName } from '../utils/pdfFileName';
+import { startSimulatedPdfProgress } from '../utils/pdfProgressSimulator';
 import { saveSignature, fetchSignatures } from '../utils/contractsRepository';
 import { supabase } from '../utils/supabaseClient';
 import { AuditStamp, formatAuditStampText } from '../utils/signatureOtpUtils';
@@ -218,37 +219,11 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
     setIsDownloadingPdf(true);
     setPdfProgress(0);
 
-    // Não existe progresso real do gerador de PDF (a lib não expõe eventos
-    // de andamento), então simulamos em 10 degraus mais graduais ao longo
-    // de ~5s (com pequena variação), e só fecha em 100% quando a geração
-    // de fato terminar - assim a barra nunca "mente" dizendo que já
-    // acabou antes da hora, mas também sobe de forma mais suave/contínua.
-    let cancelado = false;
-    const avancarProgressoSimulado = async () => {
-      const degraus = [
-        { alvo: 15, base: 500 },
-        { alvo: 28, base: 500 },
-        { alvo: 40, base: 500 },
-        { alvo: 52, base: 500 },
-        { alvo: 63, base: 500 },
-        { alvo: 73, base: 500 },
-        { alvo: 82, base: 500 },
-        { alvo: 90, base: 500 },
-        { alvo: 96, base: 500 },
-        { alvo: 99, base: 500 },
-      ];
-      for (const { alvo, base } of degraus) {
-        const variacao = base * (0.8 + Math.random() * 0.4); // ±20%
-        await new Promise((r) => setTimeout(r, variacao));
-        if (cancelado) return;
-        setPdfProgress(alvo);
-      }
-    };
-    avancarProgressoSimulado();
+    const cancelarProgresso = startSimulatedPdfProgress(setPdfProgress);
 
     try {
       const pdfBlob = await renderContractDocumentPdf(contract);
-      cancelado = true;
+      cancelarProgresso();
       setPdfProgress(100);
       // deixa o 100% visível brevemente antes de fechar a barra
       await new Promise((r) => setTimeout(r, 300));
@@ -256,7 +231,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      const nomeClientePdf = (isExcl ? contract.vendedor?.nome : contract.comprador?.nome) || contract.nomeLote || 'documento';
+      const nomeClientePdf = (isExcl ? contract.vendedor?.nome : contract.comprador?.nome) || contract.imovel?.nomeEmpreendimento || 'documento';
       a.download = buildPdfFileName(nomeClientePdf);
       document.body.appendChild(a);
       a.click();
@@ -265,7 +240,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
     } catch (err) {
       console.error('Erro ao gerar PDF:', err);
     } finally {
-      cancelado = true;
+      cancelarProgresso();
       setIsDownloadingPdf(false);
       setPdfProgress(0);
     }
@@ -464,7 +439,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       const docxComDados = await substituirTagsNoDocx(docxComSelos, tagsContrato);
 
       // 4. Fazer download + salvar no Supabase
-      const nomeClienteArquivo = dadosCliente.nome || contract.nomeLote || 'contrato';
+      const nomeClienteArquivo = dadosCliente.nome || contract.imovel?.nomeEmpreendimento || 'contrato';
       const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
       const nomeArquivo = `${slugifyNomeArquivo(nomeClienteArquivo)}_${dataArquivo}.docx`;
       await realizarDownloadESalvar(docxComDados, nomeArquivo);

@@ -7,6 +7,7 @@ import {
 } from '../utils/contractGenerators';
 import { renderContractDocumentPdf } from '../utils/renderContractFromDocx';
 import { buildPdfFileName } from '../utils/pdfFileName';
+import { startSimulatedPdfProgress } from '../utils/pdfProgressSimulator';
 import {
   downloadDocxContract,
 } from '../utils/docxProcessor';
@@ -96,16 +97,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
   // Baixar PDF direto da lista/card do contrato - gerado a partir do
   // .docx real (mesma fonte do botão Word), não mais um texto à parte.
   const [downloadingPdfId, setDownloadingPdfId] = useState<string | null>(null);
+  const [downloadPdfProgress, setDownloadPdfProgress] = useState(0);
   const handleDownloadPdfDashboard = async (contract: ContractData) => {
     setDownloadingPdfId(contract.id);
+    setDownloadPdfProgress(0);
+    const cancelarProgresso = startSimulatedPdfProgress(setDownloadPdfProgress);
     try {
       const pdfBlob = await renderContractDocumentPdf(contract);
+      cancelarProgresso();
+      setDownloadPdfProgress(100);
+      await new Promise((r) => setTimeout(r, 300));
+
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
       const nomeClientePdf =
         (contract.tipo === 'exclusividade' ? contract.vendedor?.nome : contract.comprador?.nome) ||
-        contract.nomeLote ||
+        contract.imovel?.nomeEmpreendimento ||
         'documento';
       a.download = buildPdfFileName(nomeClientePdf);
       document.body.appendChild(a);
@@ -115,7 +123,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
     } catch (err) {
       console.error('Erro ao gerar PDF:', err);
     } finally {
+      cancelarProgresso();
       setDownloadingPdfId(null);
+      setDownloadPdfProgress(0);
     }
   };
 
@@ -815,7 +825,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         title="Baixar PDF"
                       >
                         <FileText className="w-4 h-4 text-slate-700" />
-                        <span>{downloadingPdfId === contract.id ? '...' : 'PDF'}</span>
+                        <span>{downloadingPdfId === contract.id ? `${downloadPdfProgress}%` : 'PDF'}</span>
                       </button>
 
                       {isFullySigned ? (
@@ -980,10 +990,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             <button
                               onClick={() => handleDownloadPdfDashboard(contract)}
                               disabled={downloadingPdfId === contract.id}
-                              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-60 rounded-xl transition-colors cursor-pointer"
+                              className="p-2 min-w-[32px] text-slate-600 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-60 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
                               title="Baixar PDF (.pdf)"
                             >
-                              <FileText className="w-4 h-4" />
+                              {downloadingPdfId === contract.id ? (
+                                <span className="text-[10px] font-bold tabular-nums">{downloadPdfProgress}%</span>
+                              ) : (
+                                <FileText className="w-4 h-4" />
+                              )}
                             </button>
 
                             {!isFullySigned && (

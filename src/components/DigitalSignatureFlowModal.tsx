@@ -98,7 +98,7 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
       a.href = url;
       const nomeClientePdf =
         (contract.tipo === 'exclusividade' ? contract.vendedor?.nome : contract.comprador?.nome) ||
-        contract.nomeLote ||
+        contract.imovel?.nomeEmpreendimento ||
         'documento';
       a.download = buildPdfFileName(nomeClientePdf);
       document.body.appendChild(a);
