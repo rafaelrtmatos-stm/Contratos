@@ -63,8 +63,8 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-md w-full shadow-2xl">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-neutral-200">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 p-4">
           <h3 className="font-bold text-slate-900">Confirmar Assinatura Digital</h3>

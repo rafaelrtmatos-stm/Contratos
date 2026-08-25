@@ -22,16 +22,16 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8 border border-slate-200">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8 border border-neutral-200">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center p-1.5 shadow-md mb-3">
-            <div className="w-full h-full rounded-xl bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 flex items-center justify-center text-slate-950 font-bold shadow-xs">
-              <FileSignature className="w-6 h-6 stroke-[2.2]" />
+          <div className="w-14 h-14 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-center p-1.5 shadow-md mb-3">
+            <div className="w-full h-full rounded-xl bg-gradient-to-br from-[#f5e283] via-[#dfb739] to-[#b8860b] flex items-center justify-center text-[#171202] font-bold shadow-xs">
+              <FileSignature className="w-6 h-6 stroke-[2.2] text-[#171202]" />
             </div>
           </div>
-          <h1 className="font-extrabold text-2xl text-slate-950 tracking-tight">Contratos</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Acesse sua conta para continuar</p>
+          <h1 className="font-extrabold text-2xl text-neutral-950 tracking-tight">Contratos</h1>
+          <p className="text-xs text-neutral-500 mt-0.5">Acesse sua conta para continuar</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

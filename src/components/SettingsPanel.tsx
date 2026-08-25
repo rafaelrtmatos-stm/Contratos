@@ -253,17 +253,17 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-blue-50 to-slate-50 border-b border-slate-200 p-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-neutral-50 border-b border-neutral-200 p-6 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">⚙ Configurações</h2>
-            <p className="text-xs text-slate-600 mt-1">Backup, exportação e gerenciamento de dados</p>
+            <h2 className="text-xl font-bold text-neutral-900">⚙ Configurações</h2>
+            <p className="text-xs text-neutral-600 mt-1">Backup, exportação e gerenciamento de dados</p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+            className="p-1.5 text-neutral-400 hover:text-neutral-600 rounded-lg hover:bg-neutral-100 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>

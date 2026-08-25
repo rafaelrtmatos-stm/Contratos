@@ -8,7 +8,6 @@ import { ContractViewer } from './components/ContractViewer';
 import { DigitalSignatureFlowModal } from './components/DigitalSignatureFlowModal';
 import { AuditStamp } from './utils/signatureOtpUtils';
 
-import { TemplateManagerModal } from './components/TemplateManagerModal';
 import { WordTemplateModal } from './components/WordTemplateModal';
 import { TrashModal } from './components/TrashModal';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -44,7 +43,7 @@ function AuthGate() {
 
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-slate-400 text-sm">
+      <div className="min-h-screen bg-black flex items-center justify-center text-neutral-400 text-sm">
         Carregando...
       </div>
     );
@@ -67,8 +66,7 @@ function MainApp() {
   const [selectedContract, setSelectedContract] = useState<ContractData | null>(null);
   const [formDefaultType, setFormDefaultType] = useState<ContractType>('venda_vista');
   
-  // Modal de gestão de templates
-  const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
+  // Modal de gestão de templates Word (.docx) e nuvem
   const [isWordTemplateModalOpen, setIsWordTemplateModalOpen] = useState(false);
   const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
@@ -302,13 +300,13 @@ function MainApp() {
           setCurrentView('dashboard');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
-        onNewContract={handleCreateNewContract}
-        onOpenTemplateManager={() => setIsTemplateManagerOpen(true)}
         onOpenSettings={() => setIsSettingsPanelOpen(true)}
         onOpenWordTemplates={() => setIsWordTemplateModalOpen(true)}
         onOpenTrash={() => setIsTrashModalOpen(true)}
         contractCount={contracts.length}
         onSignOut={signOut}
+        userEmail={profile?.email}
+        userName={profile?.nome}
       />
 
       {/* Conteúdo Principal */}
@@ -374,15 +372,7 @@ function MainApp() {
         )}
       </main>
 
-      {/* Modal de Gestão de Templates (Padrões do Supabase) */}
-      {isTemplateManagerOpen && (
-        <TemplateManagerModal
-          isOpen={isTemplateManagerOpen}
-          onClose={() => setIsTemplateManagerOpen(false)}
-        />
-      )}
-
-      {/* Modal de Gerenciamento de Modelos Word (.docx) */}
+      {/* Modal Unificado de Modelos Contratuais Word (.docx) & Nuvem */}
       {isWordTemplateModalOpen && (
         <WordTemplateModal
           isOpen={isWordTemplateModalOpen}

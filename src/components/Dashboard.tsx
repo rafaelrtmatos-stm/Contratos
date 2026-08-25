@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ContractData, ContractType } from '../types/contract';
 import {
   formatCurrency,
@@ -45,6 +45,12 @@ import {
   FileCheck,
   Check,
   Car,
+  CheckCircle2,
+  ArrowUpDown,
+  UserCheck,
+  Clock3,
+  AlertCircle,
+  CalendarRange,
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -53,6 +59,7 @@ interface DashboardProps {
   onNewContract: (type?: ContractType) => void;
   onDeleteContract: (contractId: string) => void;
   onSignContractDirect: (contract: ContractData) => void;
+  onOpenWordTemplates?: () => void;
 }
 
 /** Indica se a parte (vendedor/contratante ou comprador/contratado) já assinou o contrato. */
@@ -124,13 +131,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onNewContract,
   onDeleteContract,
   onSignContractDirect,
+  onOpenWordTemplates,
 }) => {
   // Filtros principais
   const [selectedCategory, setSelectedCategory] = useState<ContractType | 'todos'>('todos');
+  const [statusFilter, setStatusFilter] = useState<'todos' | 'assinados' | 'pendentes'>('todos');
+  const [sortBy, setSortBy] = useState<'recentes' | 'antigos' | 'valor_maior' | 'valor_menor'>('recentes');
   const [searchTerm, setSearchTerm] = useState('');
   const [timeFilter, setTimeFilter] = useState<'este_mes' | 'ultimos_30' | 'este_ano' | 'todos'>('este_mes');
   const [isTimeFilterOpen, setIsTimeFilterOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'inicio' | 'contratos' | 'vendas' | 'monitor'>('inicio');
+  const [exclusivityFilter, setExclusivityFilter] = useState<'todos' | 'ativos' | 'alerta' | 'vencidos'>('todos');
 
   // Modais de Ações Rápidas
   const [isClientsModalOpen, setIsClientsModalOpen] = useState(false);
@@ -229,26 +240,82 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return status.status === 'ativo' || status.status === 'alerta';
   });
 
+  const activeOnlyExclusivities = exclusivityContracts.filter((c) => {
+    const status = getExclusivityStatus(c);
+    return status.status === 'ativo';
+  });
+
   const expiringExclusivities = exclusivityContracts.filter(
     (c) => getExclusivityStatus(c).status === 'alerta'
   );
 
-  // Filtragem dos Contratos
-  const filteredContracts = contracts.filter((c) => {
-    if (selectedCategory !== 'todos' && c.tipo !== selectedCategory) return false;
+  const expiredExclusivities = exclusivityContracts.filter(
+    (c) => getExclusivityStatus(c).status === 'vencido'
+  );
 
-    if (searchTerm.trim()) {
-      const q = searchTerm.toLowerCase();
-      const matchTitle = c.titulo.toLowerCase().includes(q);
-      const matchDocNum = c.numeroContrato.toLowerCase().includes(q);
-      const matchVendedor = (c.vendedor?.nome || '').toLowerCase().includes(q) || (c.vendedor?.cpfCnpj || '').includes(q);
-      const matchComprador = (c.comprador?.nome || '').toLowerCase().includes(q) || (c.comprador?.cpfCnpj || '').includes(q);
-      const matchObjeto = (c.objetoDescricao || '').toLowerCase().includes(q) || (c.imovel?.nomeEmpreendimento || '').toLowerCase().includes(q);
-      return matchTitle || matchDocNum || matchVendedor || matchComprador || matchObjeto;
-    }
+  const totalComissaoExclusividades = exclusivityContracts.reduce((acc, c) => {
+    const comissao = c.exclusividade?.valorComissaoEstimado || ((c.valorTotal || 0) * (c.exclusividade?.percentualComissao || 6)) / 100;
+    return acc + comissao;
+  }, 0);
 
-    return true;
-  });
+  const filteredExclusivityContracts = useMemo(() => {
+    return exclusivityContracts.filter((c) => {
+      const statusInfo = getExclusivityStatus(c);
+      if (exclusivityFilter === 'ativos') return statusInfo.status === 'ativo';
+      if (exclusivityFilter === 'alerta') return statusInfo.status === 'alerta';
+      if (exclusivityFilter === 'vencidos') return statusInfo.status === 'vencido';
+      return true;
+    });
+  }, [exclusivityContracts, exclusivityFilter]);
+
+  // Filtragem e Ordenação dos Contratos
+  const filteredContracts = useMemo(() => {
+    let result = contracts.filter((c) => {
+      // Filtro de Categoria
+      if (selectedCategory !== 'todos' && c.tipo !== selectedCategory) return false;
+
+      // Filtro de Status de Assinatura
+      if (statusFilter === 'assinados') {
+        const isSigned = c.status === 'assinado_total' || (c.tipo === 'venda_vista' && (c.assinaturas?.length || 0) >= 2);
+        if (!isSigned) return false;
+      } else if (statusFilter === 'pendentes') {
+        const isSigned = c.status === 'assinado_total' || (c.tipo === 'venda_vista' && (c.assinaturas?.length || 0) >= 2);
+        if (isSigned) return false;
+      }
+
+      // Busca textual
+      if (searchTerm.trim()) {
+        const q = searchTerm.toLowerCase();
+        const matchTitle = (c.titulo || '').toLowerCase().includes(q);
+        const matchDocNum = (c.numeroContrato || '').toLowerCase().includes(q);
+        const matchVendedor = (c.vendedor?.nome || '').toLowerCase().includes(q) || (c.vendedor?.cpfCnpj || '').includes(q);
+        const matchComprador = (c.comprador?.nome || '').toLowerCase().includes(q) || (c.comprador?.cpfCnpj || '').includes(q);
+        const matchObjeto = (c.objetoDescricao || '').toLowerCase().includes(q) || (c.imovel?.nomeEmpreendimento || '').toLowerCase().includes(q);
+        return matchTitle || matchDocNum || matchVendedor || matchComprador || matchObjeto;
+      }
+
+      return true;
+    });
+
+    // Ordenação
+    result.sort((a, b) => {
+      if (sortBy === 'recentes') {
+        return new Date(b.dataCriacao || 0).getTime() - new Date(a.dataCriacao || 0).getTime();
+      }
+      if (sortBy === 'antigos') {
+        return new Date(a.dataCriacao || 0).getTime() - new Date(b.dataCriacao || 0).getTime();
+      }
+      if (sortBy === 'valor_maior') {
+        return (b.valorTotal || 0) - (a.valorTotal || 0);
+      }
+      if (sortBy === 'valor_menor') {
+        return (a.valorTotal || 0) - (b.valorTotal || 0);
+      }
+      return 0;
+    });
+
+    return result;
+  }, [contracts, selectedCategory, statusFilter, searchTerm, sortBy]);
 
   const timeFilterLabels: Record<string, string> = {
     este_mes: 'Este mês',
@@ -264,8 +331,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
+  const scrollToExclusivity = () => {
+    const elem = document.getElementById('exclusivity-monitor-section');
+    if (elem) {
+      elem.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      scrollToContracts();
+    }
+  };
+
   return (
-    <div className="space-y-5 sm:space-y-6 pb-24 md:pb-12 max-w-7xl mx-auto mobile-safe-content-bottom">
+    <div className="space-y-5 sm:space-y-6 pb-12 max-w-7xl mx-auto">
       {/* 1. CARD PRINCIPAL (PAINEL PRINCIPAL) */}
       <section className="bg-white rounded-[2rem] p-6 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
@@ -327,7 +403,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </section>
 
-      {/* 2. TRÊS AÇÕES PRINCIPAIS (EMPILHADOS VERTICALMENTE) */}
+      {/* TRÊS AÇÕES PRINCIPAIS DE CRIAÇÃO (DIRETAS E VISÍVEIS) */}
       <section className="space-y-3.5 sm:space-y-4">
         {/* Card 1: Venda à Vista - Amarelo Ouro com Efeito Dourado */}
         <div
@@ -342,11 +418,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <Home className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
             </div>
             <div className="min-w-0 text-left">
-              <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-950 leading-snug">
-                Venda à Vista
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-950 leading-snug">
+                  Iniciar Venda à Vista
+                </h2>
+                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-slate-950 text-yellow-400 text-[10px] font-bold">
+                  Quitação Imediata
+                </span>
+              </div>
               <p className="text-slate-900/90 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
-                Contratos à vista para Imóveis e Outros Bens (veículos, etc.)
+                Contratos à vista para Imóveis e Outros Bens (veículos, embarcações, etc.)
               </p>
             </div>
           </div>
@@ -370,11 +451,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <CalendarDays className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
             </div>
             <div className="min-w-0 text-left">
-              <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-snug">
-                Venda Parcelada
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-snug">
+                  Iniciar Venda Parcelada
+                </h2>
+                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold border border-slate-700">
+                  Reserva de Domínio
+                </span>
+              </div>
               <p className="text-slate-300 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
-                Contratos parcelados com reserva de domínio (Imóveis e Bens Móveis)
+                Contratos parcelados com reserva de domínio e cronograma de parcelas
               </p>
             </div>
           </div>
@@ -398,11 +484,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
             </div>
             <div className="min-w-0 text-left">
-              <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-snug">
-                Exclusividade
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-snug">
+                  Contrato de Exclusividade
+                </h2>
+                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-yellow-400/20 text-yellow-300 text-[10px] font-bold border border-yellow-400/40">
+                  Corretor & Prazos
+                </span>
+              </div>
               <p className="text-slate-300 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
-                Crie contratos de exclusividade com corretor e gerencie prazos de vigência.
+                Autorização de venda com exclusividade e controle automático de vigência.
               </p>
             </div>
           </div>
@@ -517,15 +608,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* 3. Prazos de Exclusividade */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-700 flex items-center justify-center shrink-0 border border-yellow-200">
+            <div
+              onClick={scrollToExclusivity}
+              className="flex items-center gap-3 cursor-pointer hover:opacity-80 active:scale-95 transition-all group"
+              title="Ver Monitor de Prazos de Exclusividade"
+              role="button"
+            >
+              <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-700 flex items-center justify-center shrink-0 border border-yellow-200 group-hover:scale-105 transition-transform">
                 <Clock className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-lg font-extrabold text-slate-950 leading-tight">
-                  {activeExclusivities.length}
+                <div className="text-lg font-extrabold text-slate-950 leading-tight flex items-center gap-1.5">
+                  <span>{exclusivityContracts.length}</span>
+                  {expiringExclusivities.length > 0 && (
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" title="Existem contratos vencendo em até 15 dias" />
+                  )}
                 </div>
-                <div className="text-xs text-slate-500 font-medium leading-tight">
+                <div className="text-xs text-slate-500 font-medium leading-tight group-hover:text-yellow-700 transition-colors">
                   Prazos de Exclusividade
                 </div>
               </div>
@@ -555,7 +654,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           AÇÕES RÁPIDAS
         </span>
 
-        <div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3.5">
           {/* Card 1: Meus Contratos */}
           <button
             onClick={scrollToContracts}
@@ -607,376 +706,924 @@ export const Dashboard: React.FC<DashboardProps> = ({
               Relatórios
             </span>
           </button>
+
+          {/* Card 5: Modelos Word */}
+          {onOpenWordTemplates && (
+            <button
+              onClick={onOpenWordTemplates}
+              className="bg-white hover:bg-slate-50 active:scale-95 border border-slate-200 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center gap-2 text-center shadow-xs transition-all cursor-pointer min-h-[82px] sm:min-h-[96px] group col-span-2 sm:col-span-1"
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 text-slate-950 flex items-center justify-center group-hover:scale-105 transition-transform font-bold shadow-xs">
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <span className="text-[11px] sm:text-xs font-bold text-slate-800 leading-tight">
+                Modelos Word
+              </span>
+            </button>
+          )}
         </div>
       </section>
 
-      {/* 5. MONITOR DE PRAZOS DE EXCLUSIVIDADE (SEÇÃO EXPANSÍVEL/EM DESTAQUE) */}
+      {/* 5. MONITOR DE PRAZOS DE EXCLUSIVIDADE (REDESIGN MODERNO, ERGONÔMICO & MOBILE-FIRST) */}
       {exclusivityContracts.length > 0 && (
-        <section className="bg-white rounded-[1.75rem] border border-slate-100 shadow-sm p-5 sm:p-6 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+        <section
+          id="exclusivity-monitor-section"
+          className="bg-white rounded-[1.75rem] border border-slate-200 shadow-sm p-4 sm:p-6 space-y-4 sm:space-y-5"
+        >
+          {/* Cabeçalho do Monitor */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold">
-                <Clock className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold border border-amber-200 shrink-0 shadow-xs">
+                <Clock3 className="w-5 h-5 stroke-[2.3]" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-slate-900">
-                  Monitor de Prazos de Exclusividade ({activeExclusivities.length} ativos)
-                </h3>
-                <p className="text-xs text-slate-500 font-normal">
-                  Acompanhe a vigência dos contratos de exclusividade e alertas de vencimento.
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base sm:text-lg font-extrabold text-slate-950 tracking-tight">
+                    Monitor de Prazos de Exclusividade
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-xs font-extrabold border border-amber-200">
+                    {exclusivityContracts.length} {exclusivityContracts.length === 1 ? 'contrato' : 'contratos'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-normal mt-0.5">
+                  Controle de vigência em tempo real, contagem regressiva de prazos e comissões estimadas.
                 </p>
               </div>
             </div>
 
-            {expiringExclusivities.length > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 border border-yellow-300 text-yellow-900 rounded-lg sm:rounded-full text-xs font-bold">
-                <AlertTriangle className="w-3.5 h-3.5 text-yellow-600 shrink-0" />
-                <span>{expiringExclusivities.length} contrato(s) vencendo em até 15 dias!</span>
-              </div>
-            )}
+            <button
+              onClick={() => onNewContract('exclusividade')}
+              className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl btn-gold text-slate-950 text-xs font-extrabold shadow-xs hover:shadow-md active:scale-95 transition-all cursor-pointer self-start sm:self-auto shrink-0"
+              title="Novo Contrato de Exclusividade"
+            >
+              <Plus className="w-4 h-4 stroke-[2.8]" />
+              <span>Nova Exclusividade</span>
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {exclusivityContracts.map((contract) => {
-              const statusInfo = getExclusivityStatus(contract);
-              const ex = contract.exclusividade;
-
-              return (
-                <div
-                  key={contract.id}
-                  className="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-all space-y-3"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <span className="text-[10px] font-mono text-slate-500 block">
-                        {contract.numeroContrato}
-                      </span>
-                      <h4 className="font-bold text-sm text-slate-900 line-clamp-1">
-                        {contract.titulo}
-                      </h4>
-                      <p className="text-xs text-slate-600 line-clamp-1 mt-0.5">
-                        Proprietário: {contract.vendedor.nome}
-                      </p>
-                    </div>
-
-                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg sm:rounded-full border ${statusInfo.badgeColor}`}>
-                      {statusInfo.label}
-                    </span>
-                  </div>
-
-                  {/* Barra de Progresso do Prazo */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[11px] text-slate-500">
-                      <span>Início: {formatDate(ex?.dataInicio || '')}</span>
-                      <span>Término: {formatDate(ex?.dataTermino || '')}</span>
-                    </div>
-                    <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          statusInfo.status === 'vencido'
-                            ? 'bg-rose-500'
-                            : statusInfo.status === 'alerta'
-                            ? 'bg-yellow-500'
-                            : 'bg-emerald-500'
-                        }`}
-                        style={{ width: `${statusInfo.progressoPercentual}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-200 text-xs">
-                    <div className="text-slate-600">
-                      Valor: <strong className="text-slate-900">{formatCurrency(contract.valorTotal)}</strong>
-                      <span className="text-[10px] text-slate-700 ml-1 font-bold">
-                        ({ex?.percentualComissao}% comissão)
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={() => onSelectContract(contract)}
-                      className="px-3 py-1 rounded-lg bg-white border border-slate-300 text-slate-800 hover:bg-slate-100 font-bold text-xs flex items-center gap-1 cursor-pointer"
-                    >
-                      <Eye className="w-3.5 h-3.5 text-yellow-600" />
-                      <span>Ver</span>
-                    </button>
-                  </div>
+          {/* Banner Inteligente de Alertas (Se houver contratos vencendo em até 15 dias) */}
+          {expiringExclusivities.length > 0 && (
+            <div className="bg-gradient-to-r from-amber-50 via-amber-100/60 to-yellow-50 border border-amber-300 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 font-bold shadow-xs">
+                  <AlertTriangle className="w-5 h-5 stroke-[2.5]" />
                 </div>
-              );
-            })}
+                <div>
+                  <div className="text-xs sm:text-sm font-extrabold text-amber-950 leading-snug">
+                    {expiringExclusivities.length === 1
+                      ? '1 contrato de exclusividade vence em menos de 15 dias!'
+                      : `${expiringExclusivities.length} contratos de exclusividade vencem em menos de 15 dias!`}
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-amber-800 font-medium mt-0.5">
+                    Programe a renovação com o proprietário ou acelere o fechamento das negociações em andamento.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setExclusivityFilter('alerta')}
+                className="px-3 py-1.5 rounded-lg bg-amber-900 text-white hover:bg-amber-950 text-xs font-bold transition-all cursor-pointer shrink-0 self-end sm:self-auto"
+              >
+                Ver Contratos em Alerta
+              </button>
+            </div>
+          )}
+
+          {/* KPIs de Exclusividade (Grid Compacto e Responsivo) */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+            {/* Card 1: Total */}
+            <div className="p-3 sm:p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/80 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-slate-200/70 text-slate-700 flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm sm:text-base font-extrabold text-slate-950 leading-tight">
+                  {exclusivityContracts.length}
+                </div>
+                <div className="text-[10px] sm:text-xs text-slate-500 font-medium truncate">
+                  Total Registrado
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Vigentes */}
+            <div className="p-3 sm:p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200/70 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm sm:text-base font-extrabold text-emerald-950 leading-tight">
+                  {activeOnlyExclusivities.length}
+                </div>
+                <div className="text-[10px] sm:text-xs text-emerald-700 font-medium truncate">
+                  Vigência Normal
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Vencendo em Breve */}
+            <div className="p-3 sm:p-3.5 bg-amber-50/80 rounded-2xl border border-amber-200/80 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-4 h-4 stroke-[2.3]" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm sm:text-base font-extrabold text-amber-950 leading-tight">
+                  {expiringExclusivities.length}
+                </div>
+                <div className="text-[10px] sm:text-xs text-amber-700 font-medium truncate">
+                  Vence &lt; 15 dias
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Honorários Estimados Totais */}
+            <div className="p-3 sm:p-3.5 bg-yellow-50/70 rounded-2xl border border-yellow-200/80 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-yellow-400 text-slate-950 flex items-center justify-center shrink-0 font-bold shadow-xs">
+                <Banknote className="w-4 h-4 stroke-[2.5]" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm sm:text-base font-extrabold text-slate-950 leading-tight truncate">
+                  {formatCurrency(totalComissaoExclusividades)}
+                </div>
+                <div className="text-[10px] sm:text-xs text-yellow-800 font-medium truncate">
+                  Honorários Estimados
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Filtro Rápido por Status de Vigência */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar pt-1">
+            <button
+              onClick={() => setExclusivityFilter('todos')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer shrink-0 border ${
+                exclusivityFilter === 'todos'
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              Todos ({exclusivityContracts.length})
+            </button>
+
+            <button
+              onClick={() => setExclusivityFilter('ativos')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer shrink-0 border ${
+                exclusivityFilter === 'ativos'
+                  ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs'
+                  : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+              }`}
+            >
+              Vigentes ({activeOnlyExclusivities.length})
+            </button>
+
+            <button
+              onClick={() => setExclusivityFilter('alerta')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer shrink-0 border ${
+                exclusivityFilter === 'alerta'
+                  ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                  : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+              }`}
+            >
+              Em Alerta ({expiringExclusivities.length})
+            </button>
+
+            <button
+              onClick={() => setExclusivityFilter('vencidos')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer shrink-0 border ${
+                exclusivityFilter === 'vencidos'
+                  ? 'bg-rose-700 text-white border-rose-700 shadow-xs'
+                  : 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100'
+              }`}
+            >
+              Vencidos ({expiredExclusivities.length})
+            </button>
+          </div>
+
+          {/* Lista / Grid de Cards de Exclusividade */}
+          {filteredExclusivityContracts.length === 0 ? (
+            <div className="py-8 px-4 text-center bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 space-y-2">
+              <p className="text-xs sm:text-sm font-bold text-slate-700">
+                Nenhum contrato de exclusividade encontrado para o filtro selecionado.
+              </p>
+              <button
+                onClick={() => setExclusivityFilter('todos')}
+                className="text-xs font-extrabold text-yellow-700 hover:underline cursor-pointer"
+              >
+                Limpar filtro e ver todos ({exclusivityContracts.length})
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 sm:gap-4">
+              {filteredExclusivityContracts.map((contract) => {
+                const statusInfo = getExclusivityStatus(contract);
+                const ex = contract.exclusividade;
+                const isSignedTotal = contract.status === 'assinado_total' || (contract.assinaturas && contract.assinaturas.length >= 2);
+                const comissaoEstimada = ex?.valorComissaoEstimado || ((contract.valorTotal || 0) * (ex?.percentualComissao || 6)) / 100;
+                
+                // Status visual
+                const isExpired = statusInfo.status === 'vencido';
+                const isAlert = statusInfo.status === 'alerta';
+
+                return (
+                  <div
+                    key={contract.id}
+                    className="group relative rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between"
+                  >
+                    {/* Borda Superior com Cor de Status */}
+                    <div
+                      className={`h-1.5 w-full bg-gradient-to-r ${
+                        isExpired
+                          ? 'from-rose-500 via-rose-600 to-red-600'
+                          : isAlert
+                          ? 'from-amber-400 via-amber-500 to-yellow-500'
+                          : 'from-emerald-400 via-emerald-500 to-teal-500'
+                      }`}
+                    />
+
+                    <div className="p-4 sm:p-5 space-y-3.5 flex-1">
+                      {/* Topo do Card: Status de Vigência + Assinatura + Número */}
+                      <div className="flex items-start justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {/* Badge de Status de Vigência */}
+                          <span
+                            className={`inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-1 rounded-full border ${statusInfo.badgeColor}`}
+                          >
+                            {isExpired ? (
+                              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                            ) : isAlert ? (
+                              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                            ) : (
+                              <Clock3 className="w-3.5 h-3.5 shrink-0" />
+                            )}
+                            <span>{statusInfo.label}</span>
+                          </span>
+
+                          {/* Badge de Assinatura */}
+                          <span
+                            className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                              isSignedTotal
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                : 'bg-slate-100 text-slate-700 border-slate-200'
+                            }`}
+                          >
+                            <SignedDot signed={Boolean(isSignedTotal)} />
+                            <span>{isSignedTotal ? '100% Assinado' : 'Pendente de Assinatura'}</span>
+                          </span>
+                        </div>
+
+                        {/* Número do Contrato */}
+                        <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                          {contract.numeroContrato}
+                        </span>
+                      </div>
+
+                      {/* Título da Exclusividade & Dados do Imóvel */}
+                      <div className="space-y-1">
+                        <h4 className="font-extrabold text-sm sm:text-base text-slate-950 leading-snug group-hover:text-amber-900 transition-colors">
+                          {contract.titulo}
+                        </h4>
+                        
+                        {/* Identificação do Imóvel / Endereço */}
+                        <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                          <Home className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span className="line-clamp-1 font-medium">
+                            {contract.imovel?.nomeEmpreendimento || contract.imovel?.localizacaoImovel || contract.imovel?.enderecoLote || 'Imóvel em Santarém/PA'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Bloco das Partes (Proprietário e Corretor) */}
+                      <div className="bg-slate-50/80 rounded-xl p-2.5 border border-slate-100 space-y-1 text-xs">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <SignedDot signed={partySigned(contract, 'vendedor')} />
+                            <span className="font-bold text-slate-900 truncate">
+                              Proprietário: {contract.vendedor.nome}
+                            </span>
+                          </div>
+                          <span className="font-mono text-[10px] text-slate-500 shrink-0">
+                            {contract.vendedor.cpfCnpj}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/60">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <SignedDot signed={partySigned(contract, 'comprador')} />
+                            <span className="font-medium text-slate-700 truncate">
+                              Corretor: {contract.comprador.nome}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-amber-800 shrink-0">
+                            {contract.comprador.creci || contract.comprador.rg || 'CRECI'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Barra Visual de Vigência / Progresso Temporal */}
+                      <div className="space-y-1.5 bg-slate-50/50 rounded-xl p-2.5 border border-slate-100">
+                        <div className="flex items-center justify-between text-[11px] text-slate-600 font-semibold">
+                          <span className="flex items-center gap-1">
+                            <CalendarDays className="w-3 h-3 text-slate-400" />
+                            Início: {formatDate(ex?.dataInicio || '')}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <CalendarRange className="w-3 h-3 text-slate-400" />
+                            Término: {formatDate(ex?.dataTermino || '')}
+                          </span>
+                        </div>
+
+                        {/* Barra de Progresso */}
+                        <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              isExpired
+                                ? 'bg-rose-500'
+                                : isAlert
+                                ? 'bg-amber-500'
+                                : 'bg-emerald-500'
+                            }`}
+                            style={{ width: `${statusInfo.progressoPercentual}%` }}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-slate-500">
+                          <span>{statusInfo.progressoPercentual}% do período decorrido</span>
+                          <span className="font-bold text-slate-700">
+                            {isExpired
+                              ? `Expirado (${statusInfo.totalDias} dias totais)`
+                              : `${statusInfo.diasRestantes} de ${statusInfo.totalDias} dias restantes`}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Bloco Financeiro e Comissão */}
+                      <div className="flex items-center justify-between p-2.5 bg-amber-50/50 rounded-xl border border-amber-200/60 text-xs">
+                        <div>
+                          <div className="text-[10px] text-slate-500 font-medium">Valor de Venda</div>
+                          <div className="font-extrabold text-slate-950 text-sm">
+                            {formatCurrency(contract.valorTotal)}
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <div className="text-[10px] text-amber-800 font-extrabold uppercase">
+                            Honorários ({ex?.percentualComissao || 6}%)
+                          </div>
+                          <div className="font-black text-amber-900 text-sm">
+                            {formatCurrency(comissaoEstimada)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Ações Rápidas do Card de Exclusividade (Touch-First) */}
+                    <div className="p-3 sm:p-4 bg-slate-50 border-t border-slate-100 space-y-2">
+                      {/* Botão Primário: Visualizar Contrato */}
+                      <button
+                        onClick={() => onSelectContract(contract)}
+                        className="w-full min-h-[42px] px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer active:scale-98"
+                      >
+                        <Eye className="w-4 h-4 text-yellow-400" />
+                        <span>Visualizar Contrato Completo</span>
+                      </button>
+
+                      {/* Grid de Ações Secundárias */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                        {/* Word (.docx) */}
+                        <button
+                          onClick={() => handleDownloadDocxDashboard(contract)}
+                          disabled={downloadingDocxId === contract.id}
+                          className="min-h-[36px] px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 hover:bg-slate-100 hover:border-slate-300 font-bold text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer disabled:opacity-50"
+                          title="Baixar Contrato no formato Word (.docx)"
+                        >
+                          <FileDown className="w-3.5 h-3.5 text-blue-600" />
+                          <span>
+                            {downloadingDocxId === contract.id ? `${downloadDocxProgress}%` : 'Word (.docx)'}
+                          </span>
+                        </button>
+
+                        {/* PDF Oficial (.pdf) */}
+                        <button
+                          onClick={() => handleDownloadPdfDashboard(contract)}
+                          disabled={downloadingPdfId === contract.id}
+                          className="min-h-[36px] px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 hover:bg-slate-100 hover:border-slate-300 font-bold text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer disabled:opacity-50"
+                          title="Baixar PDF Oficial com carimbos"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-rose-600" />
+                          <span>
+                            {downloadingPdfId === contract.id ? `${downloadPdfProgress}%` : 'PDF (.pdf)'}
+                          </span>
+                        </button>
+
+                        {/* Assinar */}
+                        <button
+                          onClick={() => onSignContractDirect(contract)}
+                          className="min-h-[36px] px-2 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 hover:bg-amber-100 font-bold text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer"
+                          title="Assinar digitalmente"
+                        >
+                          <PenTool className="w-3.5 h-3.5 text-amber-700" />
+                          <span>Assinar</span>
+                        </button>
+
+                        {/* Excluir */}
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Deseja excluir permanentemente o contrato "${contract.titulo}"?`)) {
+                              onDeleteContract(contract.id);
+                            }
+                          }}
+                          className="min-h-[36px] px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-rose-600 hover:bg-rose-50 hover:border-rose-200 font-bold text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer"
+                          title="Excluir contrato"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                          <span>Excluir</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
       )}
 
-      {/* 6. LISTA COMPLETA DE CONTRATOS REGISTRADOS */}
-      <section id="contracts-list-section" className="bg-white rounded-[1.75rem] border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h3 className="text-base sm:text-lg font-bold text-slate-950 flex items-center gap-2">
-              <Layers className="w-5 h-5 text-yellow-600 shrink-0" />
-              Contratos Registrados ({filteredContracts.length})
-            </h3>
-            <p className="text-xs text-slate-500">
-              Visualize, exporte em Word (.docx), PDF (.pdf) ou assine digitalmente.
+      {/* 6. LISTA COMPLETA DE CONTRATOS REGISTRADOS (REDESIGN MODERNO & MOBILE-FIRST) */}
+      <section id="contracts-list-section" className="bg-white rounded-[1.75rem] border border-slate-200 shadow-sm p-4 sm:p-6 space-y-4">
+        {/* Cabeçalho da Seção */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-yellow-50 text-yellow-700 flex items-center justify-center border border-yellow-200">
+                <Layers className="w-4 h-4" />
+              </div>
+              <h3 className="text-base sm:text-lg font-extrabold text-slate-950 tracking-tight">
+                Contratos Registrados
+              </h3>
+              <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 text-xs font-bold border border-slate-200">
+                {filteredContracts.length} de {contracts.length}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-normal">
+              Gerencie, exporte em Word (.docx), PDF (.pdf) ou colete assinaturas digitais.
             </p>
           </div>
 
-          {/* Filtros e Busca */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            {/* Seletor de Categoria */}
-            <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs font-semibold overflow-x-auto no-scrollbar">
+          {/* Barra de Busca e Ordenação */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+            {/* Input de Busca com Botão de Limpeza */}
+            <div className="relative flex-1 sm:w-64">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Buscar contrato, cliente, nº..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition-all"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full cursor-pointer"
+                  title="Limpar busca"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Seletor de Ordenação */}
+            <div className="relative shrink-0">
+              <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+                <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="bg-transparent border-none text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer pr-1"
+                >
+                  <option value="recentes">Mais recentes</option>
+                  <option value="antigos">Mais antigos</option>
+                  <option value="valor_maior">Maior valor</option>
+                  <option value="valor_menor">Menor valor</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Barra de Filtros: Categorias e Status de Assinatura */}
+        <div className="space-y-2.5">
+          {/* 1. Filtros por Categoria de Contrato */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            <button
+              onClick={() => setSelectedCategory('todos')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                selectedCategory === 'todos'
+                  ? 'bg-slate-950 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
+              }`}
+            >
+              <span>Todos</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                selectedCategory === 'todos' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+              }`}>
+                {contracts.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedCategory('venda_vista')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                selectedCategory === 'venda_vista'
+                  ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 text-slate-950 shadow-sm border border-yellow-400'
+                  : 'bg-yellow-50/70 text-yellow-900 hover:bg-yellow-100/70 border border-yellow-200/50'
+              }`}
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>À Vista</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                selectedCategory === 'venda_vista' ? 'bg-slate-950/20 text-slate-950' : 'bg-yellow-100 text-yellow-900'
+              }`}>
+                {countVendasAVista}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedCategory('venda_parcelada')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                selectedCategory === 'venda_parcelada'
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200/70 border border-slate-200/50'
+              }`}
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+              <span>Parcelada</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                selectedCategory === 'venda_parcelada' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+              }`}>
+                {countVendasParceladas}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedCategory('exclusividade')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                selectedCategory === 'exclusividade'
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200/70 border border-slate-200/50'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-yellow-500" />
+              <span>Exclusividade</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                selectedCategory === 'exclusividade' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+              }`}>
+                {exclusivityContracts.length}
+              </span>
+            </button>
+          </div>
+
+          {/* 2. Filtros por Status de Assinatura */}
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Status:</span>
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto">
               <button
-                onClick={() => setSelectedCategory('todos')}
-                className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === 'todos' ? 'bg-white text-slate-950 shadow-xs font-bold' : 'text-slate-600'
+                onClick={() => setStatusFilter('todos')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                  statusFilter === 'todos'
+                    ? 'bg-slate-800 text-white font-bold'
+                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
                 Todos
               </button>
               <button
-                onClick={() => setSelectedCategory('venda_vista')}
-                className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === 'venda_vista' ? 'bg-white text-yellow-800 shadow-xs font-bold' : 'text-slate-600'
+                onClick={() => setStatusFilter('assinados')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                  statusFilter === 'assinados'
+                    ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                    : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
                 }`}
               >
-                À Vista
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                <span>100% Assinados</span>
+                <span className="text-[10px] opacity-80">({countVendasConcluidas})</span>
               </button>
               <button
-                onClick={() => setSelectedCategory('venda_parcelada')}
-                className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === 'venda_parcelada' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600'
+                onClick={() => setStatusFilter('pendentes')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                  statusFilter === 'pendentes'
+                    ? 'bg-amber-600 text-white font-bold shadow-xs'
+                    : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'
                 }`}
               >
-                Parcelada
+                <Clock3 className="w-3 h-3 text-amber-500" />
+                <span>Pendentes</span>
+                <span className="text-[10px] opacity-80">({pendingSignaturesCount})</span>
               </button>
-              <button
-                onClick={() => setSelectedCategory('exclusividade')}
-                className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === 'exclusividade' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600'
-                }`}
-              >
-                Exclusividade
-              </button>
-            </div>
-
-            {/* Input de Busca */}
-            <div className="relative w-full sm:w-60">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                placeholder="Buscar contrato, cliente ou nº..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-yellow-400 outline-none"
-              />
             </div>
           </div>
         </div>
 
         {/* Lista de Contratos */}
         {filteredContracts.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-            Nenhum contrato encontrado para os critérios selecionados.
+          <div className="text-center py-12 px-4 bg-slate-50/70 rounded-2xl border border-dashed border-slate-200 space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-white text-slate-400 flex items-center justify-center mx-auto border border-slate-200 shadow-xs">
+              <Search className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-bold text-slate-800 text-sm">Nenhum contrato encontrado</h4>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                {searchTerm || selectedCategory !== 'todos' || statusFilter !== 'todos'
+                  ? 'Nenhum contrato corresponde aos filtros ou busca selecionados.'
+                  : 'Você ainda não possui contratos gerados. Crie seu primeiro contrato clicando nas opções acima.'}
+              </p>
+            </div>
+            {(searchTerm || selectedCategory !== 'todos' || statusFilter !== 'todos') && (
+              <button
+                onClick={() => {
+                  setSelectedCategory('todos');
+                  setStatusFilter('todos');
+                  setSearchTerm('');
+                }}
+                className="px-3.5 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 text-xs font-bold rounded-xl cursor-pointer shadow-xs transition-all"
+              >
+                Limpar Todos os Filtros
+              </button>
+            )}
           </div>
         ) : (
           <>
-            {/* Versão Mobile (Cards Otimizados Touch-friendly) */}
-            <div className="block md:hidden space-y-3">
+            {/* VERSÃO MOBILE: Cards Otimizados para Touch com Visual Executivo Moderno */}
+            <div className="block md:hidden space-y-3.5">
               {filteredContracts.map((contract) => {
                 const hasSignatures = contract.assinaturas && contract.assinaturas.length > 0;
-                const isFullySigned = contract.status === 'assinado_total';
+                const isFullySigned = contract.status === 'assinado_total' || (contract.tipo === 'venda_vista' && (contract.assinaturas?.length || 0) >= 2);
+                const isVendaVista = contract.tipo === 'venda_vista';
+                const isParcelada = contract.tipo === 'venda_parcelada';
+                const isExclusividade = contract.tipo === 'exclusividade';
 
                 return (
                   <div
                     key={contract.id}
-                    className="p-4 rounded-2xl border border-slate-200 bg-white shadow-xs space-y-3"
+                    className="rounded-2xl border border-slate-200/90 bg-white shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col relative"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
-                          <span>{contract.numeroContrato}</span>
-                          <span>•</span>
-                          <span>{formatDate(contract.dataCriacao)}</span>
+                    {/* Linha de Destaque Superior Colorida por Tipo */}
+                    <div
+                      className={`h-1.5 w-full ${
+                        isVendaVista
+                          ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500'
+                          : isParcelada
+                          ? 'bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900'
+                          : 'bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600'
+                      }`}
+                    />
+
+                    <div className="p-4 space-y-3.5">
+                      {/* Topo do Card: Badge de Modalidade + Status de Assinatura */}
+                      <div className="flex items-center justify-between gap-2">
+                        {/* Tag de Modalidade com Ícone */}
+                        <div className="shrink-0">
+                          {isVendaVista && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-yellow-50 text-yellow-950 font-bold text-[11px] border border-yellow-300/80">
+                              {contract.subcategoria === 'outros_bens' ? (
+                                <>
+                                  <Car className="w-3.5 h-3.5 text-yellow-700 shrink-0" />
+                                  <span>À Vista (Bens Móveis)</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Home className="w-3.5 h-3.5 text-yellow-700 shrink-0" />
+                                  <span>À Vista (Imóvel)</span>
+                                </>
+                              )}
+                            </span>
+                          )}
+                          {isParcelada && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 font-bold text-[11px] border border-slate-300/80">
+                              {contract.subcategoria === 'outros_bens' ? (
+                                <>
+                                  <Car className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                  <span>Parcelada ({contract.vendaParcelada?.numeroParcelas || '---'}x)</span>
+                                </>
+                              ) : (
+                                <>
+                                  <CalendarDays className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                                  <span>Parcelada ({contract.vendaParcelada?.numeroParcelas || '---'}x)</span>
+                                </>
+                              )}
+                            </span>
+                          )}
+                          {isExclusividade && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 font-bold text-[11px] border border-slate-300/80">
+                              <ShieldCheck className="w-3.5 h-3.5 text-yellow-600 shrink-0" />
+                              <span>Exclusividade ({contract.exclusividade?.prazoMesesOuDias || '---'}d)</span>
+                            </span>
+                          )}
                         </div>
-                        <h4 className="font-bold text-sm text-slate-900 mt-0.5 break-words">
+
+                        {/* Status de Assinatura */}
+                        <div className="shrink-0">
+                          {isFullySigned ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> 100% Assinado
+                            </span>
+                          ) : hasSignatures ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-[10px] font-extrabold">
+                              <PenTool className="w-3 h-3 text-amber-600" /> Parcial ({contract.assinaturas.length}/2)
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-medium">
+                              <Clock3 className="w-3 h-3 text-slate-400" /> Pendente
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Título do Contrato & Identificador */}
+                      <div>
+                        <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium">
+                          <span className="font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded-md font-semibold text-[10px]">
+                            {contract.numeroContrato}
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1 text-slate-500 text-[10px]">
+                            <Calendar className="w-3 h-3 text-slate-400" />
+                            {formatDate(contract.dataCriacao)}
+                          </span>
+                        </div>
+                        <h4 className="font-extrabold text-sm text-slate-950 mt-1 leading-snug break-words">
                           {contract.titulo}
                         </h4>
                       </div>
 
-                      <div className="shrink-0">
-                        {contract.tipo === 'venda_vista' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg sm:rounded-full bg-yellow-50 text-yellow-900 font-bold text-[10px] border border-yellow-300">
-                            {contract.subcategoria === 'outros_bens' ? 'À Vista (Bens Móveis)' : 'À Vista (Imóvel)'}
+                      {/* Caixa de Informações: Partes & Valores */}
+                      <div className="bg-slate-50/90 rounded-xl p-3 border border-slate-200/70 space-y-2.5">
+                        {/* 1º e 2º Titulares com Indicador de Assinatura */}
+                        <div className="space-y-1.5 text-xs">
+                          {/* 1º Titular */}
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
+                              {isExclusividade ? 'Contratante:' : '1º Titular:'}
+                            </span>
+                            <div className="flex items-center gap-1.5 min-w-0 text-right">
+                              <SignedDot signed={partySigned(contract, 'vendedor')} />
+                              <span className="font-semibold text-slate-800 truncate text-[11px]">
+                                {contract.vendedor?.nome || '---'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* 2º Titular */}
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
+                              {isExclusividade ? 'Corretor:' : '2º Titular:'}
+                            </span>
+                            <div className="flex items-center gap-1.5 min-w-0 text-right">
+                              <SignedDot signed={partySigned(contract, 'comprador')} />
+                              <span className="font-semibold text-slate-800 truncate text-[11px]">
+                                {contract.comprador?.nome || '---'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Faixa Financeira */}
+                        <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-slate-500">Valor Total:</span>
+                          <span className="text-sm sm:text-base font-black text-slate-950">
+                            {formatCurrency(contract.valorTotal)}
                           </span>
-                        )}
-                        {contract.tipo === 'venda_parcelada' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg sm:rounded-full bg-slate-100 text-slate-800 font-bold text-[10px] border border-slate-300">
-                            {contract.subcategoria === 'outros_bens' ? 'Parcelada (Bens Móveis)' : 'Parcelada (Imóvel)'}
-                          </span>
-                        )}
-                        {contract.tipo === 'exclusividade' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg sm:rounded-full bg-slate-100 text-slate-800 font-bold text-[10px] border border-slate-300">
-                            Exclusividade
-                          </span>
-                        )}
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Dados das Partes e Valor */}
-                    <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                      <div>
-                        <span className="text-[10px] text-slate-400 block font-bold uppercase">1º Titular</span>
-                        <span className="flex items-center gap-1.5 text-slate-800 font-medium truncate">
-                          <SignedDot signed={partySigned(contract, 'vendedor')} />
-                          <span className="truncate">{contract.vendedor.nome || '---'}</span>
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 block font-bold uppercase">2º Titular</span>
-                        <span className="flex items-center gap-1.5 text-slate-800 font-medium truncate">
-                          <SignedDot signed={partySigned(contract, 'comprador')} />
-                          <span className="truncate">{contract.comprador.nome || '---'}</span>
-                        </span>
-                      </div>
-                      <div className="col-span-2 pt-1.5 border-t border-slate-200/60 flex items-center justify-between">
-                        <span className="text-[11px] text-slate-500 font-medium">Valor Total:</span>
-                        <span className="text-sm font-extrabold text-slate-900">{formatCurrency(contract.valorTotal)}</span>
-                      </div>
-                    </div>
-
-                    {/* Status de Assinatura */}
-                    <div className="flex items-center justify-between text-xs">
-                      <div>
-                        {isFullySigned ? (
-                          <span className="inline-flex items-center gap-1 text-slate-900 font-bold text-[11px] bg-yellow-50 px-2 py-0.5 rounded-full border border-yellow-300">
-                            <CheckCircle className="w-3 h-3 text-yellow-600" /> 100% Assinado
-                          </span>
-                        ) : hasSignatures ? (
-                          <span className="inline-flex items-center gap-1 text-slate-800 font-bold text-[11px] bg-slate-100 px-2 py-0.5 rounded-full border border-slate-300">
-                            <PenTool className="w-3 h-3 text-slate-700" /> Parcialmente Assinado
-                          </span>
-                        ) : (
-                          <span className="text-slate-400 text-[11px] font-medium">Pendente de Assinatura</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Barra de Ações Mobile */}
-                    <div className="grid grid-cols-5 gap-1.5 pt-2 border-t border-slate-100">
-                      <button
-                        onClick={() => onSelectContract(contract)}
-                        className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-yellow-50 hover:bg-yellow-100 text-yellow-900 rounded-xl text-[10px] font-bold transition-colors cursor-pointer border border-yellow-200"
-                        title="Ver Contrato"
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span>Ver</span>
-                      </button>
-
-                      <button
-                        onClick={() => !isFullySigned && handleDownloadDocxDashboard(contract)}
-                        disabled={isFullySigned || downloadingDocxId === contract.id}
-                        className={`min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 rounded-xl text-[10px] font-bold transition-colors ${
-                          isFullySigned
-                            ? 'bg-slate-50 text-slate-300 cursor-not-allowed'
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer'
-                        }`}
-                        title={isFullySigned ? 'Indisponível: contrato já assinado digitalmente (use o PDF)' : 'Baixar Word (.docx)'}
-                      >
-                        {downloadingDocxId === contract.id ? (
-                          <CircularProgress percentage={downloadDocxProgress} colorClass="text-slate-700" size={28} />
-                        ) : (
-                          <>
-                            <FileDown className={`w-4 h-4 ${isFullySigned ? 'text-slate-300' : 'text-slate-700'}`} />
-                            <span>Word</span>
-                          </>
-                        )}
-                      </button>
-
-                      <button
-                        onClick={() => handleDownloadPdfDashboard(contract)}
-                        disabled={downloadingPdfId === contract.id}
-                        className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-slate-100 hover:bg-slate-200 disabled:opacity-60 text-slate-700 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
-                        title="Baixar PDF"
-                      >
-                        {downloadingPdfId === contract.id ? (
-                          <CircularProgress percentage={downloadPdfProgress} colorClass="text-slate-700" size={28} />
-                        ) : (
-                          <>
-                            <FileText className="w-4 h-4 text-slate-700" />
-                            <span>PDF</span>
-                          </>
-                        )}
-                      </button>
-
-                      {isFullySigned ? (
+                      {/* BARRA DE AÇÕES MOBILE (Ergonomia Touch-First) */}
+                      <div className="space-y-2 pt-1">
+                        {/* Botão Primário: Visualizar Contrato */}
                         <button
                           onClick={() => onSelectContract(contract)}
-                          className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-yellow-50 text-yellow-900 rounded-xl text-[10px] font-bold cursor-pointer border border-yellow-200"
-                          title="Contrato assinado — somente visualização"
+                          className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 hover:from-yellow-400 hover:to-yellow-600 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] transition-all cursor-pointer border border-yellow-400"
                         >
-                          <ShieldCheck className="w-4 h-4 text-yellow-600" />
-                          <span>Assinado</span>
+                          <Eye className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                          <span>Visualizar Contrato Completo</span>
                         </button>
-                      ) : (
-                        <button
-                          onClick={() => onSignContractDirect(contract)}
-                          className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
-                          title="Assinar com Carimbo Digital"
-                        >
-                          <ShieldCheck className="w-4 h-4 text-slate-700" />
-                          <span>Carimbo Digital</span>
-                        </button>
-                      )}
 
-                      <button
-                        onClick={() => {
-                          if (confirm(`Tem certeza que deseja excluir o contrato "${contract.titulo}"?`)) {
-                            onDeleteContract(contract.id);
-                          }
-                        }}
-                        className="min-h-[42px] flex flex-col items-center justify-center gap-1 p-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[10px] font-bold transition-colors cursor-pointer"
-                        title="Excluir Contrato"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span>Excluir</span>
-                      </button>
+                        {/* Grid de Ações Secundárias (Word, PDF, Assinar, Excluir) */}
+                        <div className="grid grid-cols-4 gap-2">
+                          {/* 1. Botão Word (.docx) */}
+                          <button
+                            onClick={() => !isFullySigned && handleDownloadDocxDashboard(contract)}
+                            disabled={isFullySigned || downloadingDocxId === contract.id}
+                            className={`min-h-[42px] py-2 px-1 rounded-xl text-[10px] font-bold flex flex-col items-center justify-center gap-1 transition-all border ${
+                              isFullySigned
+                                ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed'
+                                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200 active:scale-95 cursor-pointer'
+                            }`}
+                            title={isFullySigned ? 'Indisponível: contrato já assinado digitalmente (use o PDF)' : 'Baixar documento Word (.docx)'}
+                          >
+                            {downloadingDocxId === contract.id ? (
+                              <CircularProgress percentage={downloadDocxProgress} colorClass="text-slate-700" size={22} />
+                            ) : (
+                              <>
+                                <FileDown className={`w-4 h-4 ${isFullySigned ? 'text-slate-300' : 'text-slate-700'}`} />
+                                <span>Word</span>
+                              </>
+                            )}
+                          </button>
+
+                          {/* 2. Botão PDF (.pdf) */}
+                          <button
+                            onClick={() => handleDownloadPdfDashboard(contract)}
+                            disabled={downloadingPdfId === contract.id}
+                            className="min-h-[42px] py-2 px-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[10px] font-bold flex flex-col items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer disabled:opacity-60"
+                            title="Baixar PDF Oficial com Selos"
+                          >
+                            {downloadingPdfId === contract.id ? (
+                              <CircularProgress percentage={downloadPdfProgress} colorClass="text-slate-700" size={22} />
+                            ) : (
+                              <>
+                                <FileText className="w-4 h-4 text-slate-700" />
+                                <span>PDF</span>
+                              </>
+                            )}
+                          </button>
+
+                          {/* 3. Botão Assinatura / Carimbo Digital */}
+                          {isFullySigned ? (
+                            <button
+                              onClick={() => onSelectContract(contract)}
+                              className="min-h-[42px] py-2 px-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold flex flex-col items-center justify-center gap-1 cursor-pointer"
+                              title="Contrato 100% Assinado"
+                            >
+                              <ShieldCheck className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
+                              <span>Assinado</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => onSignContractDirect(contract)}
+                              className="min-h-[42px] py-2 px-1 rounded-xl bg-yellow-50 hover:bg-yellow-100 text-yellow-950 border border-yellow-300 text-[10px] font-bold flex flex-col items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
+                              title="Assinar com Carimbo Digital"
+                            >
+                              <PenTool className="w-4 h-4 text-yellow-700" />
+                              <span>Assinar</span>
+                            </button>
+                          )}
+
+                          {/* 4. Botão Excluir */}
+                          <button
+                            onClick={() => {
+                              if (confirm(`Tem certeza que deseja excluir o contrato "${contract.titulo}"?`)) {
+                                onDeleteContract(contract.id);
+                              }
+                            }}
+                            className="min-h-[42px] py-2 px-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold flex flex-col items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
+                            title="Mover para Lixeira"
+                          >
+                            <Trash2 className="w-4 h-4 text-rose-600" />
+                            <span>Excluir</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            {/* Versão Desktop (Tabela Executiva) */}
-            <div className="hidden md:block overflow-x-auto">
+            {/* VERSÃO DESKTOP: Tabela Executiva Elegante */}
+            <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold">
-                    <th className="py-3 px-3">Contrato / Título</th>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold">
+                    <th className="py-3 px-4">Contrato / Título</th>
                     <th className="py-3 px-3">Modalidade</th>
                     <th className="py-3 px-3">Partes Envolvidas</th>
                     <th className="py-3 px-3">Valor Total</th>
                     <th className="py-3 px-3">Assinaturas</th>
-                    <th className="py-3 px-3 text-right">Ações</th>
+                    <th className="py-3 px-4 text-right">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
+                <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
                   {filteredContracts.map((contract) => {
                     const hasSignatures = contract.assinaturas && contract.assinaturas.length > 0;
-                    const isFullySigned = contract.status === 'assinado_total';
+                    const isFullySigned = contract.status === 'assinado_total' || (contract.tipo === 'venda_vista' && (contract.assinaturas?.length || 0) >= 2);
 
                     return (
                       <tr key={contract.id} className="hover:bg-slate-50/80 transition-colors">
                         {/* Título & Número */}
-                        <td className="py-3 px-3">
+                        <td className="py-3.5 px-4">
                           <div className="font-bold text-slate-950 text-sm">{contract.titulo}</div>
-                          <div className="font-mono text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
-                            <span>{contract.numeroContrato}</span>
+                          <div className="font-mono text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                            <span className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-semibold text-[10px]">
+                              {contract.numeroContrato}
+                            </span>
                             <span>•</span>
                             <span>{formatDate(contract.dataCriacao)}</span>
                           </div>
                         </td>
 
                         {/* Modalidade */}
-                        <td className="py-3 px-3">
+                        <td className="py-3.5 px-3">
                           {contract.tipo === 'venda_vista' && (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-900 font-bold border border-yellow-300">
                               {contract.subcategoria === 'outros_bens' ? (
@@ -994,60 +1641,62 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 font-bold border border-slate-300">
                               {contract.subcategoria === 'outros_bens' ? (
                                 <>
-                                  <Car className="w-3 h-3 text-slate-700" /> Venda Parcelada ({contract.vendaParcelada?.numeroParcelas}x)
+                                  <Car className="w-3 h-3 text-slate-700" /> Venda Parcelada ({contract.vendaParcelada?.numeroParcelas || '---'}x)
                                 </>
                               ) : (
                                 <>
-                                  <CalendarDays className="w-3 h-3 text-slate-700" /> Venda Parcelada ({contract.vendaParcelada?.numeroParcelas}x)
+                                  <CalendarDays className="w-3 h-3 text-slate-700" /> Venda Parcelada ({contract.vendaParcelada?.numeroParcelas || '---'}x)
                                 </>
                               )}
                             </span>
                           )}
                           {contract.tipo === 'exclusividade' && (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 font-bold border border-slate-300">
-                              <ShieldCheck className="w-3 h-3 text-yellow-600" /> Exclusividade ({contract.exclusividade?.prazoMesesOuDias}d)
+                              <ShieldCheck className="w-3 h-3 text-yellow-600" /> Exclusividade ({contract.exclusividade?.prazoMesesOuDias || '---'}d)
                             </span>
                           )}
                         </td>
 
                         {/* Partes */}
-                        <td className="py-3 px-3">
+                        <td className="py-3.5 px-3">
                           <div className="font-medium text-slate-800 line-clamp-1 flex items-center gap-1.5">
                             <SignedDot signed={partySigned(contract, 'vendedor')} />
-                            1º: {contract.vendedor.nome}
+                            <span className="truncate">1º: {contract.vendedor?.nome || '---'}</span>
                           </div>
                           <div className="text-slate-500 text-[11px] line-clamp-1 flex items-center gap-1.5 mt-0.5">
                             <SignedDot signed={partySigned(contract, 'comprador')} />
-                            2º: {contract.comprador.nome}
+                            <span className="truncate">2º: {contract.comprador?.nome || '---'}</span>
                           </div>
                         </td>
 
                         {/* Valor */}
-                        <td className="py-3 px-3 font-extrabold text-slate-950">
+                        <td className="py-3.5 px-3 font-extrabold text-slate-950">
                           {formatCurrency(contract.valorTotal)}
                         </td>
 
                         {/* Status de Assinatura */}
-                        <td className="py-3 px-3">
+                        <td className="py-3.5 px-3">
                           {isFullySigned ? (
-                            <span className="inline-flex items-center gap-1 text-slate-900 font-bold text-[11px] bg-yellow-50 px-2.5 py-0.5 rounded-full border border-yellow-300">
-                              <CheckCircle className="w-3 h-3 text-yellow-600" /> 100% Assinado
+                            <span className="inline-flex items-center gap-1 text-emerald-900 font-bold text-[11px] bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> 100% Assinado
                             </span>
                           ) : hasSignatures ? (
-                            <span className="inline-flex items-center gap-1 text-slate-800 font-bold text-[11px] bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-300">
-                              <PenTool className="w-3 h-3 text-slate-700" /> Parcial ({contract.assinaturas.length}/2)
+                            <span className="inline-flex items-center gap-1 text-amber-900 font-bold text-[11px] bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                              <PenTool className="w-3 h-3 text-amber-600" /> Parcial ({contract.assinaturas.length}/2)
                             </span>
                           ) : (
-                            <span className="text-slate-400 text-[11px]">Pendente</span>
+                            <span className="inline-flex items-center gap-1 text-slate-500 text-[11px] bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200 font-medium">
+                              <Clock3 className="w-3 h-3 text-slate-400" /> Pendente
+                            </span>
                           )}
                         </td>
 
                         {/* Ações */}
-                        <td className="py-3 px-3 text-right">
-                          <div className="flex items-center justify-end gap-1">
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => onSelectContract(contract)}
-                              className="p-2 text-yellow-700 hover:text-yellow-900 hover:bg-yellow-50 rounded-xl transition-colors cursor-pointer"
+                              className="p-2 text-yellow-700 hover:text-yellow-900 hover:bg-yellow-50 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-yellow-200"
                               title="Visualizar Contrato"
                             >
                               <Eye className="w-4 h-4" />
@@ -1056,15 +1705,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             <button
                               onClick={() => !isFullySigned && handleDownloadDocxDashboard(contract)}
                               disabled={isFullySigned || downloadingDocxId === contract.id}
-                              className={`p-2 min-w-[32px] rounded-xl transition-colors flex items-center justify-center ${
+                              className={`p-2 min-w-[32px] rounded-xl transition-colors flex items-center justify-center border border-transparent ${
                                 isFullySigned
                                   ? 'text-slate-300 cursor-not-allowed'
-                                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer'
+                                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 hover:border-slate-200 cursor-pointer'
                               }`}
                               title={isFullySigned ? 'Indisponível: contrato já assinado digitalmente (use o PDF)' : 'Baixar Word (.docx)'}
                             >
                               {downloadingDocxId === contract.id ? (
-                                <CircularProgress percentage={downloadDocxProgress} colorClass="text-slate-700" size={24} />
+                                <CircularProgress percentage={downloadDocxProgress} colorClass="text-slate-700" size={22} />
                               ) : (
                                 <FileDown className="w-4 h-4" />
                               )}
@@ -1073,11 +1722,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             <button
                               onClick={() => handleDownloadPdfDashboard(contract)}
                               disabled={downloadingPdfId === contract.id}
-                              className="p-2 min-w-[32px] text-slate-600 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-60 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
-                              title="Baixar PDF (.pdf)"
+                              className="p-2 min-w-[32px] text-slate-600 hover:text-slate-900 hover:bg-slate-100 hover:border-slate-200 border border-transparent disabled:opacity-60 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
+                              title="Baixar PDF Oficial (.pdf)"
                             >
                               {downloadingPdfId === contract.id ? (
-                                <CircularProgress percentage={downloadPdfProgress} colorClass="text-slate-700" size={24} />
+                                <CircularProgress percentage={downloadPdfProgress} colorClass="text-slate-700" size={22} />
                               ) : (
                                 <FileText className="w-4 h-4" />
                               )}
@@ -1089,7 +1738,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                 className="p-2 text-slate-600 hover:text-yellow-700 hover:bg-yellow-50 rounded-xl transition-colors cursor-pointer"
                                 title="Assinar com Carimbo Digital"
                               >
-                                <ShieldCheck className="w-4 h-4" />
+                                <PenTool className="w-4 h-4" />
                               </button>
                             )}
 
@@ -1100,7 +1749,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                 }
                               }}
                               className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
-                              title="Excluir Contrato"
+                              title="Mover para Lixeira"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -1115,59 +1764,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </>
         )}
       </section>
-
-      {/* 7. BARRA DE NAVEGAÇÃO INFERIOR MOBILE FIXA (ESTILO APP) */}
-      <div className="mobile-safe-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-1.5 shadow-2xl flex items-center justify-around">
-        {/* Início */}
-        <button
-          onClick={() => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          className="flex flex-col items-center justify-center gap-0.5 p-1 text-yellow-600 min-w-[54px] cursor-pointer"
-        >
-          <Home className="w-5 h-5 stroke-[2.5]" />
-          <span className="text-[10px] font-bold">Início</span>
-        </button>
-
-        {/* Contratos */}
-        <button
-          onClick={scrollToContracts}
-          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-yellow-600 min-w-[54px] cursor-pointer"
-        >
-          <FileText className="w-5 h-5" />
-          <span className="text-[10px] font-medium">Contratos</span>
-        </button>
-
-        {/* Botão Central Destacado "+ Novo" com Efeito Dourado */}
-        <div className="relative -top-3 flex flex-col items-center">
-          <button
-            onClick={() => setIsMobileNewModalOpen(true)}
-            className="w-13 h-13 rounded-full btn-gold text-slate-950 flex items-center justify-center shadow-lg shadow-yellow-500/40 border-4 border-white transition-all cursor-pointer font-bold active:scale-95"
-            title="Criar Novo Contrato"
-          >
-            <Plus className="w-6 h-6 stroke-[3]" />
-          </button>
-          <span className="text-[10px] font-bold text-slate-800 mt-0.5">Novo</span>
-        </div>
-
-        {/* Vendas */}
-        <button
-          onClick={() => setIsReportsModalOpen(true)}
-          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-yellow-600 min-w-[54px] cursor-pointer"
-        >
-          <TrendingUp className="w-5 h-5" />
-          <span className="text-[10px] font-medium">Vendas</span>
-        </button>
-
-        {/* Mais */}
-        <button
-          onClick={() => setIsMoreMenuOpen(true)}
-          className="flex flex-col items-center justify-center gap-0.5 p-1 text-slate-500 hover:text-yellow-600 min-w-[54px] cursor-pointer"
-        >
-          <MoreHorizontal className="w-5 h-5" />
-          <span className="text-[10px] font-medium">Mais</span>
-        </button>
-      </div>
 
       {/* MODAIS COMPLEMENTARES DE AÇÕES RÁPIDAS */}
 
@@ -1459,6 +2055,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <BarChart3 className="w-4 h-4 text-yellow-600" />
                 <span>Relatórios</span>
               </button>
+
+              {onOpenWordTemplates && (
+                <button
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
+                    onOpenWordTemplates();
+                  }}
+                  className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center gap-2 font-bold text-slate-800"
+                >
+                  <FileText className="w-4 h-4 text-yellow-600" />
+                  <span>Modelos Word</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

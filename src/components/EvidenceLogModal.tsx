@@ -29,8 +29,8 @@ export const EvidenceLogModal: React.FC<EvidenceLogModalProps> = ({ contract, on
   const assinaturas: DigitalSignature[] = contract.assinaturas || [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 print:hidden">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 print:hidden">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col border border-neutral-200">
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-amber-600" />
