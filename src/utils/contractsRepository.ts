@@ -226,10 +226,19 @@ export async function saveContract(contract: ContractData): Promise<ContractData
 
 export async function deleteContract(contractId: string): Promise<void> {
   await getSession();
-  const { error } = await withRetry(() =>
+  // Tenta soft-delete atualizando deleted_at
+  const { error: softError } = await withRetry(() =>
     supabase.from('contracts').update({ deleted_at: new Date().toISOString() }).eq('id', contractId)
   );
-  if (error) throw error;
+
+  // Se a coluna deleted_at não existir ou falhar por schema, faz hard delete direto como fallback
+  if (softError) {
+    console.warn('Soft delete falhou, tentando exclusão direta:', softError);
+    const { error: hardError } = await withRetry(() =>
+      supabase.from('contracts').delete().eq('id', contractId)
+    );
+    if (hardError) throw hardError;
+  }
 }
 
 export interface TrashedContract {

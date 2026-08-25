@@ -19,7 +19,12 @@ import { ValidatePage } from './pages/ValidatePage';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <Routes>
         {/* Rota pública: cliente assina o contrato sem precisar de login */}
         <Route path="/assinar/:token" element={<SignatureLink />} />
@@ -368,6 +373,7 @@ function MainApp() {
             }}
             onEdit={handleEditContract}
             onUpdateContract={handleUpdateContractFromViewer}
+            onDelete={handleDeleteContract}
           />
         )}
       </main>

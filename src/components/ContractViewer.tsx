@@ -25,7 +25,7 @@ import {
   substituirTagsNoDocx,
 } from '../utils/dataTagsProcessor';
 import { saveContractDocumentToSupabase } from '../utils/contractDocumentsStorage';
-import { buildPdfFileName } from '../utils/pdfFileName';
+import { buildPdfFileName, buildDocxFileName } from '../utils/pdfFileName';
 import { startSimulatedPdfProgress } from '../utils/pdfProgressSimulator';
 import { saveSignature, fetchSignatures } from '../utils/contractsRepository';
 import { supabase } from '../utils/supabaseClient';
@@ -50,6 +50,7 @@ import {
   FileSearch,
   Link as LinkIcon,
   Loader2,
+  Trash2,
 } from 'lucide-react';
 
 interface ContractViewerProps {
@@ -57,6 +58,7 @@ interface ContractViewerProps {
   onBack: () => void;
   onEdit: () => void;
   onUpdateContract: (updated: ContractData) => void;
+  onDelete?: (contractId: string) => void;
 }
 
 /** Nome de arquivo amigável a partir do nome do cliente (sem acentos/espaços/caracteres especiais). */
@@ -76,10 +78,13 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   onBack,
   onEdit,
   onUpdateContract,
+  onDelete,
 }) => {
   const [isDigitalSignFlowOpen, setIsDigitalSignFlowOpen] = useState(false);
   const [isEvidenceLogOpen, setIsEvidenceLogOpen] = useState(false);
   const [isShareLinkOpen, setIsShareLinkOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDeletingContract, setIsDeletingContract] = useState(false);
   const [signFlowParte, setSignFlowParte] = useState<'usuario' | 'comprador'>('usuario');
   const [copied, setCopied] = useState(false);
   const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
@@ -231,8 +236,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      const nomeClientePdf = (isExcl ? contract.vendedor?.nome : contract.comprador?.nome) || contract.imovel?.nomeEmpreendimento || 'documento';
-      a.download = buildPdfFileName(nomeClientePdf);
+      a.download = buildPdfFileName(contract);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -439,9 +443,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       const docxComDados = await substituirTagsNoDocx(docxComSelos, tagsContrato);
 
       // 4. Fazer download + salvar no Supabase
-      const nomeClienteArquivo = dadosCliente.nome || contract.imovel?.nomeEmpreendimento || 'contrato';
-      const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-      const nomeArquivo = `${slugifyNomeArquivo(nomeClienteArquivo)}_${dataArquivo}.docx`;
+      const nomeArquivo = buildDocxFileName(contract);
       await realizarDownloadESalvar(docxComDados, nomeArquivo);
     } catch (error: any) {
       console.error('Erro ao baixar DOCX:', error);
@@ -578,6 +580,18 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             <FileText className="w-3.5 h-3.5 shrink-0" />
             <span>{isDownloadingPdf ? 'Gerando...' : 'PDF (.pdf)'}</span>
           </button>
+
+          {/* Excluir Contrato */}
+          {onDelete && (
+            <button
+              onClick={() => setIsDeleteConfirmOpen(true)}
+              className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-medium text-slate-500 hover:text-rose-700 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-lg transition-colors cursor-pointer"
+              title="Mover contrato para a Lixeira"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+              <span>Excluir</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -864,6 +878,67 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           onCodeGenerated={() => {}}
           isFullySigned={isFullySigned}
         />
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full border border-slate-200 shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center shrink-0 text-rose-600">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-black text-slate-900 leading-snug">
+                  Mover Contrato para a Lixeira?
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  O contrato <strong className="text-slate-800 font-bold">"{contract.titulo}"</strong> será enviado para a Lixeira por 30 dias e você retornará ao painel de controle.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                disabled={isDeletingContract}
+                onClick={() => setIsDeleteConfirmOpen(false)}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingContract}
+                onClick={async () => {
+                  if (!onDelete || !contract.id) return;
+                  try {
+                    setIsDeletingContract(true);
+                    await onDelete(contract.id);
+                  } catch (err) {
+                    console.error('Erro ao excluir:', err);
+                  } finally {
+                    setIsDeletingContract(false);
+                    setIsDeleteConfirmOpen(false);
+                  }
+                }}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-60"
+              >
+                {isDeletingContract ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Excluindo...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Mover para Lixeira</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

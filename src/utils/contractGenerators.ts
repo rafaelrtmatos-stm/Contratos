@@ -9,6 +9,7 @@ import {
 import { numeroPorExtensoReais, numeroPorExtensoInteiro, percentualPorExtenso } from './numberToWords';
 import jsPDF from 'jspdf';
 import { drawDigitalSignatureStamp, STAMP_HEIGHT } from './pdfSignatureStamp';
+import { buildDocFileName, buildPdfFileName } from './pdfFileName';
 
 // Formata CPF/CNPJ no mesmo padrão exibido na prévia em tela (DigitalSignatureStamp.tsx),
 // para que o selo/texto no PDF baixado mostre exatamente o mesmo formato.
@@ -1296,7 +1297,7 @@ export function exportToDoc(contract: ContractData): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${contract.numeroContrato.replace(/[^a-zA-Z0-9_-]/g, '_')}_${contract.tipo}.doc`;
+  a.download = buildDocFileName(contract);
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -1596,7 +1597,7 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
     );
   }
 
-  doc.save(`${contract.numeroContrato.replace(/[^a-zA-Z0-9_-]/g, '_')}_${contract.tipo}.pdf`);
+  doc.save(buildPdfFileName(contract));
 }
 
 // Modelos Iniciais com Todas as Tags Preenchidas (incluindo o exemplo de Santarém/PA à vista)

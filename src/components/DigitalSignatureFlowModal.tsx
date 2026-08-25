@@ -96,11 +96,7 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      const nomeClientePdf =
-        (contract.tipo === 'exclusividade' ? contract.vendedor?.nome : contract.comprador?.nome) ||
-        contract.imovel?.nomeEmpreendimento ||
-        'documento';
-      a.download = buildPdfFileName(nomeClientePdf);
+      a.download = buildPdfFileName(contract);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

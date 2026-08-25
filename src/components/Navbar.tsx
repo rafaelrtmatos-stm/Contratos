@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
-  ChevronDown,
+  Menu,
+  X,
   LayoutGrid,
   LogOut,
   Sliders,
@@ -85,41 +86,43 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* ========================================================
-              LADO DIREITO: MENU DE PERFIL & AJUSTES UNIFICADO (AVATAR)
+              LADO DIREITO: BOTÃO HAMBÚRGUER & MENU DO SISTEMA
              ======================================================== */}
           <div className="flex items-center gap-2 sm:gap-3">
             
-            {/* MENU UNIFICADO DE AJUSTES & PERFIL */}
+            {/* BOTÃO HAMBÚRGUER DO MENU */}
             <div className="relative shrink-0">
               <button
+                id="main-hamburger-menu-btn"
                 onClick={() => {
                   setIsProfileMenuOpen(!isProfileMenuOpen);
                 }}
-                className={`flex items-center gap-2 p-1.5 sm:px-3 sm:py-2 rounded-xl border transition-all cursor-pointer select-none ${
+                className={`flex items-center gap-2.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none shadow-sm active:scale-95 ${
                   isProfileMenuOpen
-                    ? 'bg-slate-800 border-yellow-400 text-white'
-                    : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-white'
+                    ? 'bg-slate-800 border-yellow-400 text-yellow-400 ring-2 ring-yellow-400/20'
+                    : 'bg-slate-900 hover:bg-slate-800/90 border-slate-800 hover:border-slate-700 text-slate-200 hover:text-white'
                 }`}
-                title="Ajustes, Modelos e Configurações"
+                title={isProfileMenuOpen ? 'Fechar menu' : 'Abrir menu de navegação e ajustes'}
+                aria-label="Menu principal"
+                aria-expanded={isProfileMenuOpen}
               >
-                {/* Avatar Circular com Inicial e Status Dot */}
-                <div className="relative">
-                  <div className="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-lg bg-gradient-to-tr from-slate-800 to-slate-700 border border-slate-600 flex items-center justify-center font-bold text-xs text-yellow-400 shadow-xs">
-                    {initial || <User className="w-4 h-4" />}
-                  </div>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-slate-950 absolute -top-0.5 -right-0.5" />
+                {/* Ícone Hambúrguer / Fechar */}
+                <div className="relative flex items-center justify-center w-5 h-5">
+                  {isProfileMenuOpen ? (
+                    <X className="w-5 h-5 stroke-[2.5] text-yellow-400 transition-transform duration-200 rotate-90 scale-105" />
+                  ) : (
+                    <Menu className="w-5 h-5 stroke-[2.5] text-yellow-400 transition-transform duration-200" />
+                  )}
                 </div>
 
-                <div className="hidden sm:flex flex-col text-left">
-                  <span className="text-xs font-bold text-slate-200 leading-tight max-w-[100px] truncate">
-                    {displayName}
-                  </span>
-                  <span className="text-[10px] text-slate-400 leading-none">
-                    Menu & Ajustes
-                  </span>
-                </div>
+                <span className="text-xs font-extrabold tracking-wide uppercase">
+                  Menu
+                </span>
 
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+                {/* Avatar Compacto com Inicial */}
+                <div className="hidden xs:flex items-center justify-center w-6 h-6 rounded-lg bg-slate-800 border border-slate-700 text-[10px] font-black text-yellow-400 shrink-0">
+                  {initial}
+                </div>
               </button>
 
               {/* Menu Flutuante Consolidado (Tudo organizado em 1 lugar) */}
