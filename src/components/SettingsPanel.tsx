@@ -33,6 +33,18 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [userFeedback, setUserFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  // Lista de usuários existentes (aba "Usuários", somente admin)
+  const [existingUsers, setExistingUsers] = useState<
+    { id: string; email: string | null; nome: string | null; criadoEm: string; ultimoLogin: string | null }[]
+  >([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [usersError, setUsersError] = useState<string | null>(null);
+  const [resetTargetId, setResetTargetId] = useState<string | null>(null);
+  const [resetPasswordValue, setResetPasswordValue] = useState('');
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [resetFeedback, setResetFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+
   // Contatos salvos (Contratado/Vendedor) reutilizáveis
   const [savedParties, setSavedParties] = useState<SavedParty[]>([]);
   const [loadingParties, setLoadingParties] = useState(false);
@@ -46,6 +58,61 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       .catch(() => setMessage({ type: 'error', text: 'Erro ao carregar contatos salvos.' }))
       .finally(() => setLoadingParties(false));
   }, [isOpen, activeTab]);
+
+  const fetchExistingUsers = async () => {
+    setLoadingUsers(true);
+    setUsersError(null);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+
+    const { data, error } = await supabase.functions.invoke('admin-list-users', {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+
+    setLoadingUsers(false);
+
+    if (error || data?.error) {
+      setUsersError(data?.error || error?.message || 'Falha ao carregar usuários.');
+      return;
+    }
+    setExistingUsers(data?.users || []);
+  };
+
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'usuarios' || !isAdmin) return;
+    fetchExistingUsers();
+  }, [isOpen, activeTab, isAdmin]);
+
+  const handleResetPassword = async (userId: string) => {
+    if (!resetPasswordValue || resetPasswordValue.length < 6) {
+      setResetFeedback({ type: 'error', message: 'A senha precisa ter pelo menos 6 caracteres.' });
+      return;
+    }
+    setIsResettingPassword(true);
+    setResetFeedback(null);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+
+    const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+      body: { userId, newPassword: resetPasswordValue },
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+
+    setIsResettingPassword(false);
+
+    if (error || data?.error) {
+      setResetFeedback({ type: 'error', message: data?.error || error?.message || 'Falha ao redefinir senha.' });
+      return;
+    }
+
+    setResetFeedback({ type: 'success', message: 'Senha redefinida com sucesso.' });
+    setResetPasswordValue('');
+    setTimeout(() => {
+      setResetTargetId(null);
+      setResetFeedback(null);
+    }, 1500);
+  };
 
   const handleDeleteParty = async (id: string) => {
     setDeletingId(id);
@@ -182,6 +249,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setNovoNome('');
     setNovoEmail('');
     setNovaSenha('');
+    fetchExistingUsers();
   };
 
   return (
@@ -397,11 +465,103 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             <div className="space-y-4">
               <div className="bg-amber-50/60 border border-amber-200/70 rounded-lg p-4">
                 <p className="text-sm text-amber-950">
-                  Crie novos acessos ao sistema para colaboradores ou parceiros.
+                  Por segurança, o sistema nunca guarda senhas em texto legível — só é possível
+                  ver o e-mail de cada usuário e definir uma nova senha, não visualizar a atual.
                 </p>
               </div>
 
+              {/* Lista de usuários existentes */}
+              <div className="border border-slate-200 rounded-lg p-4 space-y-3">
+                <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                  <BookUser className="w-4 h-4 text-slate-700" />
+                  Usuários com acesso
+                </h3>
+
+                {loadingUsers && (
+                  <div className="flex items-center gap-2 text-xs text-slate-500 py-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Carregando usuários...
+                  </div>
+                )}
+
+                {usersError && (
+                  <div className="text-xs font-semibold text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    {usersError}
+                  </div>
+                )}
+
+                {!loadingUsers && !usersError && existingUsers.length === 0 && (
+                  <p className="text-xs text-slate-500">Nenhum usuário encontrado.</p>
+                )}
+
+                <div className="space-y-2">
+                  {existingUsers.map((u) => (
+                    <div key={u.id} className="border border-slate-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-slate-900 truncate">{u.email}</p>
+                          {u.nome && <p className="text-xs text-slate-500 truncate">{u.nome}</p>}
+                        </div>
+                        <button
+                          onClick={() => {
+                            setResetTargetId(resetTargetId === u.id ? null : u.id);
+                            setResetPasswordValue('');
+                            setResetFeedback(null);
+                          }}
+                          className="shrink-0 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                        >
+                          {resetTargetId === u.id ? 'Cancelar' : 'Redefinir senha'}
+                        </button>
+                      </div>
+
+                      {resetTargetId === u.id && (
+                        <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
+                          <label className="text-xs font-semibold text-slate-600 block">Nova senha</label>
+                          <input
+                            type="text"
+                            minLength={6}
+                            value={resetPasswordValue}
+                            onChange={(e) => setResetPasswordValue(e.target.value)}
+                            placeholder="Mínimo 6 caracteres"
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                          />
+                          {resetFeedback && (
+                            <div
+                              className={`text-xs font-semibold rounded-lg px-3 py-2 flex items-center gap-2 ${
+                                resetFeedback.type === 'success'
+                                  ? 'text-amber-950 bg-amber-50 border border-amber-200'
+                                  : 'text-red-600 bg-red-50 border border-red-100'
+                              }`}
+                            >
+                              {resetFeedback.type === 'success' ? (
+                                <CheckCircle2 className="w-4 h-4 text-amber-600" />
+                              ) : (
+                                <AlertCircle className="w-4 h-4" />
+                              )}
+                              {resetFeedback.message}
+                            </div>
+                          )}
+                          <button
+                            onClick={() => handleResetPassword(u.id)}
+                            disabled={isResettingPassword}
+                            className="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:opacity-60 text-slate-950 font-bold text-xs py-2 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                          >
+                            {isResettingPassword && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                            Salvar nova senha
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <form onSubmit={handleCreateUser} className="border border-slate-200 rounded-lg p-4 space-y-4">
+                <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                  <UserPlus className="w-4 h-4 text-slate-700" />
+                  Criar novo usuário
+                </h3>
                 <div>
                   <label className="text-xs font-semibold text-slate-600 block mb-1.5">Nome</label>
                   <input

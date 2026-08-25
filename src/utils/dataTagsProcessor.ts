@@ -146,7 +146,129 @@ export function generateContractTags(contract: ContractData): TagMapping {
     });
   }
 
+  // TAGS DE VENDA À VISTA E VENDA PARCELADA (templates usam {tag} em minúsculo,
+  // snake_case e ordem "campo_papel" - ex: {cpf_comprador}, {artigo_vendedor}).
+  // Faltava esse bloco inteiro: os templates .docx reais de venda_vista e
+  // venda_parcelada usam essas chaves, mas só existiam os equivalentes em
+  // MAIÚSCULO/ordem invertida acima (ex: COMPRADOR_CPF) - por isso nenhuma
+  // tag do contrato era substituída (chave não batia, tag ficava intocada).
+  if (contract.tipo === 'venda_vista' || contract.tipo === 'venda_parcelada') {
+    const v = contract.vendedor;
+    const c = contract.comprador;
+    const im = contract.imovel;
+
+    const dia = contract.diaAssinatura || new Date().getDate().toString();
+    const mesExtenso = contract.mesExtensoAssinatura || getMesExtensoPT(new Date().getMonth());
+    const ano = contract.anoAssinatura || new Date().getFullYear().toString();
+    const cidadeAssinatura = contract.cidadeAssinatura || contract.cidadeForo || '';
+    const estadoAssinatura = contract.ufAssinatura || contract.ufForo || '';
+
+    const formatBRL = (n: number) => `R$ ${n.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    const valorExtenso = contract.valorTotalExtenso || '';
+    const valorTotalStr = `${formatBRL(contract.valorTotal || 0)}${valorExtenso ? ` (${valorExtenso})` : ''}`;
+
+    Object.assign(tags, {
+      vendedor: v.nome || '',
+      comprador: c.nome || '',
+      VENDEDOR: v.nome || '',
+      COMPRADOR: c.nome || '',
+      NOME_PAPEL_VENDEDOR: getTratamento('vendedor', v.genero),
+      NOME_PAPEL_COMPRADOR: getTratamento('comprador', c.genero),
+
+      nacionalidade_vendedor: v.nacionalidade || 'brasileiro(a)',
+      nacionalidade_comprador: c.nacionalidade || 'brasileiro(a)',
+      estado_civil_vendedor: v.estadoCivil || '',
+      estado_civil_comprador: c.estadoCivil || '',
+      cpf_vendedor: v.cpfCnpj || '',
+      cpf_comprador: c.cpfCnpj || '',
+      rg_vendedor: v.rg || '',
+      rg_comprador: c.rg || '',
+      emissao_rg_vendedor: v.rgOrgao || 'SSP/PA',
+      emissao_rg_comprador: c.rgOrgao || 'SSP/PA',
+      endereco_vendedor: v.endereco || '',
+      endereco_comprador: c.endereco || '',
+      numero_vendedor: v.numero || 'S/N',
+      numero_comprador: c.numero || 'S/N',
+      bairro_vendedor: v.bairro || '',
+      bairro_comprador: c.bairro || '',
+      cep_vendedor: v.cep || '',
+      cep_comprador: c.cep || '',
+      cidade_vendedor: v.cidade || '',
+      cidade_comprador: c.cidade || '',
+      estado_vendedor: v.uf || '',
+      estado_comprador: c.uf || '',
+      telefone_vendedor: v.telefone || '',
+      telefone_comprador: c.telefone || '',
+
+      empreendimento: im?.nomeEmpreendimento || '',
+      lote: im?.numeroLote || '',
+      quadra: im?.numeroQuadra || '',
+      localizacao_imovel: im?.localizacaoImovel || '',
+      cidade_imovel: im?.cidadeImovel || '',
+      estado_imovel: im?.ufImovel || '',
+      rua_do_lote: im?.enderecoLote || '',
+      quantidade_terreno: '01 (um) lote de terreno',
+      frente: im?.metragemFrente ? `${im.metragemFrente} metros` : '',
+      fundos: im?.metragemFundos ? `${im.metragemFundos} metros` : '',
+      lateral_direita: im?.metragemLateralDireita ? `${im.metragemLateralDireita} metros` : '',
+      lateral_esquerda: im?.metragemLateralEsquerda ? `${im.metragemLateralEsquerda} metros` : '',
+      area_total: im?.areaTotalM2 ? `${im.areaTotalM2} m²` : '',
+
+      valor_total: valorTotalStr,
+      valor_total_extenso: valorExtenso,
+      dia,
+      mes_extenso: mesExtenso,
+      ano,
+      cidade_assinatura: cidadeAssinatura,
+      estado_assinatura: estadoAssinatura,
+
+      ...getGrammarTags(v.genero, 'vendedor'),
+      ...getGrammarTags(c.genero, 'comprador'),
+    });
+
+    if (contract.tipo === 'venda_parcelada') {
+      const vp = contract.vendaParcelada;
+      const valorTotalNum = contract.valorTotal || 0;
+      const valorEntradaNum = vp?.valorEntrada || 0;
+      const saldoRestanteNum = Math.max(0, valorTotalNum - valorEntradaNum);
+      const numParcelas = vp?.numeroParcelas || 1;
+      const valorParcelaNum = vp?.valorParcela || (numParcelas > 0 ? saldoRestanteNum / numParcelas : 0);
+
+      Object.assign(tags, {
+        entrada: formatBRL(valorEntradaNum),
+        restante: formatBRL(saldoRestanteNum),
+        quantidade_parcelas: `${numParcelas}`,
+        modo_pagamento: vp?.formaPagamentoParcelas || 'Boleto Bancário',
+        valor_parcela: formatBRL(valorParcelaNum),
+        data_vencimento: vp?.dataPrimeiroVencimento || '',
+        data_primeira_parcela: vp?.dataPrimeiroVencimento || '',
+      });
+    }
+  }
+
   return tags;
+}
+
+/**
+ * Tags de concordância gramatical (gênero) para um papel contratual
+ * (vendedor/comprador), com base no campo genero ('M' | 'F') salvo no
+ * cadastro da parte. Sem gênero definido, cai no masculino (comportamento
+ * anterior/neutro).
+ */
+function getGrammarTags(genero: string | undefined, papel: 'vendedor' | 'comprador'): TagMapping {
+  const isF = genero === 'F';
+  return {
+    [`artigo_${papel}`]: isF ? 'A' : 'O',
+    [`tratamento_${papel}`]: isF ? 'Sra.' : 'Sr.',
+    [`chamado_${papel}`]: isF ? 'chamada' : 'chamado',
+    [`domiciliado_${papel}`]: isF ? 'domiciliada' : 'domiciliado',
+    [`portador_${papel}`]: isF ? 'portadora' : 'portador',
+    [`possessivo_${papel}`]: isF ? 'sua' : 'seu',
+    [`pronome_${papel}`]: isF ? 'ela' : 'ele',
+    [`este_${papel}`]: isF ? 'esta' : 'este',
+    [`de_${papel}`]: isF ? 'da' : 'do',
+    [`ao_${papel}`]: isF ? 'à' : 'ao',
+  };
 }
 
 /**

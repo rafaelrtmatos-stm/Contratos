@@ -190,11 +190,14 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   );
 
   // Venda à Vista
-  const [formaPagamentoVista, setFormaPagamentoVista] = useState<'PIX' | 'TED/DOC' | 'Dinheiro' | 'Cheque'>(
+  const [formaPagamentoVista, setFormaPagamentoVista] = useState<'PIX' | 'TED/DOC' | 'Dinheiro' | 'Cartão' | 'Cheque' | 'Mesclado'>(
     (initialData as any)?.formaPagamentoVista || 'PIX'
   );
   const [dadosBancariosRecebedor, setDadosBancariosRecebedor] = useState(
     (initialData as any)?.dadosBancariosRecebedor || ''
+  );
+  const [detalhesPagamentoMesclado, setDetalhesPagamentoMesclado] = useState(
+    (initialData as any)?.detalhesPagamentoMesclado || ''
   );
 
   // Venda Parcelada
@@ -482,7 +485,10 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     if (!valorTotal || valorTotal <= 0) missing.push({ label: 'Valor Total da Negociação', tab: 'financeiro' });
     req(valorTotalExtenso, 'Valor por Extenso', 'financeiro');
     if (tipo === 'venda_vista') {
-      req(dadosBancariosRecebedor, 'Dados Bancários / Chave PIX', 'financeiro');
+      req(formaPagamentoVista, 'Forma de Pagamento', 'financeiro');
+      if (formaPagamentoVista === 'Mesclado') {
+        req(detalhesPagamentoMesclado, 'Detalhes do Pagamento Mesclado', 'financeiro');
+      }
     }
     if (tipo === 'exclusividade') {
       req(dataInicioExcl, 'Data Início da Exclusividade', 'financeiro');
@@ -523,6 +529,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     vendaVista: tipo === 'venda_vista' ? {
       formaPagamento: formaPagamentoVista as any,
       dadosBancariosRecebedor,
+      detalhesPagamento: formaPagamentoVista === 'Mesclado' ? detalhesPagamentoMesclado : undefined,
       dataQuitacao: `${diaAssinatura}/${mesExtensoAssinatura}/${anoAssinatura}`,
       prazoEntregaPosse: 'Imediata na assinatura deste instrumento',
     } : undefined,
@@ -1893,14 +1900,18 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
                     >
                       <option value="PIX">PIX</option>
-                      <option value="TED/DOC">TED / Transferência Bancária</option>
+                      <option value="Cartão">Cartão</option>
                       <option value="Dinheiro">Dinheiro em Espécie</option>
+                      <option value="TED/DOC">TED / Transferência Bancária</option>
                       <option value="Cheque">Cheque Administrativo</option>
+                      <option value="Mesclado">Mesclado (mais de uma forma)</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Dados Bancários / Chave PIX</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Dados Bancários / Chave PIX <span className="font-normal text-slate-400">(opcional)</span>
+                    </label>
                     <input
                       type="text"
                       value={dadosBancariosRecebedor}
@@ -1910,6 +1921,21 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     />
                   </div>
                 </div>
+
+                {formaPagamentoVista === 'Mesclado' && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Como foi a situação do pagamento?
+                    </label>
+                    <textarea
+                      value={detalhesPagamentoMesclado}
+                      onChange={(e) => setDetalhesPagamentoMesclado(e.target.value)}
+                      placeholder="Ex: R$ 50.000,00 via PIX na assinatura + R$ 130.000,00 em dinheiro na entrega das chaves"
+                      rows={2}
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                    />
+                  </div>
+                )}
               </div>
             )}
 
