@@ -629,7 +629,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {expiringExclusivities.length > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 border border-yellow-300 text-yellow-900 rounded-full text-xs font-bold">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 border border-yellow-300 text-yellow-900 rounded-lg sm:rounded-full text-xs font-bold">
                 <AlertTriangle className="w-3.5 h-3.5 text-yellow-600 shrink-0" />
                 <span>{expiringExclusivities.length} contrato(s) vencendo em até 15 dias!</span>
               </div>
@@ -659,7 +659,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </p>
                     </div>
 
-                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${statusInfo.badgeColor}`}>
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg sm:rounded-full border ${statusInfo.badgeColor}`}>
                       {statusInfo.label}
                     </span>
                   </div>
@@ -804,17 +804,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                       <div className="shrink-0">
                         {contract.tipo === 'venda_vista' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-yellow-50 text-yellow-900 font-bold text-[10px] border border-yellow-300">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg sm:rounded-full bg-yellow-50 text-yellow-900 font-bold text-[10px] border border-yellow-300">
                             {contract.subcategoria === 'outros_bens' ? 'À Vista (Bens Móveis)' : 'À Vista (Imóvel)'}
                           </span>
                         )}
                         {contract.tipo === 'venda_parcelada' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 font-bold text-[10px] border border-slate-300">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg sm:rounded-full bg-slate-100 text-slate-800 font-bold text-[10px] border border-slate-300">
                             {contract.subcategoria === 'outros_bens' ? 'Parcelada (Bens Móveis)' : 'Parcelada (Imóvel)'}
                           </span>
                         )}
                         {contract.tipo === 'exclusividade' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 font-bold text-[10px] border border-slate-300">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg sm:rounded-full bg-slate-100 text-slate-800 font-bold text-[10px] border border-slate-300">
                             Exclusividade
                           </span>
                         )}
