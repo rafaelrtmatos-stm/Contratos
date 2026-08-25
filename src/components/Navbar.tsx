@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ContractType } from '../types/contract';
 import {
-  FileSignature,
   Plus,
   ChevronDown,
   LayoutGrid,
@@ -47,11 +46,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2.5 sm:gap-3 cursor-pointer group select-none shrink-0"
             title="Ir para o Dashboard"
           >
-            {/* Ícone com fundo preto/grafite e destaque dourado */}
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-slate-900 border border-slate-700/80 flex items-center justify-center p-1.5 shadow-md shrink-0 group-hover:border-yellow-400/60 transition-colors">
-              <div className="w-full h-full rounded-xl bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 flex items-center justify-center text-slate-950 font-bold shadow-xs">
-                <FileSignature className="w-5 h-5" />
-              </div>
+            {/* Ícone com fundo preto/grafite e destaque dourado - usa o
+                mesmo arquivo do favicon/ícone iOS (public/icon-512.png),
+                antes era um ícone genérico (FileSignature) diferente do
+                que aparece na tela inicial do celular */}
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-slate-900 border border-slate-700/80 flex items-center justify-center p-1 shadow-md shrink-0 group-hover:border-yellow-400/60 transition-colors overflow-hidden">
+              <img
+                src="/icon-512.png"
+                alt="Logo Contratos"
+                className="w-full h-full rounded-xl object-cover"
+              />
             </div>
             
             <div className="min-w-0">
