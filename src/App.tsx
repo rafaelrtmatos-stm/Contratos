@@ -248,11 +248,15 @@ function MainApp() {
       const idx = updatedContract.assinaturas.findIndex((a) => a === signature);
       if (idx !== -1) updatedContract.assinaturas[idx] = { ...signature };
       await handleUpdateContractFromViewer(updatedContract);
+      setQuickSignContract(null);
     } catch (e: any) {
       console.error('Falha ao registrar assinatura no Supabase', e);
-      alert(e.message || 'Falha ao registrar assinatura.');
+      // Propaga o erro para o DigitalSignatureFlowModal: ele precisa saber
+      // que a assinatura NÃO foi salva para não avançar para a tela de
+      // "sucesso" (que libera o download do PDF com um selo inexistente
+      // no banco). Mantém quickSignContract aberto para o usuário tentar de novo.
+      throw e;
     }
-    setQuickSignContract(null);
   };
 
   return (

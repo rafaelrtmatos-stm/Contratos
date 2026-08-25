@@ -228,15 +228,14 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       meioAutenticacao: 'Login e senha (revalidação via Supabase Auth)',
     };
 
-    try {
-      const assinadoEmServidor = await saveSignature(contract.id, signature);
-      signature.assinadoEm = assinadoEmServidor;
-    } catch (err: any) {
-      console.warn(
-        '⚠️ Assinatura registrada localmente com horário do dispositivo (fallback), mas falhou ao persistir/confirmar horário do servidor:',
-        err.message
-      );
-    }
+    // Se o INSERT falhar, a assinatura NÃO existe no banco: não podemos
+    // adicionar ao estado local nem deixar o modal avançar para a tela de
+    // "sucesso" (que libera o download do PDF com um selo que não valida
+    // em lugar nenhum). Por isso o erro é propagado (throw) em vez de só
+    // logado - quem chama (DigitalSignatureFlowModal) trata e mostra ao
+    // usuário, mantendo-o na tela de senha para tentar de novo.
+    const assinadoEmServidor = await saveSignature(contract.id, signature);
+    signature.assinadoEm = assinadoEmServidor;
 
     handleAddSignature(signature);
 

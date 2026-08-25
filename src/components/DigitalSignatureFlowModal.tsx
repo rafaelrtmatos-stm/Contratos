@@ -12,7 +12,11 @@ interface DigitalSignatureFlowModalProps {
   contract: ContractData;
   parte: 'usuario' | 'comprador';
   onClose: () => void;
-  onSignatureRegistered: (auditStamp: AuditStamp) => void;
+  // Precisa devolver uma Promise: o modal aguarda ela terminar antes de
+  // mostrar "sucesso" e liberar o download do PDF. Se rejeitar, a
+  // assinatura NÃO foi persistida no banco e o usuário vê o erro em vez
+  // de um carimbo/PDF que não existe em lugar nenhum além do próprio PDF.
+  onSignatureRegistered: (auditStamp: AuditStamp) => Promise<void>;
 }
 
 export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps> = ({
@@ -63,11 +67,17 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
       const documentText = await renderContractDocumentPlainText(contract);
       const stamp = await createAuditStamp(nomeAssinante, cpfAssinante, documentText, ip);
 
+      // Só avança pra tela de "sucesso" (que libera o download do PDF com
+      // o selo) DEPOIS que a assinatura foi de fato persistida no banco.
+      // Antes disso era um "fire-and-forget": o modal mostrava sucesso e
+      // liberava o PDF antes mesmo do INSERT terminar, então dava pra
+      // baixar um PDF com um código de selo que nunca existiu no banco.
+      await onSignatureRegistered(stamp);
+
       setCarimbo(stamp);
-      onSignatureRegistered(stamp);
       setStep('actions');
     } catch (err: any) {
-      setError(err.message || 'Erro ao processar assinatura');
+      setError(err.message || 'Erro ao registrar a assinatura. Tente novamente antes de baixar o PDF.');
     } finally {
       setLoading(false);
     }
