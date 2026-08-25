@@ -413,7 +413,15 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   // nesse ponto o botão de assinatura vira "etapa 2": gerar/enviar o
   // link de assinatura pro cliente, em vez de reabrir o fluxo de
   // assinatura do próprio corretor de novo.
-  const sigVendedor = contract.assinaturas?.find((a) => a.role === 'vendedor');
+  // Em contratos de EXCLUSIVIDADE os campos são invertidos (vendedor =
+  // Contratante/proprietário, comprador = Contratado/corretor) - e é
+  // esse mesmo mapeamento que handleSignatureRegistered usa para gravar
+  // a assinatura do corretor com role:'comprador' nesse tipo de
+  // contrato. Sem levar isso em conta aqui, a assinatura já registrada
+  // do corretor nunca era encontrada, e o painel voltava a pedir senha
+  // como se ninguém tivesse assinado ainda.
+  const roleCorretorAtual = isExcl ? 'comprador' : 'vendedor';
+  const sigVendedor = contract.assinaturas?.find((a) => a.role === roleCorretorAtual);
   const vendedorJaAssinouAguardandoCliente = isDigital && !!sigVendedor && !isFullySigned;
 
   return (

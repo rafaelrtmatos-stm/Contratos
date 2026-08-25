@@ -206,10 +206,21 @@ function MainApp() {
   const handleQuickSignConfirm = async (auditStamp: AuditStamp) => {
     if (!quickSignContract) return;
 
+    // Mesmo mapeamento usado em ContractViewer.tsx: em contratos de
+    // EXCLUSIVIDADE os campos são invertidos (vendedor = Contratante/
+    // proprietário, comprador = Contratado/corretor). Sem isso, o "quick
+    // sign" gravava a assinatura do corretor com o nome/CPF do
+    // Contratante (campo vendedor) e com role:'vendedor' - o que também
+    // fazia o painel de detalhe (que já procura role:'comprador' nesse
+    // tipo de contrato) nunca reconhecer que o corretor já tinha assinado.
+    const isExclSig = quickSignContract.tipo === 'exclusividade';
+    const dadosCorretorSig = isExclSig ? quickSignContract.comprador : quickSignContract.vendedor;
+    const roleCorretorSig: 'vendedor' | 'comprador' = isExclSig ? 'comprador' : 'vendedor';
+
     const signature = {
-      role: quickSignParte === 'usuario' ? 'vendedor' : 'comprador',
-      nomeSignatario: quickSignParte === 'usuario' ? quickSignContract.vendedor.nome : quickSignContract.comprador.nome,
-      documentoSignatario: quickSignParte === 'usuario' ? quickSignContract.vendedor.cpfCnpj : quickSignContract.comprador.cpfCnpj,
+      role: quickSignParte === 'usuario' ? roleCorretorSig : 'comprador',
+      nomeSignatario: quickSignParte === 'usuario' ? dadosCorretorSig.nome : quickSignContract.comprador.nome,
+      documentoSignatario: quickSignParte === 'usuario' ? dadosCorretorSig.cpfCnpj : quickSignContract.comprador.cpfCnpj,
       assinaturaDataUrl: auditStamp.signatureId,
       assinadoEm: auditStamp.dataAssinatura,
       hashAutenticacao: auditStamp.hashDocumento,
@@ -221,9 +232,7 @@ function MainApp() {
     const filtered = quickSignContract.assinaturas.filter((a) => a.role !== signature.role);
     const updatedSignatures = [...filtered, signature];
 
-    const isFullySigned =
-      updatedSignatures.some((a) => a.role === 'vendedor') &&
-      updatedSignatures.some((a) => a.role === 'comprador');
+    const isFullySigned = quickSignContract.modalidadeAssinatura === 'digital' && updatedSignatures.length >= 2;
 
     const updatedContract: ContractData = {
       ...quickSignContract,
@@ -280,9 +289,12 @@ function MainApp() {
             onNewContract={handleCreateNewContract}
             onDeleteContract={handleDeleteContract}
             onSignContractDirect={(contract) => {
-              const vendedorAssinou = contract.assinaturas?.some((a) => a.role === 'vendedor');
+              // Mesmo ajuste de handleQuickSignConfirm: em EXCLUSIVIDADE o
+              // corretor assina com role:'comprador', não 'vendedor'.
+              const roleCorretorAtual = contract.tipo === 'exclusividade' ? 'comprador' : 'vendedor';
+              const corretorAssinou = contract.assinaturas?.some((a) => a.role === roleCorretorAtual);
               const compradorAssinou = contract.assinaturas?.some((a) => a.role === 'comprador');
-              setQuickSignParte(vendedorAssinou && !compradorAssinou ? 'comprador' : 'usuario');
+              setQuickSignParte(corretorAssinou && !compradorAssinou ? 'comprador' : 'usuario');
               setQuickSignContract(contract);
             }}
             onOpenWordTemplates={() => setIsWordTemplateModalOpen(true)}
