@@ -228,18 +228,21 @@ export const SignatureLink: React.FC = () => {
 
       // Mesma simulação de progresso do botão do corretor (ContractViewer) -
       // a lib de geração de PDF não expõe eventos reais de andamento, então
-      // simulamos em degraus: 0 -> 15 -> 50 -> 85 -> 90 -> 95 -> 97 -> 99 em
-      // ~4,5s, só fechando em 100% quando a geração de fato terminar.
+      // simulamos em 10 degraus mais graduais ao longo de ~5s, só fechando
+      // em 100% quando a geração de fato terminar.
       let cancelado = false;
       const avancarProgressoSimulado = async () => {
         const degraus = [
           { alvo: 15, base: 500 },
-          { alvo: 50, base: 1000 },
-          { alvo: 85, base: 1200 },
-          { alvo: 90, base: 700 },
-          { alvo: 95, base: 400 },
-          { alvo: 97, base: 350 },
-          { alvo: 99, base: 350 },
+          { alvo: 28, base: 500 },
+          { alvo: 40, base: 500 },
+          { alvo: 52, base: 500 },
+          { alvo: 63, base: 500 },
+          { alvo: 73, base: 500 },
+          { alvo: 82, base: 500 },
+          { alvo: 90, base: 500 },
+          { alvo: 96, base: 500 },
+          { alvo: 99, base: 500 },
         ];
         for (const { alvo, base } of degraus) {
           const variacao = base * (0.8 + Math.random() * 0.4);

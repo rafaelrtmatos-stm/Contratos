@@ -219,21 +219,23 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
     setPdfProgress(0);
 
     // Não existe progresso real do gerador de PDF (a lib não expõe eventos
-    // de andamento), então simulamos em degraus enquanto o arquivo é
-    // montado: 0 -> 15 -> 50 -> 85 -> 90 -> 95 -> 97 -> 99 em ~4,5s (com
-    // pequena variação), e só fecha em 100% quando a geração de fato
-    // terminar - assim a barra nunca "mente" dizendo que já acabou antes
-    // da hora, mas também não fica parada muito tempo perto do fim.
+    // de andamento), então simulamos em 10 degraus mais graduais ao longo
+    // de ~5s (com pequena variação), e só fecha em 100% quando a geração
+    // de fato terminar - assim a barra nunca "mente" dizendo que já
+    // acabou antes da hora, mas também sobe de forma mais suave/contínua.
     let cancelado = false;
     const avancarProgressoSimulado = async () => {
       const degraus = [
         { alvo: 15, base: 500 },
-        { alvo: 50, base: 1000 },
-        { alvo: 85, base: 1200 },
-        { alvo: 90, base: 700 },
-        { alvo: 95, base: 400 },
-        { alvo: 97, base: 350 },
-        { alvo: 99, base: 350 },
+        { alvo: 28, base: 500 },
+        { alvo: 40, base: 500 },
+        { alvo: 52, base: 500 },
+        { alvo: 63, base: 500 },
+        { alvo: 73, base: 500 },
+        { alvo: 82, base: 500 },
+        { alvo: 90, base: 500 },
+        { alvo: 96, base: 500 },
+        { alvo: 99, base: 500 },
       ];
       for (const { alvo, base } of degraus) {
         const variacao = base * (0.8 + Math.random() * 0.4); // ±20%
