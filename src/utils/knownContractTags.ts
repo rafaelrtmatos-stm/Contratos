@@ -91,10 +91,19 @@ export const KNOWN_CONTRACT_TAGS: Record<string, string> = {
   valor_total: 'Valor total da negociação (formatado + por extenso)',
   valor_total_extenso: 'Valor total por extenso',
   dia: 'Dia da assinatura',
+  dia_assinatura: 'Dia da assinatura',
   mes_extenso: 'Mês da assinatura por extenso',
+  mes_assinatura: 'Mês da assinatura por extenso',
   ano: 'Ano da assinatura',
+  ano_assinatura: 'Ano da assinatura',
+  data_assinatura: 'Data da assinatura formatada por extenso',
   cidade_assinatura: 'Cidade da assinatura',
   estado_assinatura: 'UF da assinatura',
+  uf_assinatura: 'UF da assinatura',
+  cidade_foro: 'Cidade do foro eleito',
+  estado_foro: 'UF do foro eleito',
+  uf_foro: 'UF do foro eleito',
+  foro_comarca: 'Comarca do foro eleito (ex: Santarém/PA)',
 
   // Parcelamento (só contrato parcelado)
   entrada: 'Valor da entrada',
@@ -139,12 +148,36 @@ export function extractTagsFromText(text: string): string[] {
 }
 
 export function isKnownTag(tag: string): 'signature' | 'known' | 'unknown' {
-  if (SIGNATURE_TAGS[tag] || tag.toUpperCase().includes('ASSINATURA')) return 'signature';
-  if (KNOWN_CONTRACT_TAGS[tag]) return 'known';
-  // Fallback: aceitar variações de caixa (ex: valor_total vs VALOR_TOTAL)
-  const lower = tag.toLowerCase();
-  const found = Object.keys(KNOWN_CONTRACT_TAGS).find((k) => k.toLowerCase() === lower);
-  return found ? 'known' : 'unknown';
+  const clean = tag.replace(/[{}]/g, '').trim();
+  const upper = clean.toUpperCase();
+  const lower = clean.toLowerCase();
+
+  // 1. Verifica se é tag de dados conhecida primeiro
+  if (KNOWN_CONTRACT_TAGS[clean] || KNOWN_CONTRACT_TAGS[lower]) {
+    return 'known';
+  }
+  const foundDataTag = Object.keys(KNOWN_CONTRACT_TAGS).find((k) => k.toLowerCase() === lower);
+  if (foundDataTag) {
+    return 'known';
+  }
+
+  // 2. Verifica se é selo de assinatura
+  if (
+    SIGNATURE_TAGS[clean] ||
+    SIGNATURE_TAGS[upper] ||
+    upper === 'USUARIO_ASSINATURA_DIGITAL' ||
+    upper === 'USUARIO_ASSINATURA_MANUAL' ||
+    upper === 'COMPRADOR_ASSINATURA_DIGITAL' ||
+    upper === 'COMPRADOR_ASSINATURA_MANUAL' ||
+    upper === 'CONTRATANTE_ASSINATURA_DIGITAL' ||
+    upper === 'CONTRATANTE_ASSINATURA_MANUAL' ||
+    upper.endsWith('_ASSINATURA_DIGITAL') ||
+    upper.endsWith('_ASSINATURA_MANUAL')
+  ) {
+    return 'signature';
+  }
+
+  return 'unknown';
 }
 
 export function describeTag(tag: string): string {
