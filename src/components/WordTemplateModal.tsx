@@ -16,6 +16,10 @@ import {
   listTemplates,
   clearTemplateCache,
 } from '../utils/supabaseTemplateStorage';
+import {
+  downloadOfficialTemplateAsPdf,
+  downloadCustomTemplateAsPdf,
+} from '../utils/templatePdfExporter';
 import { extractTagsFromText, isKnownTag, describeTag } from '../utils/knownContractTags';
 import { extractEditableParagraphs, applyParagraphEdits, EditableParagraph } from '../utils/templateTextEditor';
 import { supabase } from '../utils/supabaseClient';
@@ -53,6 +57,7 @@ import {
   SlidersHorizontal,
   Package,
   Pencil,
+  FileType,
 } from 'lucide-react';
 
 export type TemplateCategory = ContractType | 'outros_bens';
@@ -107,6 +112,8 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [downloadingFile, setDownloadingFile] = useState<string | null>(null);
+  const [downloadingPdfFile, setDownloadingPdfFile] = useState<string | null>(null);
+  const [isDownloadingCustomPdf, setIsDownloadingCustomPdf] = useState(false);
 
   // Assistente de upload e scanner de tags
   const [selectedUploadFile, setSelectedUploadFile] = useState<File | null>(null);
@@ -533,7 +540,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
     }
   };
 
-  // Download de template
+  // Download de template Word (.docx)
   const handleDownloadFile = async (arquivoNome: string) => {
     setDownloadingFile(arquivoNome);
     setErrorMessage(null);
@@ -559,9 +566,39 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
     }
   };
 
-  // Download do modelo personalizado em uso
+  // Download de template em PDF (.pdf)
+  const handleDownloadFilePdf = async (arquivoNome: string) => {
+    setDownloadingPdfFile(arquivoNome);
+    setErrorMessage(null);
+
+    try {
+      await downloadOfficialTemplateAsPdf(arquivoNome);
+    } catch (err: any) {
+      setErrorMessage(`Erro ao gerar PDF de "${arquivoNome}": ${err.message}`);
+    } finally {
+      setDownloadingPdfFile(null);
+    }
+  };
+
+  // Download do modelo personalizado em uso em Word (.docx)
   const handleDownloadCustomActive = () => {
     downloadSampleDocxTemplate(toTemplateKey(activeCategory));
+  };
+
+  // Download do modelo personalizado em uso em PDF (.pdf)
+  const handleDownloadCustomActivePdf = async () => {
+    const key = toTemplateKey(activeCategory);
+    setIsDownloadingCustomPdf(true);
+    setErrorMessage(null);
+
+    try {
+      const fileName = currentMeta ? currentMeta.fileName : `Matriz_${activeCategory}`;
+      await downloadCustomTemplateAsPdf(key, fileName);
+    } catch (err: any) {
+      setErrorMessage(`Erro ao gerar PDF do modelo em uso: ${err.message}`);
+    } finally {
+      setIsDownloadingCustomPdf(false);
+    }
   };
 
   // Restaurar modelo padrão (remover customização)
@@ -1066,14 +1103,24 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                <div className="flex flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                   <button
                     onClick={handleDownloadCustomActive}
                     className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-extrabold bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 rounded-xl transition-all cursor-pointer shadow-xs min-h-[40px]"
-                    title="Baixar matriz atualmente em uso"
+                    title="Baixar matriz atualmente em uso em formato Word (.docx)"
                   >
                     <Download className="w-3.5 h-3.5 text-slate-600" />
-                    <span>Baixar em Uso</span>
+                    <span>Word (.docx)</span>
+                  </button>
+
+                  <button
+                    onClick={handleDownloadCustomActivePdf}
+                    disabled={isDownloadingCustomPdf}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-extrabold bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-800 rounded-xl transition-all cursor-pointer shadow-xs min-h-[40px] disabled:opacity-50"
+                    title="Baixar matriz atualmente em uso em formato PDF (.pdf)"
+                  >
+                    <FileType className="w-3.5 h-3.5 text-rose-600" />
+                    <span>{isDownloadingCustomPdf ? 'Gerando PDF...' : 'PDF (.pdf)'}</span>
                   </button>
 
                   {currentMeta && (
@@ -1105,6 +1152,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                   {currentSlots.map((slot, idx) => {
                     const isFileInStorage = supabaseFiles.has(slot.arquivo);
                     const isCurrentDownloading = downloadingFile === slot.arquivo;
+                    const isCurrentDownloadingPdf = downloadingPdfFile === slot.arquivo;
 
                     return (
                       <div
@@ -1163,10 +1211,11 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
 
                         {/* Botões de Ação do Card */}
                         <div className="space-y-2 pt-2 border-t border-slate-100">
-                          <div className="grid grid-cols-3 gap-1.5">
+                          {/* Linha 1: Prévia e Edição */}
+                          <div className="grid grid-cols-2 gap-1.5">
                             <button
                               onClick={() => handlePreviewFile(slot.arquivo)}
-                              className="flex items-center justify-center gap-1 px-2 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer border border-slate-200 min-h-[38px]"
+                              className="flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer border border-slate-200 min-h-[36px]"
                               title="Visualizar texto e formatação original"
                             >
                               <Eye className="w-3.5 h-3.5 text-slate-500" />
@@ -1175,28 +1224,42 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
 
                             <button
                               onClick={() => handleOpenZohoEditor(slot.arquivo)}
-                              className="flex items-center justify-center gap-1 px-2 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer border border-slate-200 min-h-[38px]"
+                              className="flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer border border-slate-200 min-h-[36px]"
                               title="Editar o modelo completo (fonte, negrito, tabelas) direto no navegador"
                             >
                               <Pencil className="w-3.5 h-3.5 text-slate-500" />
                               <span>Editar</span>
                             </button>
+                          </div>
 
+                          {/* Linha 2: Baixar Word e Baixar PDF */}
+                          <div className="grid grid-cols-2 gap-1.5">
                             <button
                               onClick={() => handleDownloadFile(slot.arquivo)}
                               disabled={isCurrentDownloading}
-                              className="flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-extrabold btn-chrome-graphite text-white rounded-xl transition-all cursor-pointer shadow-xs disabled:opacity-50 min-h-[38px]"
-                              title="Baixar arquivo Word para edição"
+                              className="flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-extrabold btn-chrome-graphite text-white rounded-xl transition-all cursor-pointer shadow-xs disabled:opacity-50 min-h-[36px]"
+                              title="Baixar arquivo Word (.docx) para edição"
                             >
                               <Download className="w-3.5 h-3.5" />
-                              <span>{isCurrentDownloading ? '...' : 'Baixar'}</span>
+                              <span>{isCurrentDownloading ? '...' : 'Word (.docx)'}</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleDownloadFilePdf(slot.arquivo)}
+                              disabled={isCurrentDownloadingPdf}
+                              className="flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-extrabold bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-all cursor-pointer shadow-xs disabled:opacity-50 min-h-[36px]"
+                              title="Baixar modelo formatado em PDF (.pdf)"
+                            >
+                              <FileType className="w-3.5 h-3.5 text-rose-100" />
+                              <span>{isCurrentDownloadingPdf ? '...' : 'PDF (.pdf)'}</span>
                             </button>
                           </div>
 
+                          {/* Linha 3: Substituição */}
                           <button
                             onClick={() => handleDirectSlotUpload(slot.arquivo)}
                             disabled={isProcessing}
-                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-extrabold text-yellow-950 bg-yellow-100/70 hover:bg-yellow-200/80 border border-yellow-300/80 rounded-xl transition-all cursor-pointer min-h-[38px] disabled:opacity-50"
+                            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold text-yellow-950 bg-yellow-100/70 hover:bg-yellow-200/80 border border-yellow-300/80 rounded-xl transition-all cursor-pointer min-h-[34px] disabled:opacity-50"
                             title="Substituir este slot com um arquivo Word"
                           >
                             <Upload className="w-3.5 h-3.5 text-yellow-800" />
@@ -1560,13 +1623,27 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
 
                 <div className="flex items-center gap-2">
                   {previewFileName && (
-                    <button
-                      onClick={() => handleDownloadFile(previewFileName)}
-                      className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>Baixar Este .docx</span>
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleDownloadFile(previewFileName)}
+                        disabled={downloadingFile === previewFileName}
+                        className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+                        title="Baixar modelo em formato Word (.docx)"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>{downloadingFile === previewFileName ? 'Baixando...' : 'Baixar .docx'}</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleDownloadFilePdf(previewFileName)}
+                        disabled={downloadingPdfFile === previewFileName}
+                        className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+                        title="Baixar modelo formatado em PDF (.pdf)"
+                      >
+                        <FileType className="w-3.5 h-3.5 text-rose-100" />
+                        <span>{downloadingPdfFile === previewFileName ? 'Gerando PDF...' : 'Baixar .pdf'}</span>
+                      </button>
+                    </>
                   )}
                   <button
                     onClick={() => setActiveSubTab('matrizes')}
