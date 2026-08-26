@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { validateSignatureCode, SignatureValidationResult } from '../utils/signatureOtpUtils';
-import { ShieldCheck, ShieldAlert, Search, Loader2 } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Search, Loader2, Copy, Check } from 'lucide-react';
 
 const roleLabel = (role?: string): string => {
   if (role === 'vendedor') return 'Contratante';
@@ -24,6 +24,7 @@ export const ValidatePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState<SignatureValidationResult | null>(null);
   const [buscou, setBuscou] = useState(false);
+  const [copiedValidation, setCopiedValidation] = useState(false);
 
   const handleValidar = async (codigoParam?: string) => {
     const alvo = codigoParam ?? codigo;
@@ -36,6 +37,30 @@ export const ValidatePage: React.FC = () => {
       setResultado(r);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCopyValidation = async () => {
+    if (!resultado || !resultado.encontrado) return;
+    const text = [
+      '=== REGISTRO DE VALIDAÇÃO DE ASSINATURA DIGITAL ===',
+      `Status: Documento Autêntico e Válido`,
+      `Signatário: ${resultado.nomeSignatario} (${roleLabel(resultado.papel)})`,
+      `Data/Hora: ${resultado.assinadoEm ? new Date(resultado.assinadoEm).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '-'}`,
+      `Contrato: Nº ${resultado.numeroContrato} — ${tipoLabel(resultado.tipoContrato)}`,
+      `Meio de Autenticação: ${resultado.meioAutenticacao || 'Código de Confirmação OTP'}`,
+      `Código de Validação: ${codigo}`,
+      `HASH SHA-256: ${resultado.hashCompleto}`,
+      `Base Legal: MP 2.200-2/2001 e Lei 14.063/2020`,
+      '==================================================',
+    ].join('\n');
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedValidation(true);
+      setTimeout(() => setCopiedValidation(false), 2500);
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -83,20 +108,41 @@ export const ValidatePage: React.FC = () => {
 
           {buscou && !loading && resultado && (
             resultado.encontrado ? (
-              <div className="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-xl space-y-2">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                  <span className="font-bold text-emerald-900 text-sm">Documento autêntico</span>
+              <div className="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                    <span className="font-bold text-emerald-900 text-sm">Documento autêntico</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyValidation}
+                    className="flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-emerald-100/50 border border-emerald-300 rounded-lg text-[11px] font-bold text-emerald-800 shadow-2xs transition-colors cursor-pointer"
+                    title="Copiar relatório de validação"
+                  >
+                    {copiedValidation ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span>Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3 text-emerald-700" />
+                        <span>Copiar Evidência</span>
+                      </>
+                    )}
+                  </button>
                 </div>
-                <div className="text-xs text-emerald-800 space-y-1 pt-1">
+
+                <div className="text-xs text-emerald-800 space-y-1 pt-1 bg-white/70 p-3 rounded-lg border border-emerald-200">
                   <p><strong>Assinado por:</strong> {resultado.nomeSignatario} ({roleLabel(resultado.papel)})</p>
                   <p><strong>Data/Hora:</strong> {resultado.assinadoEm ? new Date(resultado.assinadoEm).toLocaleString('pt-BR', { hour12: true, timeZone: 'America/Sao_Paulo' }) : '-'}</p>
                   <p><strong>Contrato nº:</strong> {resultado.numeroContrato} — {tipoLabel(resultado.tipoContrato)}</p>
                   {resultado.meioAutenticacao && (
                     <p><strong>Meio de autenticação:</strong> {resultado.meioAutenticacao}</p>
                   )}
-                  <p className="break-all font-mono text-[10px] text-emerald-700 pt-1">
-                    Hash: {resultado.hashCompleto}
+                  <p className="break-all font-mono text-[10px] text-emerald-700 pt-1.5 border-t border-emerald-200/60 mt-1.5">
+                    <strong>Hash SHA-256:</strong> {resultado.hashCompleto}
                   </p>
                 </div>
               </div>
@@ -118,3 +164,4 @@ export const ValidatePage: React.FC = () => {
     </div>
   );
 };
+

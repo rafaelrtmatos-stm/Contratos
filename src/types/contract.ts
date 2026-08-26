@@ -95,6 +95,8 @@ export interface DigitalSignature {
    *  Campo próprio no banco (contract_signatures.meio_autenticacao) - não
    *  fica mais embutido como texto livre dentro de metadadosNavegador. */
   meioAutenticacao?: string;
+  /** Código alfanumérico OTP de confirmação / validação da assinatura (ex: A8F9-2041-99BC-1234) */
+  codigoConfirmacao?: string;
 }
 
 export interface ContractData {

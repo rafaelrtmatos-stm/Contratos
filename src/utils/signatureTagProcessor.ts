@@ -10,8 +10,8 @@ import { DigitalSignature } from '../types/contract';
 import { renderSignatureStampPng } from './signatureStampImage';
 
 const EMU_PER_MM = 36000;
-const STAMP_WIDTH_MM = 69.3; // 33% da largura da página A4 (210mm)
-const STAMP_HEIGHT_MM = 20.79; // 7% da altura da página A4 (297mm)
+const STAMP_WIDTH_MM = 70; // 33% da largura da página A4 (210mm * 0.33 = ~70 mm)
+const STAMP_HEIGHT_MM = 22.2; // Altura proporcional 3.158:1 (~22.2 mm)
 
 // Fonte do tema do documento (Calibri via minorHAnsi), igual à declarada explicitamente
 // em quase todo run dos templates .docx. Sem isso, texto inserido dinamicamente (linha

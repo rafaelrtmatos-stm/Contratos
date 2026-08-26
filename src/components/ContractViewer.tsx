@@ -1046,7 +1046,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
 
         {!renderLoading && !renderError && renderedHtml && (
           <div
-            className="contract-docx-html text-sm sm:text-base [&_p]:mb-3 [&_p]:text-justify [&_strong]:font-bold [&_table]:w-full [&_img]:w-[33%]! [&_img]:h-auto! [&_img]:max-w-[33%]!"
+            className="contract-docx-html text-sm sm:text-base [&_p]:mb-3 [&_p]:text-justify [&_strong]:font-bold [&_table]:w-full [&_img]:w-[33%]! [&_img]:max-w-[33%]! [&_img]:h-auto! [&_img]:mx-auto [&_img]:my-3 [&_img]:block [&_img]:rounded-xl [&_img]:shadow-xs"
             dangerouslySetInnerHTML={{ __html: renderedHtml }}
           />
         )}
