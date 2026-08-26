@@ -35,7 +35,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   // Lista de usuários existentes (aba "Usuários", somente admin)
   const [existingUsers, setExistingUsers] = useState<
-    { id: string; email: string | null; nome: string | null; criadoEm: string; ultimoLogin: string | null }[]
+    {
+      id: string;
+      email: string | null;
+      nome: string | null;
+      criadoEm: string;
+      ultimoLogin: string | null;
+      role: string;
+      permissions: Record<string, boolean>;
+    }[]
   >([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
@@ -44,6 +52,52 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [resetFeedback, setResetFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  // Painel de "o que ele vê ou não" (permissões) por usuário
+  const [permsTargetId, setPermsTargetId] = useState<string | null>(null);
+  const [permsDraft, setPermsDraft] = useState<Record<string, boolean>>({});
+  const [isSavingPerms, setIsSavingPerms] = useState(false);
+  const [permsFeedback, setPermsFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const PERMISSION_LABELS: { key: string; label: string; hint: string }[] = [
+    { key: 'ver_financeiro', label: 'Ver valores financeiros', hint: 'Valor total, entrada e parcelas dos contratos' },
+    { key: 'excluir_contratos', label: 'Excluir contratos', hint: 'Enviar contratos para a Lixeira' },
+    { key: 'gerenciar_templates', label: 'Gerenciar Templates', hint: 'Enviar, baixar e excluir modelos .docx' },
+    { key: 'gerenciar_usuarios', label: 'Gerenciar Usuários', hint: 'Criar usuários e editar permissões de outros' },
+  ];
+
+  const handleSavePermissions = async (userId: string) => {
+    setIsSavingPerms(true);
+    setPermsFeedback(null);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+
+    const { data, error } = await supabase.functions.invoke('admin-update-user-permissions', {
+      body: { userId, permissions: permsDraft },
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+
+    setIsSavingPerms(false);
+
+    if (error || data?.error) {
+      setPermsFeedback({ type: 'error', message: data?.error || error?.message || 'Falha ao salvar permissões.' });
+      return;
+    }
+
+    setExistingUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, permissions: { ...u.permissions, ...permsDraft } } : u))
+    );
+    setPermsFeedback({ type: 'success', message: 'Permissões atualizadas.' });
+    setTimeout(() => {
+      setPermsTargetId(null);
+      setPermsFeedback(null);
+    }, 1200);
+  };
+
+  const formatUltimoAcesso = (iso: string | null) => {
+    if (!iso) return 'Nunca acessou';
+    return new Date(iso).toLocaleString('pt-BR', { hour12: true, timeZone: 'America/Sao_Paulo' });
+  };
 
   // Contatos salvos (Contratado/Vendedor) reutilizáveis
   const [savedParties, setSavedParties] = useState<SavedParty[]>([]);
@@ -502,18 +556,81 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <div className="min-w-0">
                           <p className="text-sm font-bold text-slate-900 truncate">{u.email}</p>
                           {u.nome && <p className="text-xs text-slate-500 truncate">{u.nome}</p>}
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            Último acesso: {formatUltimoAcesso(u.ultimoLogin)}
+                            {u.role === 'admin' && <span className="ml-2 text-amber-700 font-semibold">Admin</span>}
+                          </p>
                         </div>
-                        <button
-                          onClick={() => {
-                            setResetTargetId(resetTargetId === u.id ? null : u.id);
-                            setResetPasswordValue('');
-                            setResetFeedback(null);
-                          }}
-                          className="shrink-0 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
-                        >
-                          {resetTargetId === u.id ? 'Cancelar' : 'Redefinir senha'}
-                        </button>
+                        <div className="flex flex-col gap-1.5 shrink-0">
+                          <button
+                            onClick={() => {
+                              setResetTargetId(resetTargetId === u.id ? null : u.id);
+                              setResetPasswordValue('');
+                              setResetFeedback(null);
+                            }}
+                            className="px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                          >
+                            {resetTargetId === u.id ? 'Cancelar' : 'Redefinir senha'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (permsTargetId === u.id) {
+                                setPermsTargetId(null);
+                              } else {
+                                setPermsTargetId(u.id);
+                                setPermsDraft(u.permissions || {});
+                                setPermsFeedback(null);
+                              }
+                            }}
+                            className="px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                          >
+                            {permsTargetId === u.id ? 'Cancelar' : 'O que ele vê'}
+                          </button>
+                        </div>
                       </div>
+
+                      {permsTargetId === u.id && (
+                        <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
+                          {PERMISSION_LABELS.map((p) => (
+                            <label key={p.key} className="flex items-start gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={!!permsDraft[p.key]}
+                                onChange={(e) => setPermsDraft({ ...permsDraft, [p.key]: e.target.checked })}
+                                className="mt-0.5 w-4 h-4 accent-amber-500 cursor-pointer"
+                              />
+                              <span>
+                                <span className="block text-xs font-semibold text-slate-800">{p.label}</span>
+                                <span className="block text-[11px] text-slate-500">{p.hint}</span>
+                              </span>
+                            </label>
+                          ))}
+                          {permsFeedback && (
+                            <div
+                              className={`text-xs font-semibold rounded-lg px-3 py-2 flex items-center gap-2 ${
+                                permsFeedback.type === 'success'
+                                  ? 'text-amber-950 bg-amber-50 border border-amber-200'
+                                  : 'text-red-600 bg-red-50 border border-red-100'
+                              }`}
+                            >
+                              {permsFeedback.type === 'success' ? (
+                                <CheckCircle2 className="w-4 h-4 text-amber-600" />
+                              ) : (
+                                <AlertCircle className="w-4 h-4" />
+                              )}
+                              {permsFeedback.message}
+                            </div>
+                          )}
+                          <button
+                            onClick={() => handleSavePermissions(u.id)}
+                            disabled={isSavingPerms}
+                            className="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:opacity-60 text-slate-950 font-bold text-xs py-2 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                          >
+                            {isSavingPerms && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                            Salvar permissões
+                          </button>
+                        </div>
+                      )}
 
                       {resetTargetId === u.id && (
                         <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">

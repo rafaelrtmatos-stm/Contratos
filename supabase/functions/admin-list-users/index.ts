@@ -74,13 +74,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    const users = listData.users.map((u) => ({
-      id: u.id,
-      email: u.email,
-      nome: (u.user_metadata as any)?.nome || null,
-      criadoEm: u.created_at,
-      ultimoLogin: u.last_sign_in_at,
-    }));
+    // Busca role/permissions de todos de uma vez (tabela profiles) - a
+    // Admin API do Auth não sabe nada sobre isso, só o banco.
+    const { data: profilesData } = await adminClient
+      .from('profiles')
+      .select('id, role, permissions');
+    const profilesById = new Map((profilesData || []).map((p: any) => [p.id, p]));
+
+    const users = listData.users.map((u) => {
+      const perfil = profilesById.get(u.id);
+      return {
+        id: u.id,
+        email: u.email,
+        nome: (u.user_metadata as any)?.nome || null,
+        criadoEm: u.created_at,
+        ultimoLogin: u.last_sign_in_at,
+        role: perfil?.role || 'user',
+        permissions: perfil?.permissions || {},
+      };
+    });
 
     return new Response(JSON.stringify({ users }), {
       status: 200,
