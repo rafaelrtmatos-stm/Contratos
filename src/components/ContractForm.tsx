@@ -132,18 +132,29 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     initialData?.dataCriacao ? new Date(initialData.dataCriacao) : new Date()
   );
 
-  // Foro e Assinatura
-  const [cidadeForo, setCidadeForo] = useState(initialData?.cidadeForo || '');
-  const [ufForo, setUfForo] = useState(initialData?.ufForo || '');
-  const [cidadeAssinatura, setCidadeAssinatura] = useState(initialData?.cidadeAssinatura || '');
-  const [ufAssinatura, setUfAssinatura] = useState(initialData?.ufAssinatura || '');
-  
-  // Data de Assinatura desmembrada
-  const [diaAssinatura, setDiaAssinatura] = useState(initialData?.diaAssinatura || '');
-  const [mesExtensoAssinatura, setMesExtensoAssinatura] = useState(
-    initialData?.mesExtensoAssinatura || ''
+  // Foro e Assinatura - contrato novo já nasce com Santarém/PA e a data
+  // atual preenchidos (evita ter que digitar isso toda vez); em edição
+  // de contrato existente, respeita o que já estava salvo.
+  const [cidadeForo, setCidadeForo] = useState(initialData?.cidadeForo || 'Santarém');
+  const [ufForo, setUfForo] = useState(initialData?.ufForo || 'PA');
+  const [cidadeAssinatura, setCidadeAssinatura] = useState(initialData?.cidadeAssinatura || 'Santarém');
+  const [ufAssinatura, setUfAssinatura] = useState(initialData?.ufAssinatura || 'PA');
+
+  // Data de Assinatura desmembrada - default é a data de hoje por extenso
+  const MESES_EXTENSO = [
+    'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+  ];
+  const hoje = new Date();
+  const [diaAssinatura, setDiaAssinatura] = useState(
+    initialData?.diaAssinatura || String(hoje.getDate())
   );
-  const [anoAssinatura, setAnoAssinatura] = useState(initialData?.anoAssinatura || '');
+  const [mesExtensoAssinatura, setMesExtensoAssinatura] = useState(
+    initialData?.mesExtensoAssinatura || MESES_EXTENSO[hoje.getMonth()]
+  );
+  const [anoAssinatura, setAnoAssinatura] = useState(
+    initialData?.anoAssinatura || String(hoje.getFullYear())
+  );
 
   // Partes Detalhadas
   const [vendedor, setVendedor] = useState<PartyDetailedInfo>(
