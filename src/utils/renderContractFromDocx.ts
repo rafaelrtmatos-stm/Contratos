@@ -208,6 +208,15 @@ function base64ToBlob(base64: string, type: string): Blob {
 export async function renderContractDocumentPdf(contract: ContractData): Promise<Blob> {
   // 1) Tentativa primária: conversão via Edge Function (alta fidelidade Word) com retry para cold-start
   try {
+    // Garante que a sessão do Supabase já terminou de "hidratar" (restaurar
+    // do storage local) ANTES de chamar a Edge Function. Sem isso, um clique
+    // logo após a página carregar podia sair sem token válido, a função
+    // rejeitava na hora (401, quase instantâneo) e o código já caía pro
+    // fallback local em seguida - dando a falsa impressão de que "não usou
+    // a API", quando na verdade tentou e foi rejeitada rápido demais pra
+    // perceber. Aguardar aqui elimina essa corrida.
+    await supabase.auth.getSession();
+
     const docxFilled = await buildFilledDocx(contract);
     const temAssinaturaDigital = (contract.assinaturas?.length || 0) > 0;
     const docxFinal = temAssinaturaDigital
@@ -216,8 +225,11 @@ export async function renderContractDocumentPdf(contract: ContractData): Promise
     const docxBase64 = arrayBufferToBase64(docxFinal);
 
     let lastError: any = null;
-    // Até 3 tentativas com pausa de recuperação para contornar cold-start da Edge Function do Supabase
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    // 2 tentativas (não 3): cada chamada já demora ~7-8s por natureza (o
+    // serviço externo de conversão faz 5 passos sequenciais), então 3
+    // tentativas em série podia esticar o tempo total de espera muito além
+    // do razoável quando a primeira falhava. Pausa curta entre tentativas.
+    for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         const { data, error } = await supabase.functions.invoke('convert-docx-to-pdf', {
           body: { docxBase64, filename: 'contrato.docx' },
@@ -228,18 +240,18 @@ export async function renderContractDocumentPdf(contract: ContractData): Promise
         }
 
         lastError = error || data?.error;
-        if (attempt < 3) {
-          await new Promise((r) => setTimeout(r, 1200 * attempt));
+        if (attempt < 2) {
+          await new Promise((r) => setTimeout(r, 800));
         }
       } catch (invokeErr) {
         lastError = invokeErr;
-        if (attempt < 3) {
-          await new Promise((r) => setTimeout(r, 1200 * attempt));
+        if (attempt < 2) {
+          await new Promise((r) => setTimeout(r, 800));
         }
       }
     }
 
-    let detailedError = lastError?.message || lastError || 'Edge Function falhou após 3 tentativas';
+    let detailedError = lastError?.message || lastError || 'Edge Function falhou após 2 tentativas';
     console.warn(
       'Edge Function convert-docx-to-pdf não respondeu a tempo:',
       detailedError,

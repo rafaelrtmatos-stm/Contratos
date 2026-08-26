@@ -22,10 +22,15 @@ export interface StampImageResult {
   heightPx: number;
 }
 
-// Resolução Super Ultra HD / 600+ DPI para máxima nitidez, clareza tipográfica e fidelidade visual
+// Resolução Ultra HD (2460 x 780 px) - já é nitidez de sobra pro selo ocupando
+// 33% da largura da página impressa. O supersample 2x (4920x1560) foi testado
+// e revertido: dobrava o peso do PNG embutido no .docx (~1-2MB por selo) sem
+// ganho visual perceptível, e isso inflava o payload enviado pra conversão
+// (~5MB por contrato com 2 selos), deixando a chamada à API mais lenta e mais
+// sujeita a falha no serviço externo.
 const BASE_WIDTH = 2460;
 const BASE_HEIGHT = 780;
-const SUPERSAMPLE_SCALE = 2; // Renderiza internamente em 4920 x 1560 para altíssima densidade de pixels
+const SUPERSAMPLE_SCALE = 1;
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
@@ -736,7 +741,7 @@ export async function renderSignatureStampPng(data: StampImageData): Promise<Sta
   try {
     const qrDataUrl = await QRCode.toDataURL(data.validationUrl, {
       margin: 1,
-      width: 1200,
+      width: 800,
       color: { dark: '#071224', light: '#FFFFFF' },
       errorCorrectionLevel: 'M',
     });
