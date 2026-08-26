@@ -17,6 +17,7 @@ import {
   clearTemplateCache,
 } from '../utils/supabaseTemplateStorage';
 import { extractTagsFromText, isKnownTag, describeTag } from '../utils/knownContractTags';
+import { extractEditableParagraphs, applyParagraphEdits, EditableParagraph } from '../utils/templateTextEditor';
 import JSZip from 'jszip';
 import * as mammoth from 'mammoth';
 import {
@@ -50,6 +51,7 @@ import {
   HardDrive,
   SlidersHorizontal,
   Package,
+  Pencil,
 } from 'lucide-react';
 
 export type TemplateCategory = ContractType | 'outros_bens';
@@ -117,6 +119,99 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
   const [previewFileName, setPreviewFileName] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
+
+  // Editor de texto do modelo (edição segura, só o texto dos parágrafos -
+  // ver templateTextEditor.ts pro porquê do escopo limitado)
+  const [editorFileName, setEditorFileName] = useState<string | null>(null);
+  const [editorParagraphs, setEditorParagraphs] = useState<EditableParagraph[]>([]);
+  const [editorDrafts, setEditorDrafts] = useState<Record<number, string>>({});
+  const [editorLoading, setEditorLoading] = useState(false);
+  const [editorSaving, setEditorSaving] = useState(false);
+  const [editorError, setEditorError] = useState<string | null>(null);
+  const [editorSuccess, setEditorSuccess] = useState<string | null>(null);
+  // Guarda o XML original (word/document.xml) pra aplicar as edições em
+  // cima dele na hora de salvar, sem precisar baixar o arquivo de novo.
+  const editorOriginalXmlRef = useRef<string | null>(null);
+
+  const handleOpenEditor = async (arquivoNome: string) => {
+    setEditorFileName(arquivoNome);
+    setEditorLoading(true);
+    setEditorError(null);
+    setEditorSuccess(null);
+    setEditorParagraphs([]);
+    setEditorDrafts({});
+    editorOriginalXmlRef.current = null;
+
+    try {
+      const { sucesso, blob, erro } = await downloadTemplateWithCache(arquivoNome);
+      if (!sucesso || !blob) throw new Error(erro || 'Não foi possível carregar o arquivo.');
+
+      const arrayBuffer = await blob.arrayBuffer();
+      const zip = await JSZip.loadAsync(arrayBuffer);
+      const documentXml = await zip.file('word/document.xml')?.async('string');
+      if (!documentXml) throw new Error('Não achei o conteúdo do documento dentro do arquivo .docx.');
+
+      editorOriginalXmlRef.current = documentXml;
+      setEditorParagraphs(extractEditableParagraphs(documentXml));
+    } catch (err: any) {
+      setEditorError(err.message || 'Falha ao abrir o modelo para edição.');
+    } finally {
+      setEditorLoading(false);
+    }
+  };
+
+  const handleSaveEditor = async () => {
+    if (!editorFileName || !editorOriginalXmlRef.current) return;
+
+    const edits = new Map<number, string>();
+    for (const p of editorParagraphs) {
+      const draft = editorDrafts[p.id];
+      if (draft !== undefined && draft !== p.text) edits.set(p.id, draft);
+    }
+
+    if (edits.size === 0) {
+      setEditorSuccess('Nada para salvar - nenhum parágrafo foi alterado.');
+      return;
+    }
+
+    setEditorSaving(true);
+    setEditorError(null);
+    setEditorSuccess(null);
+
+    try {
+      // Reconstrói o .docx: lê o zip de novo (o que já está em cache),
+      // troca só o word/document.xml pelo texto editado, e reenvia pro
+      // MESMO nome de arquivo no bucket.
+      const { sucesso, blob, erro } = await downloadTemplateWithCache(editorFileName);
+      if (!sucesso || !blob) throw new Error(erro || 'Falha ao reler o arquivo original.');
+
+      const arrayBuffer = await blob.arrayBuffer();
+      const zip = await JSZip.loadAsync(arrayBuffer);
+      const novoXml = applyParagraphEdits(editorOriginalXmlRef.current, edits);
+      zip.file('word/document.xml', novoXml);
+
+      const novoBuffer = await zip.generateAsync({ type: 'arraybuffer' });
+      const novoBlob = new Blob([novoBuffer], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+
+      const { sucesso: sucessoUpload, erro: erroUpload } = await uploadTemplate(editorFileName, novoBlob);
+      if (!sucessoUpload) throw new Error(erroUpload || 'Falha ao salvar o modelo editado.');
+
+      clearTemplateCache();
+      await loadAllData();
+
+      setEditorSuccess('Modelo salvo! As próximas gerações de contrato já usam o texto novo.');
+      // Atualiza a base de comparação pra continuar editando sem reabrir
+      editorOriginalXmlRef.current = novoXml;
+      setEditorParagraphs((prev) => prev.map((p) => (edits.has(p.id) ? { ...p, text: edits.get(p.id)! } : p)));
+      setEditorDrafts({});
+    } catch (err: any) {
+      setEditorError(err.message || 'Falha ao salvar as edições.');
+    } finally {
+      setEditorSaving(false);
+    }
+  };
 
   // Dicionário de tags
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
@@ -1022,10 +1117,10 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
 
                         {/* Botões de Ação do Card */}
                         <div className="space-y-2 pt-2 border-t border-slate-100">
-                          <div className="grid grid-cols-2 gap-1.5">
+                          <div className="grid grid-cols-3 gap-1.5">
                             <button
                               onClick={() => handlePreviewFile(slot.arquivo)}
-                              className="flex items-center justify-center gap-1 px-2.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer border border-slate-200 min-h-[38px]"
+                              className="flex items-center justify-center gap-1 px-2 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer border border-slate-200 min-h-[38px]"
                               title="Visualizar texto e formatação original"
                             >
                               <Eye className="w-3.5 h-3.5 text-slate-500" />
@@ -1033,13 +1128,22 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                             </button>
 
                             <button
+                              onClick={() => handleOpenEditor(slot.arquivo)}
+                              className="flex items-center justify-center gap-1 px-2 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer border border-slate-200 min-h-[38px]"
+                              title="Editar o texto do modelo direto no navegador"
+                            >
+                              <Pencil className="w-3.5 h-3.5 text-slate-500" />
+                              <span>Editar</span>
+                            </button>
+
+                            <button
                               onClick={() => handleDownloadFile(slot.arquivo)}
                               disabled={isCurrentDownloading}
-                              className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-extrabold btn-chrome-graphite text-white rounded-xl transition-all cursor-pointer shadow-xs disabled:opacity-50 min-h-[38px]"
+                              className="flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-extrabold btn-chrome-graphite text-white rounded-xl transition-all cursor-pointer shadow-xs disabled:opacity-50 min-h-[38px]"
                               title="Baixar arquivo Word para edição"
                             >
                               <Download className="w-3.5 h-3.5" />
-                              <span>{isCurrentDownloading ? 'Baixando...' : 'Baixar'}</span>
+                              <span>{isCurrentDownloading ? '...' : 'Baixar'}</span>
                             </button>
                           </div>
 
@@ -1467,6 +1571,115 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Modal do Editor de Texto do Modelo */}
+      {editorFileName && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setEditorFileName(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 shrink-0">
+              <div className="min-w-0">
+                <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                  <Pencil className="w-4 h-4 text-slate-700" />
+                  Editar texto do modelo
+                </h3>
+                <p className="text-xs font-mono text-slate-500 truncate">{editorFileName}</p>
+              </div>
+              <button
+                onClick={() => setEditorFileName(null)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer shrink-0"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+
+            <div className="px-5 py-2.5 bg-amber-50/60 border-b border-amber-100 shrink-0">
+              <p className="text-[11px] text-amber-950">
+                Edição rápida: só o texto de cada parágrafo, sem baixar e reenviar pelo Word. As tags{' '}
+                {'{tag}'} continuam funcionando normalmente - só não dá pra mudar negrito/fonte dentro do
+                mesmo parágrafo nem adicionar parágrafos novos aqui.
+              </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2.5 bg-slate-50">
+              {editorLoading && (
+                <div className="flex items-center justify-center gap-2 text-slate-500 py-10">
+                  <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                  Carregando modelo...
+                </div>
+              )}
+
+              {editorError && !editorLoading && (
+                <div className="text-xs font-semibold text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {editorError}
+                </div>
+              )}
+
+              {!editorLoading &&
+                !editorError &&
+                editorParagraphs.map((p) => (
+                  <textarea
+                    key={p.id}
+                    value={editorDrafts[p.id] ?? p.text}
+                    onChange={(e) => setEditorDrafts({ ...editorDrafts, [p.id]: e.target.value })}
+                    rows={Math.max(1, Math.ceil((editorDrafts[p.id] ?? p.text).length / 90))}
+                    className={`w-full px-3 py-2 text-sm border rounded-lg bg-white leading-relaxed focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                      editorDrafts[p.id] !== undefined && editorDrafts[p.id] !== p.text
+                        ? 'border-amber-400'
+                        : 'border-slate-200'
+                    }`}
+                  />
+                ))}
+
+              {!editorLoading && !editorError && editorParagraphs.length === 0 && (
+                <p className="text-xs text-slate-500 text-center py-6">
+                  Não achei texto editável neste modelo (pode ser um arquivo só com tabelas/imagens).
+                </p>
+              )}
+            </div>
+
+            <div className="px-5 py-3.5 border-t border-slate-200 shrink-0 space-y-2">
+              {editorSuccess && (
+                <div className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  {editorSuccess}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditorFileName(null)}
+                  className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-lg transition-colors cursor-pointer"
+                >
+                  Fechar
+                </button>
+                <button
+                  onClick={handleSaveEditor}
+                  disabled={editorSaving || editorLoading}
+                  className="flex-1 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:bg-slate-300 text-slate-950 font-bold text-sm rounded-lg transition-all flex items-center gap-2 justify-center cursor-pointer shadow-xs"
+                >
+                  {editorSaving ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      Salvar no modelo
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
