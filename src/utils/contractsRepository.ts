@@ -31,6 +31,11 @@ async function withRetry<T>(fn: () => PromiseLike<T>, retries = 3, baseDelayMs =
 // Mapeamento ContractData (app) <-> linha da tabela `contracts`
 // ============================================================
 
+const MONTH_NAMES_PT = [
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+];
+
 function toRow(contract: ContractData) {
   return {
     id: contract.id,
@@ -70,6 +75,24 @@ function toRow(contract: ContractData) {
 }
 
 function fromRow(row: any): ContractData {
+  const dataBase = row.data_criacao || row.created_at;
+  let diaAss: string | undefined = row.dia_assinatura;
+  let mesAss: string | undefined = row.mes_extenso_assinatura;
+  let anoAss: string | undefined = row.ano_assinatura;
+
+  if ((!diaAss || !mesAss || !anoAss) && dataBase) {
+    try {
+      const d = new Date(dataBase);
+      if (!isNaN(d.getTime())) {
+        diaAss = diaAss || String(d.getDate()).padStart(2, '0');
+        mesAss = mesAss || MONTH_NAMES_PT[d.getMonth()];
+        anoAss = anoAss || String(d.getFullYear());
+      }
+    } catch {
+      // fallback ignore
+    }
+  }
+
   return {
     id: row.id,
     tipo: row.tipo,
@@ -83,6 +106,9 @@ function fromRow(row: any): ContractData {
     ufForo: row.uf_foro,
     cidadeAssinatura: row.cidade_assinatura,
     ufAssinatura: row.uf_assinatura,
+    diaAssinatura: diaAss,
+    mesExtensoAssinatura: mesAss,
+    anoAssinatura: anoAss,
 
     vendedor: row.vendedor,
     comprador: row.comprador,
@@ -92,18 +118,24 @@ function fromRow(row: any): ContractData {
     imovel: row.imovel ?? undefined,
     bemOutros: row.bem_outros ?? undefined,
     objetoDescricao: row.objeto_descricao ?? undefined,
+    objetoIdentificacao: row.objeto_identificacao ?? undefined,
+    objetoEstadoConservacao: row.objeto_estado_conservacao ?? undefined,
 
     valorTotal: Number(row.valor_total),
     valorTotalExtenso: row.valor_total_extenso ?? undefined,
     vendaVista: row.venda_vista ?? undefined,
     vendaParcelada: row.venda_parcelada ?? undefined,
     exclusividade: row.exclusividade ?? undefined,
+    varianteExclusividade: row.variante_exclusividade ?? (row.exclusividade ? 'sem_conjuge' : undefined),
 
     clausulasExtras: row.clausulas_extras ?? undefined,
     modalidadeAssinatura: row.modalidade_assinatura ?? undefined,
     testemunha1: row.testemunhas?.testemunha1 ?? undefined,
     testemunha2: row.testemunhas?.testemunha2 ?? undefined,
     testemunha3: row.testemunhas?.testemunha3 ?? undefined,
+
+    documentoStoragePath: row.documento_storage_path ?? undefined,
+    documentoUrl: row.documento_url ?? undefined,
 
     assinaturas: [], // carregadas separadamente via fetchSignatures
   };

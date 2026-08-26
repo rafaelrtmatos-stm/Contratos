@@ -22,9 +22,10 @@ export interface StampImageResult {
   heightPx: number;
 }
 
-// Resolução Ultra HD (2460 x 780 px - proporção 3.15:1) para máxima nitidez e legibilidade
-const CANVAS_WIDTH = 2460;
-const CANVAS_HEIGHT = 780;
+// Resolução Super Ultra HD / 600+ DPI para máxima nitidez, clareza tipográfica e fidelidade visual
+const BASE_WIDTH = 2460;
+const BASE_HEIGHT = 780;
+const SUPERSAMPLE_SCALE = 2; // Renderiza internamente em 4920 x 1560 para altíssima densidade de pixels
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
@@ -127,19 +128,22 @@ function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, spikes 
   ctx.fill();
 }
 
-/** Gera o PNG de altíssima definição (Ultra HD) do carimbo de assinatura digital */
+/** Gera o PNG de altíssima definição (Ultra HD / 600 DPI) do carimbo de assinatura digital */
 export async function renderSignatureStampPng(data: StampImageData): Promise<StampImageResult> {
-  const w = CANVAS_WIDTH;
-  const h = CANVAS_HEIGHT;
+  const w = BASE_WIDTH;
+  const h = BASE_HEIGHT;
 
   const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = Math.round(w * SUPERSAMPLE_SCALE);
+  canvas.height = Math.round(h * SUPERSAMPLE_SCALE);
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D não suportado.');
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
+
+  // Aplica escala global de supersampling para máxima definição gráfica e tipográfica
+  ctx.scale(SUPERSAMPLE_SCALE, SUPERSAMPLE_SCALE);
 
   // 1. Moldura Externa com Gradiente Dourado Metálico Nobre
   const outerBorderGrad = ctx.createLinearGradient(0, 0, w, h);
@@ -732,7 +736,7 @@ export async function renderSignatureStampPng(data: StampImageData): Promise<Sta
   try {
     const qrDataUrl = await QRCode.toDataURL(data.validationUrl, {
       margin: 1,
-      width: 800,
+      width: 1200,
       color: { dark: '#071224', light: '#FFFFFF' },
       errorCorrectionLevel: 'M',
     });
@@ -752,5 +756,5 @@ export async function renderSignatureStampPng(data: StampImageData): Promise<Sta
   ctx.restore(); // Fim do clip interno
 
   const dataUrl = canvas.toDataURL('image/png');
-  return { bytes: dataUrlToUint8Array(dataUrl), widthPx: w, heightPx: h };
+  return { bytes: dataUrlToUint8Array(dataUrl), widthPx: canvas.width, heightPx: canvas.height };
 }
