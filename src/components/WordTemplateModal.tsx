@@ -18,6 +18,7 @@ import {
 } from '../utils/supabaseTemplateStorage';
 import { extractTagsFromText, isKnownTag, describeTag } from '../utils/knownContractTags';
 import { extractEditableParagraphs, applyParagraphEdits, EditableParagraph } from '../utils/templateTextEditor';
+import { supabase } from '../utils/supabaseClient';
 import JSZip from 'jszip';
 import * as mammoth from 'mammoth';
 import {
@@ -132,6 +133,51 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
   // Guarda o XML original (word/document.xml) pra aplicar as edições em
   // cima dele na hora de salvar, sem precisar baixar o arquivo de novo.
   const editorOriginalXmlRef = useRef<string | null>(null);
+
+  // Editor completo (Zoho Writer, via iframe) - fonte, negrito, parágrafos,
+  // tudo. Ver supabase/functions/zoho-open-document.
+  const [zohoEditorUrl, setZohoEditorUrl] = useState<string | null>(null);
+  const [zohoEditorFileName, setZohoEditorFileName] = useState<string | null>(null);
+  const [zohoEditorLoading, setZohoEditorLoading] = useState(false);
+  const [zohoEditorError, setZohoEditorError] = useState<string | null>(null);
+
+  const handleOpenZohoEditor = async (arquivoNome: string) => {
+    setZohoEditorFileName(arquivoNome);
+    setZohoEditorUrl(null);
+    setZohoEditorLoading(true);
+    setZohoEditorError(null);
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      const { data, error } = await supabase.functions.invoke('zoho-open-document', {
+        body: { arquivo: arquivoNome },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+
+      if (error || data?.error) {
+        throw new Error(data?.error || error?.message || 'Falha ao abrir o editor.');
+      }
+
+      setZohoEditorUrl(data.document_url);
+    } catch (err: any) {
+      setZohoEditorError(err.message || 'Falha ao abrir o editor completo.');
+    } finally {
+      setZohoEditorLoading(false);
+    }
+  };
+
+  const handleCloseZohoEditor = async () => {
+    setZohoEditorFileName(null);
+    setZohoEditorUrl(null);
+    setZohoEditorError(null);
+    // O salvar acontece dentro do editor da Zoho (botão Salvar dela), que
+    // chama nosso callback e grava no bucket - ao fechar, só recarregamos
+    // a lista pra refletir qualquer alteração já salva.
+    clearTemplateCache();
+    await loadAllData();
+  };
 
   const handleOpenEditor = async (arquivoNome: string) => {
     setEditorFileName(arquivoNome);
@@ -1128,9 +1174,9 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                             </button>
 
                             <button
-                              onClick={() => handleOpenEditor(slot.arquivo)}
+                              onClick={() => handleOpenZohoEditor(slot.arquivo)}
                               className="flex items-center justify-center gap-1 px-2 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer border border-slate-200 min-h-[38px]"
-                              title="Editar o texto do modelo direto no navegador"
+                              title="Editar o modelo completo (fonte, negrito, tabelas) direto no navegador"
                             >
                               <Pencil className="w-3.5 h-3.5 text-slate-500" />
                               <span>Editar</span>
@@ -1572,7 +1618,61 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
         </div>
       </div>
 
-      {/* Modal do Editor de Texto do Modelo */}
+      {/* Modal do Editor Completo (Zoho Writer) */}
+      {zohoEditorFileName && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-2 sm:p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full h-full max-w-5xl flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 shrink-0 bg-slate-50">
+              <div className="min-w-0">
+                <h3 className="font-bold text-slate-900 flex items-center gap-2 text-sm">
+                  <Pencil className="w-4 h-4 text-slate-700" />
+                  Editor completo do modelo
+                </h3>
+                <p className="text-[11px] font-mono text-slate-500 truncate">{zohoEditorFileName}</p>
+              </div>
+              <button
+                onClick={handleCloseZohoEditor}
+                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg cursor-pointer shrink-0"
+              >
+                Concluído / Fechar
+              </button>
+            </div>
+
+            <div className="flex-1 relative bg-slate-100">
+              {zohoEditorLoading && (
+                <div className="absolute inset-0 flex items-center justify-center gap-2 text-slate-500">
+                  <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                  Abrindo editor...
+                </div>
+              )}
+              {zohoEditorError && !zohoEditorLoading && (
+                <div className="absolute inset-0 flex items-center justify-center p-6">
+                  <div className="text-xs font-semibold text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 flex items-center gap-2 max-w-md">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    {zohoEditorError}
+                  </div>
+                </div>
+              )}
+              {zohoEditorUrl && !zohoEditorLoading && (
+                <iframe
+                  src={zohoEditorUrl}
+                  className="absolute inset-0 w-full h-full border-0"
+                  title="Editor Zoho Writer"
+                />
+              )}
+            </div>
+
+            <div className="px-5 py-2 border-t border-slate-100 bg-amber-50/60 shrink-0">
+              <p className="text-[11px] text-amber-950">
+                Use o botão "Salvar" dentro do editor pra gravar as alterações no modelo. Ao fechar esta janela, a
+                lista é atualizada automaticamente.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal do Editor de Texto do Modelo (simples, reserva) */}
       {editorFileName && (
         <div
           className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4"
