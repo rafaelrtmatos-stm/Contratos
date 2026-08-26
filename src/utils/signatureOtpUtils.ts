@@ -259,6 +259,9 @@ export interface SignatureValidationResult {
   tipoContrato?: string;
   hashCompleto?: string;
   meioAutenticacao?: string;
+  documentoSignatarioMascarado?: string;
+  ipAssinatura?: string;
+  temDocumento?: boolean;
 }
 
 /**

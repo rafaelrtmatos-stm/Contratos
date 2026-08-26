@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { validateSignatureCode, SignatureValidationResult } from '../utils/signatureOtpUtils';
-import { ShieldCheck, ShieldAlert, Search, Loader2, Copy, Check } from 'lucide-react';
+import { supabase } from '../utils/supabaseClient';
+import { ShieldCheck, ShieldAlert, Search, Loader2, Copy, Check, FileText, ExternalLink } from 'lucide-react';
 
 const roleLabel = (role?: string): string => {
   if (role === 'vendedor') return 'Contratante';
@@ -25,6 +26,30 @@ export const ValidatePage: React.FC = () => {
   const [resultado, setResultado] = useState<SignatureValidationResult | null>(null);
   const [buscou, setBuscou] = useState(false);
   const [copiedValidation, setCopiedValidation] = useState(false);
+  const [docUrl, setDocUrl] = useState<string | null>(null);
+  const [loadingDoc, setLoadingDoc] = useState(false);
+  const [docError, setDocError] = useState<string | null>(null);
+
+  const handleVerDocumento = async () => {
+    setLoadingDoc(true);
+    setDocError(null);
+    setDocUrl(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('get-document-url', {
+        body: { code: codigo },
+      });
+      if (error || data?.error) {
+        setDocError(data?.error || 'Não foi possível abrir o documento agora.');
+        return;
+      }
+      setDocUrl(data.url);
+      window.open(data.url, '_blank', 'noopener,noreferrer');
+    } catch {
+      setDocError('Não foi possível abrir o documento agora.');
+    } finally {
+      setLoadingDoc(false);
+    }
+  };
 
   const handleValidar = async (codigoParam?: string) => {
     const alvo = codigoParam ?? codigo;
@@ -112,7 +137,7 @@ export const ValidatePage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                    <span className="font-bold text-emerald-900 text-sm">Documento autêntico</span>
+                    <span className="font-bold text-emerald-900 text-sm">Documento VÁLIDO, ÍNTEGRO e AUTÊNTICO</span>
                   </div>
                   <button
                     type="button"
@@ -134,17 +159,51 @@ export const ValidatePage: React.FC = () => {
                   </button>
                 </div>
 
+                {/* Identificação do signatário */}
                 <div className="text-xs text-emerald-800 space-y-1 pt-1 bg-white/70 p-3 rounded-lg border border-emerald-200">
                   <p><strong>Assinado por:</strong> {resultado.nomeSignatario} ({roleLabel(resultado.papel)})</p>
-                  <p><strong>Data/Hora:</strong> {resultado.assinadoEm ? new Date(resultado.assinadoEm).toLocaleString('pt-BR', { hour12: true, timeZone: 'America/Sao_Paulo' }) : '-'}</p>
+                  {resultado.documentoSignatarioMascarado && (
+                    <p><strong>CPF/CNPJ:</strong> <span className="font-mono">{resultado.documentoSignatarioMascarado}</span></p>
+                  )}
                   <p><strong>Contrato nº:</strong> {resultado.numeroContrato} — {tipoLabel(resultado.tipoContrato)}</p>
+                </div>
+
+                {/* Trilha de auditoria */}
+                <div className="text-xs text-emerald-800 space-y-1 pt-1 bg-white/70 p-3 rounded-lg border border-emerald-200">
+                  <p><strong>Data/Hora da assinatura:</strong> {resultado.assinadoEm ? new Date(resultado.assinadoEm).toLocaleString('pt-BR', { hour12: true, timeZone: 'America/Sao_Paulo' }) : '-'}</p>
+                  {resultado.ipAssinatura && (
+                    <p><strong>IP utilizado:</strong> <span className="font-mono">{resultado.ipAssinatura}</span></p>
+                  )}
                   {resultado.meioAutenticacao && (
                     <p><strong>Meio de autenticação:</strong> {resultado.meioAutenticacao}</p>
                   )}
+                </div>
+
+                {/* Dados técnicos de criptografia */}
+                <div className="text-xs text-emerald-800 space-y-1 pt-1 bg-white/70 p-3 rounded-lg border border-emerald-200">
+                  <p><strong>ID de Verificação:</strong> <span className="font-mono uppercase">{codigo}</span></p>
                   <p className="break-all font-mono text-[10px] text-emerald-700 pt-1.5 border-t border-emerald-200/60 mt-1.5">
                     <strong>Hash SHA-256:</strong> {resultado.hashCompleto}
                   </p>
                 </div>
+
+                {/* Documento original */}
+                {resultado.temDocumento && (
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={handleVerDocumento}
+                      disabled={loadingDoc}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer disabled:opacity-60"
+                    >
+                      {loadingDoc ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                      Ver documento original (PDF)
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                    {docError && <p className="text-[11px] text-red-600 mt-1.5 text-center">{docError}</p>}
+                    <p className="text-[10px] text-emerald-700/70 text-center mt-1">O link de visualização expira em 10 minutos por segurança.</p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="p-4 bg-red-50 border-2 border-red-300 rounded-xl flex items-center gap-2">
