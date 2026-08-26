@@ -212,21 +212,6 @@ export const SignatureLink: React.FC = () => {
     setDownloading(true);
     setDownloadProgress(0);
     try {
-      // Se já existe o documento final salvo no Storage (ex: o corretor
-      // baixou o Word depois de assinar), abre exatamente esse arquivo -
-      // gera um link assinado novo na hora (o antigo pode ter expirado).
-      // Abertura é praticamente instantânea aqui - não faz sentido simular
-      // barra de progresso, é só pro caminho que realmente gera o PDF.
-      if (contract.documentoStoragePath) {
-        const signedUrl = await getSignedDocumentUrl(contract.documentoStoragePath, 60 * 10);
-        if (signedUrl) {
-          window.open(signedUrl, '_blank', 'noopener,noreferrer');
-          return;
-        }
-        // Se não conseguiu gerar o link (arquivo removido, etc.), cai pro
-        // PDF gerado na hora a partir dos dados do contrato.
-      }
-
       const cancelarProgresso = startSimulatedPdfProgress(setDownloadProgress);
 
       const pdfBlob = await renderContractDocumentPdf(contract);

@@ -36,19 +36,73 @@ import { generateContractPdfBlob } from './contractGenerators';
  * docxProcessor.ts) - um único caminho, sem depender de nenhum modelo
  * customizado que o usuário precisasse enviar à parte.
  */
-export async function buildFilledDocx(contract: ContractData): Promise<ArrayBuffer> {
+/**
+ * Localiza as assinaturas do corretor e do cliente de forma resiliente a diferentes
+ * convenções de role ('usuario', 'vendedor', 'comprador', 'contratante', 'contratado' ou CPF/nome).
+ */
+export function resolvePartySignatures(contract: ContractData) {
   const isExcl = contract.tipo === 'exclusividade';
-
-  // "usuario" (selo {{USUARIO_ASSINATURA_DIGITAL}}) é sempre o CORRETOR/CONTRATADO.
-  // Na exclusividade, quem guarda os dados do corretor é o campo "comprador"
-  // (o campo "vendedor" guarda o CONTRATANTE/proprietário).
   const dadosCorretor = isExcl ? contract.comprador : contract.vendedor;
   const dadosCliente = isExcl ? contract.vendedor : contract.comprador;
   const roleCorretor: 'vendedor' | 'comprador' = isExcl ? 'comprador' : 'vendedor';
   const roleCliente: 'vendedor' | 'comprador' = isExcl ? 'vendedor' : 'comprador';
 
-  const sigCorretorAtual = contract.assinaturas?.find((a) => a.role === roleCorretor);
-  const sigClienteAtual = contract.assinaturas?.find((a) => a.role === roleCliente);
+  const assinaturas = contract.assinaturas || [];
+  const cleanCpfCorretor = (dadosCorretor?.cpfCnpj || '').replace(/\D/g, '');
+  const nomeCorretor = (dadosCorretor?.nome || '').toLowerCase().trim();
+  const cleanCpfCliente = (dadosCliente?.cpfCnpj || '').replace(/\D/g, '');
+  const nomeCliente = (dadosCliente?.nome || '').toLowerCase().trim();
+
+  // 1. Localizar assinatura do Corretor / Contratado
+  let sigCorretor = assinaturas.find((a) => {
+    if (a.role === roleCorretor) return true;
+    if (a.role === 'usuario' || a.role === 'corretor' || a.role === 'contratado') return true;
+    if (cleanCpfCorretor && (a.documentoSignatario || '').replace(/\D/g, '') === cleanCpfCorretor) return true;
+    if (nomeCorretor && (a.nomeSignatario || '').toLowerCase().trim() === nomeCorretor) return true;
+    return false;
+  });
+
+  // 2. Localizar assinatura do Cliente / Comprador / Contratante
+  let sigCliente = assinaturas.find((a) => {
+    if (a === sigCorretor) return false;
+    if (a.role === roleCliente) return true;
+    if (!isExcl && a.role === 'comprador') return true;
+    if (isExcl && a.role === 'vendedor') return true;
+    if (a.role === 'contratante' || a.role === 'cliente' || a.role === 'comprador_adicional') return true;
+    if (cleanCpfCliente && (a.documentoSignatario || '').replace(/\D/g, '') === cleanCpfCliente) return true;
+    if (nomeCliente && (a.nomeSignatario || '').toLowerCase().trim() === nomeCliente) return true;
+    return false;
+  });
+
+  // 3. Fallback inteligente quando há assinaturas registradas
+  if (!sigCorretor && assinaturas.length > 0 && !sigCliente) {
+    sigCorretor = assinaturas[0];
+  } else if (!sigCorretor && assinaturas.length > 1) {
+    sigCorretor = assinaturas.find((a) => a !== sigCliente);
+  }
+  if (!sigCliente && assinaturas.length > 1) {
+    sigCliente = assinaturas.find((a) => a !== sigCorretor);
+  }
+
+  return {
+    dadosCorretor,
+    dadosCliente,
+    roleCorretor,
+    roleCliente,
+    sigCorretorAtual: sigCorretor,
+    sigClienteAtual: sigCliente,
+  };
+}
+
+export async function buildFilledDocx(contract: ContractData): Promise<ArrayBuffer> {
+  const isExcl = contract.tipo === 'exclusividade';
+
+  const {
+    dadosCorretor,
+    dadosCliente,
+    sigCorretorAtual,
+    sigClienteAtual,
+  } = resolvePartySignatures(contract);
 
   // Modalidade por PESSOA, não por contrato: quem já tem uma assinatura
   // digital registrada é 'digital'; quem ainda não assinou é tratado como

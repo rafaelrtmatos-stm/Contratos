@@ -1473,15 +1473,30 @@ export async function generateContractPdfBlob(contract: ContractData): Promise<B
       }
     };
 
-    // Signatário 1: Contratado / Vendedor
-    const sigVendedor = contract.assinaturas?.find(a => a.role === 'vendedor');
+    // Signatário 1: Vendedor / Contratante
+    const cleanDocVendedor = (vDoc || '').replace(/\D/g, '');
+    const cleanNomeVendedor = (vNome || '').toLowerCase().trim();
+    const sigVendedor = contract.assinaturas?.find(a =>
+      a.role === 'vendedor' ||
+      (!isExcl && (a.role === 'usuario' || a.role === 'corretor')) ||
+      (cleanDocVendedor && (a.documentoSignatario || '').replace(/\D/g, '') === cleanDocVendedor) ||
+      (cleanNomeVendedor && (a.nomeSignatario || '').toLowerCase().trim() === cleanNomeVendedor)
+    );
     await drawPartyStamp(sigVendedor, vNome, vDoc, vTermo);
 
     // Contratante / Compradores
     const primerComp = allCompradores[0] || contract.comprador;
+    const cleanDocPrimer = (primerComp.cpfCnpj || cDoc || '').replace(/\D/g, '');
+    const cleanNomePrimer = (primerComp.nome || cNome || '').toLowerCase().trim();
     const sigPrimerComp = contract.assinaturas?.find(a =>
-      a.role === 'comprador' ||
-      (a.role === 'comprador_adicional' && (a.signerIndex === 0 || a.documentoSignatario === primerComp.cpfCnpj))
+      (a !== sigVendedor) && (
+        a.role === 'comprador' ||
+        a.role === 'contratado' ||
+        a.role === 'usuario' ||
+        (a.role === 'comprador_adicional' && (a.signerIndex === 0 || a.documentoSignatario === primerComp.cpfCnpj)) ||
+        (cleanDocPrimer && (a.documentoSignatario || '').replace(/\D/g, '') === cleanDocPrimer) ||
+        (cleanNomePrimer && (a.nomeSignatario || '').toLowerCase().trim() === cleanNomePrimer)
+      )
     );
     const primerLabel = isExcl
       ? 'CONTRATADO(A)'
