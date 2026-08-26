@@ -16,6 +16,7 @@ import {
   Users,
   Shield,
   KeyRound,
+  Pencil,
   RefreshCw,
   Search,
   Check,
@@ -145,6 +146,71 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const formatUltimoAcesso = (iso: string | null) => {
     if (!iso) return 'Nunca acessou';
     return new Date(iso).toLocaleString('pt-BR', { hour12: true, timeZone: 'America/Sao_Paulo' });
+  };
+
+  // Editar nome do usuário
+  const [renameTargetId, setRenameTargetId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameFeedback, setRenameFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const handleRenameUser = async (userId: string) => {
+    if (!renameValue.trim()) {
+      setRenameFeedback({ type: 'error', message: 'O nome não pode ficar vazio.' });
+      return;
+    }
+    setIsRenaming(true);
+    setRenameFeedback(null);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+
+    const { data, error } = await supabase.functions.invoke('admin-edit-user', {
+      body: { action: 'rename', userId, nome: renameValue.trim() },
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+
+    setIsRenaming(false);
+
+    if (error || data?.error) {
+      setRenameFeedback({ type: 'error', message: data?.error || error?.message || 'Falha ao renomear.' });
+      return;
+    }
+
+    setExistingUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, nome: renameValue.trim() } : u)));
+    setRenameFeedback({ type: 'success', message: 'Nome atualizado.' });
+    setTimeout(() => {
+      setRenameTargetId(null);
+      setRenameFeedback(null);
+    }, 1000);
+  };
+
+  // Excluir usuário definitivamente
+  const [confirmDeleteUserId, setConfirmDeleteUserId] = useState<string | null>(null);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const [deleteUserFeedback, setDeleteUserFeedback] = useState<{ type: 'error'; message: string } | null>(null);
+
+  const handleDeleteUser = async (userId: string) => {
+    setIsDeletingUser(true);
+    setDeleteUserFeedback(null);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+
+    const { data, error } = await supabase.functions.invoke('admin-edit-user', {
+      body: { action: 'delete', userId },
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+
+    setIsDeletingUser(false);
+
+    if (error || data?.error) {
+      setDeleteUserFeedback({ type: 'error', message: data?.error || error?.message || 'Falha ao excluir usuário.' });
+      return;
+    }
+
+    setExistingUsers((prev) => prev.filter((u) => u.id !== userId));
+    setConfirmDeleteUserId(null);
   };
 
   // Zona de Risco
@@ -1056,6 +1122,17 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <div className="flex flex-col sm:flex-row gap-1.5 shrink-0">
                           <button
                             onClick={() => {
+                              setRenameTargetId(renameTargetId === u.id ? null : u.id);
+                              setRenameValue(u.nome || '');
+                              setRenameFeedback(null);
+                            }}
+                            className="px-3 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5 justify-center"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-slate-500" />
+                            <span>{renameTargetId === u.id ? 'Fechar' : 'Editar Nome'}</span>
+                          </button>
+                          <button
+                            onClick={() => {
                               setResetTargetId(resetTargetId === u.id ? null : u.id);
                               setResetPasswordValue('');
                               setResetFeedback(null);
@@ -1079,8 +1156,85 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                           >
                             {permsTargetId === u.id ? 'Fechar' : 'O que ele vê'}
                           </button>
+                          <button
+                            onClick={() => {
+                              setConfirmDeleteUserId(u.id);
+                              setDeleteUserFeedback(null);
+                            }}
+                            className="px-3 py-1.5 text-xs font-bold text-red-700 bg-white border border-red-200 hover:bg-red-50 rounded-lg transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5 justify-center"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Excluir</span>
+                          </button>
                         </div>
                       </div>
+
+                      {renameTargetId === u.id && (
+                        <div className="mt-3 pt-3 border-t border-slate-200 space-y-2.5 bg-white p-3 rounded-xl border">
+                          <label className="text-xs font-semibold text-slate-600 block">Nome do usuário</label>
+                          <input
+                            type="text"
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            placeholder="Nome completo"
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                          />
+                          {renameFeedback && (
+                            <div
+                              className={`text-xs font-semibold rounded-lg px-3 py-2 flex items-center gap-2 ${
+                                renameFeedback.type === 'success'
+                                  ? 'text-amber-950 bg-amber-50 border border-amber-200'
+                                  : 'text-red-600 bg-red-50 border border-red-100'
+                              }`}
+                            >
+                              {renameFeedback.type === 'success' ? (
+                                <CheckCircle2 className="w-4 h-4 text-amber-600" />
+                              ) : (
+                                <AlertCircle className="w-4 h-4" />
+                              )}
+                              {renameFeedback.message}
+                            </div>
+                          )}
+                          <button
+                            onClick={() => handleRenameUser(u.id)}
+                            disabled={isRenaming}
+                            className="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:opacity-60 text-slate-950 font-bold text-xs py-2 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                          >
+                            {isRenaming && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                            Salvar nome
+                          </button>
+                        </div>
+                      )}
+
+                      {confirmDeleteUserId === u.id && (
+                        <div className="mt-3 pt-3 border-t border-red-100 bg-red-50 -mx-3.5 -mb-3.5 px-3.5 pb-3.5 rounded-b-xl">
+                          <p className="text-xs font-bold text-red-800 mb-2">
+                            Excluir "{u.email}" para sempre? Ele perde o acesso ao sistema imediatamente. Essa ação
+                            não pode ser desfeita.
+                          </p>
+                          {deleteUserFeedback && (
+                            <div className="text-xs font-semibold text-red-600 bg-white border border-red-200 rounded-lg px-3 py-2 mb-2">
+                              {deleteUserFeedback.message}
+                            </div>
+                          )}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setConfirmDeleteUserId(null)}
+                              className="flex-1 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-bold cursor-pointer"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(u.id)}
+                              disabled={isDeletingUser}
+                              className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white rounded-lg text-xs font-bold cursor-pointer flex items-center justify-center gap-2"
+                            >
+                              {isDeletingUser && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                              Sim, excluir
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       {permsTargetId === u.id && (
                         <div className="mt-3 pt-3 border-t border-slate-200 bg-white p-3 rounded-xl border space-y-2">
