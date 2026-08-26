@@ -8,6 +8,7 @@ import {
 import { renderContractDocumentPdf } from '../utils/renderContractFromDocx';
 import { buildPdfFileName } from '../utils/pdfFileName';
 import { startSimulatedPdfProgress } from '../utils/pdfProgressSimulator';
+import { fetchSignatures } from '../utils/contractsRepository';
 import {
   downloadDocxContract,
 } from '../utils/docxProcessor';
@@ -374,7 +375,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setDownloadPdfProgress(0);
     const cancelarProgresso = startSimulatedPdfProgress(setDownloadPdfProgress);
     try {
-      const pdfBlob = await renderContractDocumentPdf(contract);
+      let contractToRender = contract;
+      if (contract.id) {
+        try {
+          const freshSignatures = await fetchSignatures(contract.id);
+          if (freshSignatures) {
+            contractToRender = { ...contract, assinaturas: freshSignatures };
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      const pdfBlob = await renderContractDocumentPdf(contractToRender);
       cancelarProgresso();
       setDownloadPdfProgress(100);
       await new Promise((r) => setTimeout(r, 300));
@@ -382,7 +395,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = buildPdfFileName(contract);
+      a.download = buildPdfFileName(contractToRender);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -405,7 +418,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setDownloadDocxProgress(0);
     const cancelarProgresso = startSimulatedPdfProgress(setDownloadDocxProgress);
     try {
-      await downloadDocxContract(contract);
+      let contractToRender = contract;
+      if (contract.id) {
+        try {
+          const freshSignatures = await fetchSignatures(contract.id);
+          if (freshSignatures) {
+            contractToRender = { ...contract, assinaturas: freshSignatures };
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      await downloadDocxContract(contractToRender);
       cancelarProgresso();
       setDownloadDocxProgress(100);
       await new Promise((r) => setTimeout(r, 300));

@@ -152,7 +152,7 @@ function base64ToBlob(base64: string, type: string): Blob {
  * (mammoth -> HTML -> jsPDF), que descartava a maior parte da formatação.
  */
 export async function renderContractDocumentPdf(contract: ContractData): Promise<Blob> {
-  // 1) Tentativa primária: conversão via Edge Function (alta fidelidade Word)
+  // 1) Tentativa primária: conversão via Edge Function (alta fidelidade Word) com retry para cold-start
   try {
     const docxFilled = await buildFilledDocx(contract);
     const temAssinaturaDigital = (contract.assinaturas?.length || 0) > 0;
@@ -161,31 +161,33 @@ export async function renderContractDocumentPdf(contract: ContractData): Promise
       : docxFilled;
     const docxBase64 = arrayBufferToBase64(docxFinal);
 
-    const { data, error } = await supabase.functions.invoke('convert-docx-to-pdf', {
-      body: { docxBase64, filename: 'contrato.docx' },
-    });
-
-    if (!error && data?.pdfBase64) {
-      return base64ToBlob(data.pdfBase64, 'application/pdf');
-    }
-
-    let detailedError = error?.message || data?.error || 'Erro desconhecido na Edge Function';
-    if (error && 'context' in (error as any)) {
+    let lastError: any = null;
+    // Até 3 tentativas com pausa de recuperação para contornar cold-start da Edge Function do Supabase
+    for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        const res = (error as any).context as Response;
-        if (res && typeof res.json === 'function') {
-          const errJson = await res.json();
-          if (errJson?.error) {
-            detailedError = errJson.error;
-          }
+        const { data, error } = await supabase.functions.invoke('convert-docx-to-pdf', {
+          body: { docxBase64, filename: 'contrato.docx' },
+        });
+
+        if (!error && data?.pdfBase64) {
+          return base64ToBlob(data.pdfBase64, 'application/pdf');
         }
-      } catch {
-        // ignore
+
+        lastError = error || data?.error;
+        if (attempt < 3) {
+          await new Promise((r) => setTimeout(r, 1200 * attempt));
+        }
+      } catch (invokeErr) {
+        lastError = invokeErr;
+        if (attempt < 3) {
+          await new Promise((r) => setTimeout(r, 1200 * attempt));
+        }
       }
     }
-    
+
+    let detailedError = lastError?.message || lastError || 'Edge Function falhou após 3 tentativas';
     console.warn(
-      'Edge Function convert-docx-to-pdf não retornou PDF:',
+      'Edge Function convert-docx-to-pdf não respondeu a tempo:',
       detailedError,
       'Acionando gerador client-side jsPDF integrado...'
     );
