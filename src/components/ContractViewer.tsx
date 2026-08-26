@@ -500,17 +500,17 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
     <div className="max-w-4xl mx-auto pb-16 space-y-6">
       {/* Barra de progresso do download do PDF (fixa, sobre o conteúdo) */}
       {isDownloadingPdf && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm bg-white border border-slate-200 rounded-xl shadow-lg p-4 print:hidden">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm bg-white border border-amber-200 rounded-xl shadow-lg p-4 print:hidden">
           <div className="flex items-center justify-between mb-2">
             <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-              <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+              <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
               Gerando PDF...
             </span>
-            <span className="text-sm font-bold text-rose-600 tabular-nums">{pdfProgress}%</span>
+            <span className="text-sm font-bold text-amber-600 tabular-nums">{pdfProgress}%</span>
           </div>
           <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
             <div
-              className="h-full bg-rose-500 transition-all duration-500 ease-out"
+              className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 transition-all duration-500 ease-out"
               style={{ width: `${pdfProgress}%` }}
             />
           </div>
@@ -781,7 +781,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                         setSignFlowParte('usuario');
                         setIsDigitalSignFlowOpen(true);
                       }}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer"
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
                     >
                       <ShieldCheck className="w-4 h-4 text-slate-950" />
                       <span>Assinar como Corretor</span>
@@ -833,7 +833,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                   ) : sigVendedor ? (
                     <button
                       onClick={() => setIsShareLinkOpen(true)}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer"
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
                     >
                       <LinkIcon className="w-4 h-4 text-slate-950" />
                       <span>Gerar Link para o Cliente</span>
@@ -890,7 +890,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             ) : isDigital && vendedorJaAssinouAguardandoCliente ? (
               <button
                 onClick={() => setIsShareLinkOpen(true)}
-                className="flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer min-h-[38px]"
                 title="Gerar link de assinatura do cliente"
               >
                 <LinkIcon className="w-4 h-4 text-slate-950" />
@@ -902,7 +902,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                   setSignFlowParte('usuario');
                   setIsDigitalSignFlowOpen(true);
                 }}
-                className="flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer min-h-[38px]"
                 title="Assinar digitalmente com código OTP"
               >
                 <ShieldCheck className="w-4 h-4 text-slate-950" />
@@ -950,10 +950,10 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               <button
                 onClick={handleDownloadPdf}
                 disabled={isDownloadingPdf}
-                className="flex items-center justify-center gap-2 px-4.5 py-2.5 min-h-[42px] text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:bg-black disabled:opacity-60 rounded-xl transition-all shadow-sm cursor-pointer"
+                className="flex items-center justify-center gap-2 px-4.5 py-2.5 min-h-[42px] text-xs font-extrabold text-white bg-slate-950 hover:bg-slate-900 active:bg-black disabled:opacity-60 rounded-xl transition-all shadow-xs cursor-pointer border border-slate-800"
                 title="Baixar contrato oficial formatado em PDF"
               >
-                <FileText className="w-4 h-4 text-rose-400 shrink-0" />
+                <FileText className="w-4 h-4 text-yellow-400 shrink-0" />
                 <span>{isDownloadingPdf ? 'Gerando PDF...' : 'Baixar PDF (.pdf)'}</span>
               </button>
             </div>

@@ -151,7 +151,7 @@ export const TrashModal: React.FC<TrashModalProps> = ({ isOpen, onClose, onContr
                     <button
                       onClick={() => handleRestore(item)}
                       disabled={isBusy}
-                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1"
+                      className="px-3 py-1.5 btn-gold text-slate-950 rounded-xl text-xs font-extrabold transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shadow-xs"
                       title="Restaurar contrato"
                     >
                       {isBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
@@ -160,7 +160,7 @@ export const TrashModal: React.FC<TrashModalProps> = ({ isOpen, onClose, onContr
                     <button
                       onClick={() => setConfirmPermanentId(item.contract.id)}
                       disabled={isBusy}
-                      className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
+                      className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
                       title="Excluir definitivamente agora"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -169,21 +169,21 @@ export const TrashModal: React.FC<TrashModalProps> = ({ isOpen, onClose, onContr
                 </div>
 
                 {confirmPermanentId === item.contract.id && (
-                  <div className="mt-3 pt-3 border-t border-red-100 bg-red-50 -mx-3 -mb-3 px-3 pb-3 rounded-b-xl">
-                    <p className="text-xs font-bold text-red-800 mb-2">
+                  <div className="mt-3 pt-3 border-t border-rose-100 bg-rose-50 -mx-3 -mb-3 px-3 pb-3 rounded-b-xl">
+                    <p className="text-xs font-bold text-rose-900 mb-2">
                       Excluir "{nomeDoContrato(item.contract)}" para sempre agora, sem esperar os {DIAS_ATE_EXPURGO}{' '}
                       dias? Essa ação não pode ser desfeita.
                     </p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setConfirmPermanentId(null)}
-                        className="flex-1 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-bold cursor-pointer"
+                        className="flex-1 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold cursor-pointer"
                       >
                         Cancelar
                       </button>
                       <button
                         onClick={() => handlePermanentDelete(item)}
-                        className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold cursor-pointer"
+                        className="flex-1 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold cursor-pointer transition-all shadow-xs"
                       >
                         Sim, excluir para sempre
                       </button>

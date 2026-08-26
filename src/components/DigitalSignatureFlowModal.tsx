@@ -163,8 +163,7 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
                   type="button"
                   onClick={handleConfirmPassword}
                   disabled={loading}
-                  className="w-full px-4 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:bg-slate-300 text-slate-950 text-sm font-bold rounded-lg
-                    transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  className="w-full btn-gold text-slate-950 font-extrabold text-sm py-3 rounded-xl transition-all shadow-md shadow-yellow-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                 >
                   {loading ? (
                     <>
@@ -208,13 +207,12 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
                   type="button"
                   onClick={handleDownloadPdf}
                   disabled={downloading}
-                  className="w-full px-4 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white text-sm font-bold rounded-lg
-                    transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3 px-4 bg-slate-950 hover:bg-slate-900 active:bg-black disabled:opacity-60 text-white text-sm font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs border border-slate-800"
                 >
                   {downloading ? (
                     <Loader className="w-4 h-4 animate-spin" />
                   ) : (
-                    <FileDown className="w-4 h-4" />
+                    <FileDown className="w-4 h-4 text-yellow-400" />
                   )}
                   PDF Assinado por Mim
                 </button>
@@ -222,8 +220,7 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
                 <button
                   type="button"
                   onClick={() => setIsCodeModalOpen(true)}
-                  className="w-full px-4 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-sm font-bold rounded-lg
-                    transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  className="w-full btn-gold text-slate-950 font-extrabold text-sm py-3 rounded-xl transition-all shadow-md shadow-yellow-500/20 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <KeyRound className="w-4 h-4 text-slate-950" />
                   Gerar Código para Cliente

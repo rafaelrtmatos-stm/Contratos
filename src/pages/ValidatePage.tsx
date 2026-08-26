@@ -68,13 +68,13 @@ export const ValidatePage: React.FC = () => {
               onChange={(e) => setCodigo(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleValidar()}
               placeholder="Ex: A8F9-2041-99BC-1234"
-              className="flex-1 px-3 py-2.5 border-2 border-slate-300 rounded-lg text-sm font-mono uppercase tracking-wider focus:border-amber-500 focus:outline-none"
+              className="flex-1 px-4 py-3 border-2 border-slate-300 rounded-xl text-sm font-mono uppercase tracking-wider focus:border-yellow-500 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
             />
             <button
               type="button"
               onClick={() => handleValidar()}
               disabled={loading || !codigo.trim()}
-              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-300 text-slate-950 font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+              className="px-5 py-3 btn-gold text-slate-950 font-extrabold text-xs rounded-xl transition-all shadow-md shadow-yellow-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-60"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               Validar

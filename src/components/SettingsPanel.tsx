@@ -26,7 +26,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { ContractData, SavedParty } from '../types/contract';
-import { supabase } from '../utils/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
 import { fetchSavedParties, deleteSavedParty } from '../utils/savedPartiesRepository';
 import { saveContract } from '../utils/contractsRepository';
 
@@ -38,7 +38,7 @@ interface SettingsPanelProps {
   isAdmin?: boolean;
 }
 
-type Tab = 'backup' | 'contatos' | 'usuarios' | 'danger';
+type Tab = 'backup' | 'contatos' | 'ilovepdf' | 'usuarios' | 'danger';
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   isOpen,
@@ -50,6 +50,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [activeTab, setActiveTab] = useState<Tab>('backup');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+
+  // iLovePDF status e teste de conexão
+  const [testingIlovepdf, setTestingIlovepdf] = useState(false);
+  const [ilovepdfStatus, setIlovepdfStatus] = useState<{
+    tested: boolean;
+    success?: boolean;
+    title?: string;
+    message?: string;
+    details?: string;
+  }>({ tested: false });
 
   // Filtro de exportação
   const [exportFilter, setExportFilter] = useState<'all' | 'signed' | 'pending'>('all');
@@ -245,6 +255,102 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       setMessage({ type: 'error', text: `Erro ao exportar CSV: ${error.message}` });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Testar conexão com a Edge Function / iLovePDF API
+  const handleTestIlovepdf = async () => {
+    setTestingIlovepdf(true);
+    setIlovepdfStatus({ tested: false });
+    try {
+      // 1. Verificar se as credenciais do Supabase estão configuradas no client
+      if (!isSupabaseConfigured) {
+        setIlovepdfStatus({
+          tested: true,
+          success: false,
+          title: 'Supabase não conectado na aplicação',
+          message: 'As variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY não estão configuradas no projeto.',
+          details: 'Preencha o arquivo .env com a URL e ANON_KEY do seu projeto Supabase.',
+        });
+        return;
+      }
+
+      // 2. Chamar a Edge Function convert-docx-to-pdf
+      const { data, error } = await supabase.functions.invoke('convert-docx-to-pdf', {
+        body: { docxBase64: '', filename: 'teste.docx' },
+      });
+
+      let serverErrorMsg = error?.message || data?.error || '';
+      if (error && 'context' in (error as any)) {
+        try {
+          const res = (error as any).context as Response;
+          if (res && typeof res.json === 'function') {
+            const errJson = await res.json();
+            if (errJson?.error) {
+              serverErrorMsg = errJson.error;
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      if (serverErrorMsg.includes('Failed to send a request to the Edge Function') || error?.message?.includes('Failed to send a request')) {
+        setIlovepdfStatus({
+          tested: true,
+          success: false,
+          title: 'Edge Function ainda não foi implantada (Deploy)',
+          message: 'O Supabase não conseguiu encontrar a Edge Function "convert-docx-to-pdf" no servidor.',
+          details: 'Você precisa fazer o deploy da função pelo terminal usando o comando: supabase functions deploy convert-docx-to-pdf --no-verify-jwt',
+        });
+      } else if (serverErrorMsg.includes('ILOVEAPI_PUBLIC_KEY não configurada')) {
+        setIlovepdfStatus({
+          tested: true,
+          success: false,
+          title: 'Falta configurar a chave nos Secrets',
+          message: 'A Edge Function está implantada, mas a chave ILOVEAPI_PUBLIC_KEY não foi salva no Supabase.',
+          details: 'Execute: supabase secrets set ILOVEAPI_PUBLIC_KEY="project_public_sua_chave"',
+        });
+      } else if (serverErrorMsg.includes('Falha ao autenticar no iLoveAPI') || serverErrorMsg.includes('Unauthorized') || serverErrorMsg.includes('401')) {
+        setIlovepdfStatus({
+          tested: true,
+          success: false,
+          title: 'Chave iLovePDF recusada',
+          message: 'A chave configurada foi recusada pelo iLovePDF API.',
+          details: 'Verifique se você copiou exatamente a Public Key em developer.ilovepdf.com > My Projects.',
+        });
+      } else if (serverErrorMsg.includes('docxBase64 é obrigatório') || data?.pdfBase64) {
+        setIlovepdfStatus({
+          tested: true,
+          success: true,
+          title: 'Conexão e Chave Validadas com Sucesso!',
+          message: 'A Edge Function e a chave iLovePDF estão ativas e funcionando perfeitamente.',
+          details: 'Todos os downloads de contratos serão convertidos automaticamente com 100% de fidelidade de layout.',
+        });
+      } else {
+        setIlovepdfStatus({
+          tested: true,
+          success: false,
+          title: 'Resposta do Servidor',
+          message: serverErrorMsg || 'Resposta inesperada ao invocar a função.',
+          details: 'Verifique se a função convert-docx-to-pdf está ativa no painel do Supabase.',
+        });
+      }
+    } catch (err: any) {
+      const isDeployError = err?.message?.includes('Failed to send a request') || err?.name === 'FunctionsFetchError';
+      setIlovepdfStatus({
+        tested: true,
+        success: false,
+        title: isDeployError ? 'Edge Function não encontrada no Supabase' : 'Erro de Comunicação',
+        message: isDeployError
+          ? 'A Edge Function "convert-docx-to-pdf" ainda não foi publicada no seu projeto Supabase.'
+          : `Erro ao chamar Edge Function: ${err.message}`,
+        details: isDeployError
+          ? 'Para publicar, abra o terminal e rode: supabase functions deploy convert-docx-to-pdf --no-verify-jwt'
+          : undefined,
+      });
+    } finally {
+      setTestingIlovepdf(false);
     }
   };
 
@@ -469,6 +575,18 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 {savedParties.length}
               </span>
             )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('ilovepdf')}
+            className={`px-4 py-3.5 font-bold text-xs sm:text-sm transition-all border-b-2 flex items-center gap-2 cursor-pointer shrink-0 ${
+              activeTab === 'ilovepdf'
+                ? 'border-yellow-400 text-slate-950 bg-yellow-50/80 font-black'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/60'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <span>iLoveAPI / PDF</span>
           </button>
 
           {isAdmin && (
@@ -1012,6 +1130,131 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   <span>Cadastrar Usuário</span>
                 </button>
               </form>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* ABA: CONFIGURAÇÃO E DIAGNÓSTICO DO iLovePDF API                           */}
+          {/* ========================================================================= */}
+          {activeTab === 'ilovepdf' && (
+            <div className="space-y-5">
+              {/* Card Informativo Principal */}
+              <div className="bg-gradient-to-br from-yellow-50/70 via-white to-amber-50/50 border border-yellow-200/80 rounded-2xl p-5 shadow-2xs space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-slate-950 text-yellow-400 border border-slate-800 flex items-center justify-center font-black text-sm shadow-xs tracking-tight">
+                    PDF
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                      Motor de Conversão iLovePDF API (Office to PDF)
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Geração de PDF com 100% de fidelidade ao layout do documento Word (.docx)
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-700 leading-relaxed">
+                  O sistema converte o documento Word preenchido em PDF utilizando a <strong>iLoveAPI (iLovePDF)</strong> através de uma Edge Function no Supabase (<code className="bg-yellow-100 text-yellow-900 px-1.5 py-0.5 rounded font-mono text-[11px]">convert-docx-to-pdf</code>).
+                </p>
+              </div>
+
+              {/* Status e Teste de Conexão */}
+              <div className="border border-slate-200 rounded-2xl p-5 space-y-4 bg-white shadow-2xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                      Diagnóstico de Conexão e Chave
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Verifique se a Edge Function e o secret <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-800">ILOVEAPI_PUBLIC_KEY</code> estão operacionais.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleTestIlovepdf}
+                    disabled={testingIlovepdf}
+                    className="px-4 py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs shrink-0 disabled:opacity-60"
+                  >
+                    {testingIlovepdf ? <Loader2 className="w-4 h-4 animate-spin text-slate-950" /> : <RefreshCw className="w-4 h-4 text-slate-950" />}
+                    <span>{testingIlovepdf ? 'Testando Conexão...' : 'Testar Conexão iLovePDF'}</span>
+                  </button>
+                </div>
+
+                {ilovepdfStatus.tested && (
+                  <div
+                    className={`p-4 rounded-xl border flex items-start gap-3 text-xs leading-relaxed animate-in fade-in duration-200 ${
+                      ilovepdfStatus.success
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                        : 'bg-amber-50 border-amber-200 text-amber-950'
+                    }`}
+                  >
+                    {ilovepdfStatus.success ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    )}
+                    <div className="space-y-1.5 flex-1">
+                      <span className="font-bold text-sm block">
+                        {ilovepdfStatus.title || (ilovepdfStatus.success ? 'Conexão Bem-Sucedida!' : 'Atenção')}
+                      </span>
+                      <p>{ilovepdfStatus.message}</p>
+                      {ilovepdfStatus.details && (
+                        <div className="mt-2 p-2.5 bg-slate-900 text-slate-100 rounded-lg font-mono text-[11px] select-all overflow-x-auto">
+                          {ilovepdfStatus.details}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Guia Completo Passo a Passo: Deploy da Edge Function e Chave */}
+              <div className="border border-slate-200 rounded-2xl p-5 space-y-4 bg-slate-50/70">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-amber-600" />
+                  Passo a Passo: Como Resolver o Erro e Ativar a iLoveAPI
+                </h4>
+
+                <div className="space-y-3 text-xs text-slate-700 leading-relaxed">
+                  <div className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-2">
+                    <p className="font-bold text-slate-900">1. Obter a Chave Pública (Public Key):</p>
+                    <p>
+                      Acesse{' '}
+                      <a
+                        href="https://developer.ilovepdf.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-bold text-rose-600 hover:underline"
+                      >
+                        developer.ilovepdf.com
+                      </a>
+                      , entre na sua conta e copie a <strong>Public Key</strong> do seu projeto (formato: <code className="bg-slate-100 text-slate-800 px-1 py-0.5 rounded font-mono text-[11px]">project_public_...</code>).
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-2">
+                    <p className="font-bold text-slate-900">2. Salvar a Chave nos Secrets do Supabase:</p>
+                    <p>Execute no terminal do seu projeto:</p>
+                    <div className="p-2.5 bg-slate-900 text-slate-100 rounded-lg font-mono text-[11px] select-all overflow-x-auto">
+                      supabase secrets set ILOVEAPI_PUBLIC_KEY="project_public_sua_chave_aqui"
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Ou adicione pelo Painel Web do Supabase em <strong>Project Settings &gt; Edge Functions &gt; Secrets</strong>.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-2">
+                    <p className="font-bold text-slate-900">3. Fazer o Deploy da Edge Function no Supabase (Corrige "Failed to send a request"):</p>
+                    <p>
+                      O erro <em>"Failed to send a request to the Edge Function"</em> acontece quando a função ainda não foi publicada no seu projeto Supabase. Para publicar, execute:
+                    </p>
+                    <div className="p-2.5 bg-slate-900 text-slate-100 rounded-lg font-mono text-[11px] select-all overflow-x-auto">
+                      supabase functions deploy convert-docx-to-pdf --no-verify-jwt
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

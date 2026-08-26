@@ -1313,7 +1313,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         {/* Botão Primário: Visualizar Contrato */}
                         <button
                           onClick={() => onSelectContract(contract)}
-                          className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 hover:from-yellow-400 hover:to-yellow-600 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 shadow-xs active:scale-[0.98] transition-all cursor-pointer border border-yellow-400"
+                          className="w-full min-h-[44px] py-2.5 px-4 rounded-xl btn-gold text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 shadow-md shadow-yellow-500/20 active:scale-[0.98] transition-all cursor-pointer"
                         >
                           <Eye className="w-4 h-4 text-slate-950 stroke-[2.5]" />
                           <span>Visualizar Contrato Completo</span>
@@ -1372,10 +1372,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           ) : (
                             <button
                               onClick={() => onSignContractDirect(contract)}
-                              className="min-h-[42px] py-2 px-1 rounded-xl bg-yellow-50 hover:bg-yellow-100 text-yellow-950 border border-yellow-300 text-[10px] font-bold flex flex-col items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
+                              className="min-h-[42px] py-2 px-1 rounded-xl btn-gold text-slate-950 text-[10px] font-extrabold flex flex-col items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer shadow-xs"
                               title="Assinar com Carimbo Digital"
                             >
-                              <PenTool className="w-4 h-4 text-yellow-700" />
+                              <PenTool className="w-4 h-4 text-slate-950 stroke-[2.5]" />
                               <span>Assinar</span>
                             </button>
                           )}
@@ -1509,7 +1509,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             {!isFullySigned && (
                               <button
                                 onClick={() => onSignContractDirect(contract)}
-                                className="p-2 text-yellow-900 hover:text-slate-950 bg-yellow-400 hover:bg-yellow-500 border border-yellow-500 rounded-xl transition-all cursor-pointer shadow-2xs active:scale-95"
+                                className="p-2 btn-gold text-slate-950 rounded-xl transition-all cursor-pointer shadow-2xs active:scale-95"
                                 title="Assinar com Carimbo Digital"
                               >
                                 <PenTool className="w-4 h-4 stroke-[2.5]" />

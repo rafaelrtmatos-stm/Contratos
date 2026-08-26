@@ -1315,8 +1315,8 @@ function buildValidationUrl(numeroContrato: string, signatureId: string): string
   return `${origin}/validar?contrato=${encodeURIComponent(numeroContrato)}&sig=${encodeURIComponent(signatureId)}`;
 }
 
-// Exportação para PDF via jsPDF
-export async function exportToPdf(contract: ContractData): Promise<void> {
+// Gerador de PDF em formato Blob via jsPDF
+export async function generateContractPdfBlob(contract: ContractData): Promise<Blob> {
   const legal = generateContractLegalText(contract);
   const tags = legal.tagsMapping;
 
@@ -1419,8 +1419,6 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
   if (isDigital) {
     // =========================================================================
     // MODALIDADE 1: ASSINATURA DIGITAL / ELETRÔNICA
-    // Regra estrita: Apenas 2 assinaturas (CONTRATADO e CONTRATANTE).
-    // NÃO exibir campo ou linhas de testemunhas.
     // =========================================================================
     if (y > pageHeight - margin - 55) {
       doc.addPage();
@@ -1429,8 +1427,6 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
 
     y += 5;
 
-    // Carimbo de assinatura digital (mesmo layout/paleta do CRM) — um por signatário,
-    // empilhados verticalmente e centralizados na página.
     const drawPartyStamp = async (sig: typeof contract.assinaturas[number] | undefined, fallbackName: string, fallbackDoc: string, roleLabel: string) => {
       const neededHeight = sig ? STAMP_HEIGHT + 19 : 14;
       if (y > pageHeight - margin - neededHeight) {
@@ -1450,8 +1446,6 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
           validationUrl: buildValidationUrl(contract.numeroContrato, signatureId),
         });
 
-        // Nome e CPF legíveis abaixo do selo — mesmo bloco exibido na prévia em
-        // tela (ContractViewer.tsx), que antes não era replicado no PDF baixado.
         doc.setFont('times', 'bold');
         doc.setFontSize(9);
         doc.setTextColor(15, 23, 42);
@@ -1511,7 +1505,6 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
   } else {
     // =========================================================================
     // MODALIDADE 2: PDF PARA ASSINATURA MANUAL
-    // Regra estrita: CONTRATADO + CONTRATANTE + 3 TESTEMUNHAS
     // =========================================================================
     if (y > pageHeight - margin - 65) {
       doc.addPage();
@@ -1540,7 +1533,6 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
     doc.text(`${primerLabel}${primerComp.cpfCnpj ? (isExcl ? ` - ${primerComp.cpfCnpj}` : ` - CPF: ${primerComp.cpfCnpj}`) : (cDoc ? ` - ${cDoc}` : '')}`, margin + colWidth + 10, y);
     y += 14;
 
-    // Se houver mais compradores, linhas para cada um
     if (allCompradores.length > 1) {
       for (let i = 1; i < allCompradores.length; i++) {
         const compAdic = allCompradores[i];
@@ -1571,7 +1563,6 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
     doc.text('TESTEMUNHAS:', margin, y);
     y += 7;
 
-    // Testemunha 1 e Testemunha 2
     doc.line(margin, y, margin + colWidth, y);
     doc.line(margin + colWidth + 10, y, pageWidth - margin, y);
     y += 4;
@@ -1580,6 +1571,68 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
     doc.text(`1. Nome: ${contract.testemunha1?.nome || ''}    CPF: ${contract.testemunha1?.cpf || ''}    RG: ${contract.testemunha1?.rg || ''}`, margin, y);
     doc.text(`2. Nome: ${contract.testemunha2?.nome || ''}    CPF: ${contract.testemunha2?.cpf || ''}    RG: ${contract.testemunha2?.rg || ''}`, margin + colWidth + 10, y);
     y += 10;
+  }
+
+  // Página Extra: Manifesto de Auditoria e Assinaturas (se houver assinaturas digitais registradas)
+  if (contract.assinaturas && contract.assinaturas.length > 0) {
+    doc.addPage();
+    let my = margin;
+
+    doc.setFillColor(15, 23, 42); // slate-900
+    doc.rect(margin, my, contentWidth, 14, 'F');
+    doc.setFont('times', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(255, 255, 255);
+    doc.text('MANIFESTO DE ASSINATURAS E TRILHA DE AUDITORIA', pageWidth / 2, my + 9, { align: 'center' });
+    my += 20;
+
+    doc.setFont('times', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    doc.text(
+      'Documento formalizado eletronicamente com validade jurídica plena nos termos da Lei Federal nº 14.063/2020 e Art. 10, § 2º da MP 2.200-2/2001.',
+      margin,
+      my,
+      { maxWidth: contentWidth }
+    );
+    my += 9;
+
+    doc.setFont('times', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`Identificador do Contrato: nº ${contract.numeroContrato || '---'}`, margin, my);
+    my += 8;
+
+    contract.assinaturas.forEach((sig, idx) => {
+      if (my > pageHeight - margin - 40) {
+        doc.addPage();
+        my = margin;
+      }
+
+      doc.setDrawColor(203, 213, 225); // slate-300
+      doc.setFillColor(248, 250, 252); // slate-50
+      doc.roundedRect(margin, my, contentWidth, 34, 2, 2, 'FD');
+
+      doc.setFont('times', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(15, 23, 42);
+      const roleText = sig.role === 'vendedor' ? 'Contratante/Vendedor' : sig.role === 'comprador' ? 'Contratado/Comprador' : 'Parte Signatária';
+      doc.text(`${idx + 1}. Signatário(a): ${sig.nomeSignatario} (${roleText})`, margin + 4, my + 6);
+
+      doc.setFont('times', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(51, 65, 85);
+      doc.text(`CPF/Documento: ${formatCpfCnpjDoc(sig.documentoSignatario)}    |    Data/Hora: ${new Date(sig.assinadoEm).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })} (Brasília)`, margin + 4, my + 12);
+      doc.text(`Endereço IP: ${sig.ipAssinatura || 'Registrado'}    |    Autenticação: ${sig.meioAutenticacao || 'Token Seguro + Código Único'}`, margin + 4, my + 17);
+      doc.text(`Dispositivo / Navegador: ${sig.metadadosNavegador ? sig.metadadosNavegador.slice(0, 80) : 'Navegador Web Seguro'}`, margin + 4, my + 22);
+
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(6.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Hash Criptográfico (SHA-256): ${sig.hashAutenticacao || '---'}`, margin + 4, my + 28);
+
+      my += 38;
+    });
   }
 
   // Rodapé em todas as páginas
@@ -1597,7 +1650,20 @@ export async function exportToPdf(contract: ContractData): Promise<void> {
     );
   }
 
-  doc.save(buildPdfFileName(contract));
+  return doc.output('blob');
+}
+
+// Exportação para PDF via jsPDF com download automático
+export async function exportToPdf(contract: ContractData): Promise<void> {
+  const blob = await generateContractPdfBlob(contract);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = buildPdfFileName(contract);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // Modelos Iniciais com Todas as Tags Preenchidas (incluindo o exemplo de Santarém/PA à vista)

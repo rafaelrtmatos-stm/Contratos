@@ -831,8 +831,8 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                 onClick={() => setActiveSubTab('previa')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
                   activeSubTab === 'previa'
-                    ? 'bg-amber-600 text-white shadow-xs'
-                    : 'bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200'
+                    ? 'bg-yellow-400 text-slate-950 shadow-xs'
+                    : 'bg-yellow-50 text-yellow-900 hover:bg-yellow-100 border border-yellow-200'
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" />
@@ -1035,7 +1035,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                             <button
                               onClick={() => handleDownloadFile(slot.arquivo)}
                               disabled={isCurrentDownloading}
-                              className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-extrabold bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all cursor-pointer shadow-xs disabled:opacity-50 min-h-[38px]"
+                              className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-extrabold btn-chrome-graphite text-white rounded-xl transition-all cursor-pointer shadow-xs disabled:opacity-50 min-h-[38px]"
                               title="Baixar arquivo Word para edição"
                             >
                               <Download className="w-3.5 h-3.5" />
@@ -1046,10 +1046,10 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                           <button
                             onClick={() => handleDirectSlotUpload(slot.arquivo)}
                             disabled={isProcessing}
-                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 rounded-xl transition-all cursor-pointer min-h-[38px] disabled:opacity-50"
+                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-extrabold text-yellow-950 bg-yellow-100/70 hover:bg-yellow-200/80 border border-yellow-300/80 rounded-xl transition-all cursor-pointer min-h-[38px] disabled:opacity-50"
                             title="Substituir este slot com um arquivo Word"
                           >
-                            <Upload className="w-3.5 h-3.5 text-amber-700" />
+                            <Upload className="w-3.5 h-3.5 text-yellow-800" />
                             <span>Substituir este .docx</span>
                           </button>
                         </div>
@@ -1097,7 +1097,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                       O sistema analisa as tags <code className="bg-slate-100 px-1 py-0.5 rounded font-bold text-slate-800">{'{campo}'}</code> e valida a formatação, logotipos e cabeçalhos do documento.
                     </p>
                   </div>
-                  <span className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-extrabold btn-gold text-slate-950 rounded-xl shadow-xs hover:shadow-md transition-all">
+                  <span className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-extrabold btn-gold text-slate-950 rounded-xl shadow-md shadow-yellow-500/20 hover:shadow-lg transition-all">
                     <Upload className="w-4 h-4 stroke-[2.5]" />
                     <span>Escolher Arquivo Word (.docx)</span>
                   </span>
@@ -1174,12 +1174,12 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                         onClick={() => setUploadMode('storage')}
                         className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
                           uploadMode === 'storage'
-                            ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-500/20'
+                            ? 'bg-yellow-50/80 border-yellow-500 ring-2 ring-yellow-400/30'
                             : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <Cloud className="w-4 h-4 text-amber-700" />
+                          <Cloud className="w-4 h-4 text-yellow-700" />
                           <span className="text-xs font-extrabold text-slate-900">
                             Substituir Slot Oficial (Supabase Storage)
                           </span>
@@ -1195,12 +1195,12 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                         onClick={() => setUploadMode('custom')}
                         className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
                           uploadMode === 'custom'
-                            ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-500/20'
+                            ? 'bg-yellow-50/80 border-yellow-500 ring-2 ring-yellow-400/30'
                             : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-amber-700" />
+                          <Building2 className="w-4 h-4 text-yellow-700" />
                           <span className="text-xs font-extrabold text-slate-900">
                             Modelo Timbrado Personalizado (Seu Usuário)
                           </span>
