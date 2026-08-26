@@ -98,6 +98,10 @@ function MainApp() {
   }, []);
 
   const handleCreateNewContract = (type: ContractType = 'venda_vista') => {
+    if (!hasPermission(profile, 'gerenciar_contratos')) {
+      alert('Você não tem permissão para criar contratos. Fale com um administrador.');
+      return;
+    }
     setSelectedContract(null);
     setFormDefaultType(type);
     setCurrentView('form');
@@ -105,6 +109,10 @@ function MainApp() {
   };
 
   const handleEditContract = () => {
+    if (!hasPermission(profile, 'gerenciar_contratos')) {
+      alert('Você não tem permissão para editar contratos. Fale com um administrador.');
+      return;
+    }
     // Regra de integridade: um contrato que já tem QUALQUER assinatura
     // (parcial ou total) nunca pode ser sobrescrito por uma edição - o
     // hash/selo gravado na assinatura foi calculado em cima do texto

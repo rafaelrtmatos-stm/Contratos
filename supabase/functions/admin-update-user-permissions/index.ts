@@ -16,6 +16,7 @@ const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
 
 const PERMISSION_KEYS = [
   'ver_financeiro',
+  'gerenciar_contratos',
   'excluir_contratos',
   'gerenciar_templates',
   'gerenciar_usuarios',

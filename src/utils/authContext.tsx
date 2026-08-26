@@ -8,6 +8,7 @@ export interface Profile {
   role: 'admin' | 'user';
   permissions: {
     ver_financeiro?: boolean;
+    gerenciar_contratos?: boolean;
     excluir_contratos?: boolean;
     gerenciar_templates?: boolean;
     gerenciar_usuarios?: boolean;

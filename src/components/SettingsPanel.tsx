@@ -107,6 +107,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   const PERMISSION_LABELS: { key: string; label: string; hint: string }[] = [
     { key: 'ver_financeiro', label: 'Ver valores financeiros', hint: 'Valor total, entrada e parcelas dos contratos' },
+    { key: 'gerenciar_contratos', label: 'Gerenciar Contratos', hint: 'Criar e editar contratos' },
     { key: 'excluir_contratos', label: 'Excluir contratos', hint: 'Enviar contratos para a Lixeira' },
     { key: 'gerenciar_templates', label: 'Gerenciar Templates', hint: 'Enviar, baixar e excluir modelos .docx' },
     { key: 'gerenciar_usuarios', label: 'Gerenciar Usuários', hint: 'Criar usuários e editar permissões de outros' },
