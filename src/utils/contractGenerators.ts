@@ -607,26 +607,22 @@ E, por estarem assim justos e contratados, assinam o presente instrumento em via
 
 {cidade_assinatura}/{uf_assinatura}, {dia} de {mes_extenso} de {ano}.
 
-_________________________________________________
 {vendedor_nome}
 PROMITENTE VENDEDOR(A)
 CPF/CNPJ: {vendedor_cpf_cnpj}
 
-_________________________________________________
 {comprador_nome}
 PROMITENTE COMPRADOR(A)
 CPF: {comprador_cpf}
 
 TESTEMUNHAS:
-1. _____________________________________________
-Nome:
-CPF:
-RG:
+1. Nome: {testemunha_1_nome}
+CPF: {testemunha_1_cpf}
+RG: {testemunha_1_rg}
 
-2. _____________________________________________
-Nome:
-CPF:
-RG:
+2. Nome: {testemunha_2_nome}
+CPF: {testemunha_2_cpf}
+RG: {testemunha_2_rg}
 `.trim();
 
 // Template padrão com as tags { } do Contrato Parcelado
@@ -677,24 +673,20 @@ E, por estarem assim justos e contratados, assinam o presente instrumento em via
 
 {cidade_assinatura}/{uf_assinatura}, {dia} de {mes_extenso} de {ano}.
 
-_________________________________________________
 {vendedor_termo} - {vendedor}
 CPF nº {cpf_vendedor}
 
-_________________________________________________
 {comprador_termo} - {comprador}
 CPF nº {cpf_comprador}
 
 TESTEMUNHAS:
-1. _____________________________________________
-Nome:
-CPF:
-RG:
+1. Nome: {testemunha_1_nome}
+CPF: {testemunha_1_cpf}
+RG: {testemunha_1_rg}
 
-2. _____________________________________________
-Nome:
-CPF:
-RG:
+2. Nome: {testemunha_2_nome}
+CPF: {testemunha_2_cpf}
+RG: {testemunha_2_rg}
 `.trim();
 
 // Template padrão com as tags {{ }} e { } do Contrato de Exclusividade
@@ -743,24 +735,20 @@ E, por estarem assim justos e contratados, assinam o presente instrumento em via
 
 {{CIDADE_ASSINATURA}}/{{ESTADO_ASSINATURA}}, {{DIA}} de {{MES_EXTENSO}} de {{ANO}}.
 
-_________________________________________________
 CONTRATANTE - {{CONTRATANTE_NOME}}
 CPF nº {{CONTRATANTE_CPF}}
 
-_________________________________________________
 CONTRATADO - {{VENDEDOR_NOME}}
 CRECI nº {{VENDEDOR_CRECI}} | CPF/CNPJ nº {{VENDEDOR_CPF}}
 
 TESTEMUNHAS:
-1. _____________________________________________
-Nome:
-CPF:
-RG:
+1. Nome: {{TESTEMUNHA_1_NOME}}
+CPF: {{TESTEMUNHA_1_CPF}}
+RG: {{TESTEMUNHA_1_RG}}
 
-2. _____________________________________________
-Nome:
-CPF:
-RG:
+2. Nome: {{TESTEMUNHA_2_NOME}}
+CPF: {{TESTEMUNHA_2_CPF}}
+RG: {{TESTEMUNHA_2_RG}}
 `.trim();
 
 function escapeRegExpPattern(string: string) {
@@ -1227,16 +1215,19 @@ export function exportToDoc(contract: ContractData): void {
       : (tags.comprador_cpf || tags.cpf_comprador || '');
     const clienteTermo = isExcl ? 'CONTRATANTE' : (tags.comprador_termo || 'PROMITENTE COMPRADOR(A)');
 
+    const t1 = contract.testemunha1;
+    const t2 = contract.testemunha2;
+
     signaturesHtml = `
       <table style="width: 100%; margin-top: 40px; border-collapse: collapse;">
         <tr>
-          <td style="width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 10px; vertical-align: top;">
+          <td style="width: 45%; text-align: center; padding-top: 10px; vertical-align: top;">
             <strong>${corretorNome}</strong><br/>
             ${corretorTermo}<br/>
             ${corretorDoc ? `CPF/CNPJ: ${corretorDoc}` : ''}
           </td>
           <td style="width: 10%;"></td>
-          <td style="width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 10px; vertical-align: top;">
+          <td style="width: 45%; text-align: center; padding-top: 10px; vertical-align: top;">
             <strong>${clienteNome}</strong><br/>
             ${clienteTermo}<br/>
             ${clienteDoc ? (isExcl ? clienteDoc : `CPF/CNPJ: ${clienteDoc}`) : ''}
@@ -1249,17 +1240,15 @@ export function exportToDoc(contract: ContractData): void {
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
             <td style="width: 45%; vertical-align: top;">
-              1. _____________________________________________<br/>
-              Nome:<br/>
-              CPF:<br/>
-              RG:
+              1. Nome: ${t1?.nome || ''}<br/>
+              CPF: ${t1?.cpf || ''}<br/>
+              RG: ${t1?.rg || ''}
             </td>
             <td style="width: 10%;"></td>
             <td style="width: 45%; vertical-align: top;">
-              2. _____________________________________________<br/>
-              Nome:<br/>
-              CPF:<br/>
-              RG:
+              2. Nome: ${t2?.nome || ''}<br/>
+              CPF: ${t2?.cpf || ''}<br/>
+              RG: ${t2?.rg || ''}
             </td>
           </tr>
         </table>
@@ -1526,11 +1515,6 @@ export async function generateContractPdfBlob(contract: ContractData): Promise<B
       ? 'CONTRATADO(A)' 
       : (allCompradores.length > 1 ? '1º PROMITENTE COMPRADOR(A)' : cTermo);
 
-    doc.setDrawColor(80, 80, 80);
-    doc.line(margin, y, margin + colWidth, y);
-    doc.line(margin + colWidth + 10, y, pageWidth - margin, y);
-    y += 4.5;
-
     doc.setFont('times', 'bold');
     doc.setFontSize(9);
     doc.text(vNome, margin, y);
@@ -1540,7 +1524,7 @@ export async function generateContractPdfBlob(contract: ContractData): Promise<B
     doc.setFontSize(8);
     doc.text(`${vTermo}${vDoc ? ` - CPF/CNPJ: ${vDoc}` : ''}`, margin, y);
     doc.text(`${primerLabel}${primerComp.cpfCnpj ? (isExcl ? ` - ${primerComp.cpfCnpj}` : ` - CPF: ${primerComp.cpfCnpj}`) : (cDoc ? ` - ${cDoc}` : '')}`, margin + colWidth + 10, y);
-    y += 14;
+    y += 10;
 
     if (allCompradores.length > 1) {
       for (let i = 1; i < allCompradores.length; i++) {
@@ -1549,8 +1533,6 @@ export async function generateContractPdfBlob(contract: ContractData): Promise<B
           doc.addPage();
           y = margin + 10;
         }
-        doc.line(margin, y, margin + colWidth, y);
-        y += 4.5;
         doc.setFont('times', 'bold');
         doc.setFontSize(9);
         doc.text(compAdic.nome || `COMPRADOR ${i + 1}`, margin, y);
@@ -1558,11 +1540,11 @@ export async function generateContractPdfBlob(contract: ContractData): Promise<B
         doc.setFont('times', 'normal');
         doc.setFontSize(8);
         doc.text(`${i + 1}º PROMITENTE COMPRADOR(A) - CPF: ${compAdic.cpfCnpj || '---'}`, margin, y);
-        y += 14;
+        y += 10;
       }
     }
 
-    // Bloco de 3 Testemunhas para Assinatura Manual
+    // Bloco de Testemunhas
     if (y > pageHeight - margin - 45) {
       doc.addPage();
       y = margin + 10;
@@ -1570,11 +1552,8 @@ export async function generateContractPdfBlob(contract: ContractData): Promise<B
     doc.setFont('times', 'bold');
     doc.setFontSize(8.5);
     doc.text('TESTEMUNHAS:', margin, y);
-    y += 7;
+    y += 5;
 
-    doc.line(margin, y, margin + colWidth, y);
-    doc.line(margin + colWidth + 10, y, pageWidth - margin, y);
-    y += 4;
     doc.setFont('times', 'normal');
     doc.setFontSize(7.5);
     doc.text(`1. Nome: ${contract.testemunha1?.nome || ''}    CPF: ${contract.testemunha1?.cpf || ''}    RG: ${contract.testemunha1?.rg || ''}`, margin, y);

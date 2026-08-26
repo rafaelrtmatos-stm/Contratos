@@ -208,30 +208,16 @@ export async function processSignatureTags(
 
     // Processar cada tag de assinatura
     for (const config of tagsConfig) {
-      const isManual = config.tipo === 'manual';
-
-      // Remove o bloco de texto fixo duplicado (nome/CPF) SÓ no caso manual,
-      // onde insertSignatureSpace já gera seu próprio texto de nome/CPF por
-      // código (aí sim duplicaria). No caso digital JÁ ASSINADO, o formato
-      // correto é manter esse texto do template (selo em cima, "PAPEL: Nome"
-      // embaixo, CPF na linha seguinte) - é ele que fornece nome/CPF de
-      // forma legível junto do selo, não deve ser removido. No caso
-      // "pendente" (digital, ainda sem assinatura) esse bloco também
-      // precisa continuar, pelo mesmo motivo de sempre.
-      if (isManual) {
-        documentXml = removeRedundantRoleNameCpfBlock(documentXml, config.tag);
-      }
-
       if (config.tipo === 'digital') {
         if (config.info.assinou && config.info.signature) {
           // DIGITAL + JÁ ASSINADO: insere o selo visual (imagem PNG) com os dados reais da assinatura
           documentXml = await insertDigitalSignatureStampImage(zip, documentXml, config.tag, config.info);
         } else {
-          // DIGITAL + AINDA NÃO ASSINADO: insere aviso de pendência (nunca deixa a tag "crua" no documento)
-          documentXml = insertPendingSignatureNotice(documentXml, config.tag, config.info);
+          // DIGITAL + AINDA NÃO ASSINADO: remove a tag pendente ou insere aviso discreto
+          documentXml = replaceEnclosingParagraph(documentXml, config.tag, '');
         }
       } else {
-        // MANUAL: linha em branco para assinatura física, com nome/documento da parte
+        // MANUAL: apenas remove a tag de controle sem criar linhas artificiais no documento
         documentXml = insertSignatureSpace(documentXml, config.tag, config.info);
       }
     }
@@ -367,31 +353,10 @@ function insertPendingSignatureNotice(xml: string, tag: string, info: PartySigna
 }
 
 /**
- * Insere um espaço em branco (linha de assinatura) onde estava a tag, com o nome
- * e documento da parte identificados abaixo da linha.
+ * Limpa a tag de assinatura manual no template sem injetar linhas de sublinhado adicionais
  */
-function insertSignatureSpace(xml: string, tag: string, info: PartySignatureInfo): string {
-  const nome = escapeXml(info.nome || '');
-  const role = escapeXml((info.roleLabel || '').toUpperCase());
-  const doc = escapeXml(info.documento || '');
-
-  // Mesmo padrão visual do bloco do CONTRATADO no template: sz 24 (12pt), negrito,
-  // sem itálico/cor - só o texto muda ("CPF nº" para ambos, mesmo se doc for CNPJ,
-  // igual o template já faz para o contratado).
-  const signatureSpace = `<w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:before="240" w:line="360" w:lineRule="auto"/></w:pPr>
-      <w:r><w:rPr>${DOC_RFONTS}<w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr><w:t xml:space="preserve">_____________________________________________</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>
-      <w:r><w:rPr>${DOC_RFONTS}<w:b/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr><w:t xml:space="preserve">${role}: ${nome}</w:t></w:r>
-    </w:p>
-    <w:p>
-      <w:pPr><w:jc w:val="center"/></w:pPr>
-      <w:r><w:rPr>${DOC_RFONTS}<w:b/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr><w:t xml:space="preserve">CPF nº ${doc}</w:t></w:r>
-    </w:p>`;
-
-  return replaceEnclosingParagraph(xml, tag, signatureSpace);
+function insertSignatureSpace(xml: string, tag: string, _info: PartySignatureInfo): string {
+  return replaceEnclosingParagraph(xml, tag, '');
 }
 
 /**

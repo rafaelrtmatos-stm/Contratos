@@ -267,42 +267,29 @@ export function buildUnifiedContractTags(contract: ContractData): Record<string,
   setTag('ESTADO_ASSINATURA', contract.ufAssinatura || contract.ufForo || 'PA');
   setTag('FORO_COMARCA', `${contract.cidadeForo || 'Santarém'}/${contract.ufForo || 'PA'}`);
 
-  // Regra de Testemunhas e Modalidade de Assinatura:
-  // Se modalidade for digital: testemunhas NÃO devem aparecer (tags vazias/suprimidas)
-  // Se modalidade for manual: apresentar apenas 2 testemunhas
-  const isDigital = contract.modalidadeAssinatura === 'digital';
+  // Testemunhas: preenche exatamente os dados informados ou vazio se não houver
   const t1 = contract.testemunha1;
   const t2 = contract.testemunha2;
+  const t3 = contract.testemunha3;
 
-  if (isDigital) {
-    // Modo Digital: tags de testemunhas são limpas
-    setTag('TESTEMUNHA_1_NOME', '');
-    setTag('TESTEMUNHA_1_CPF', '');
-    setTag('TESTEMUNHA_1_RG', '');
-    setTag('TESTEMUNHA_2_NOME', '');
-    setTag('TESTEMUNHA_2_CPF', '');
-    setTag('TESTEMUNHA_2_RG', '');
-    setTag('TESTEMUNHA_3_NOME', '');
-    setTag('TESTEMUNHA_3_CPF', '');
-    setTag('TESTEMUNHA_3_RG', '');
-    setTag('BLOCO_TESTEMUNHAS', '');
-    setTag('TESTEMUNHAS', '');
-  } else {
-    // Modo Manual: 3 testemunhas com linhas de assinatura
-    setTag('TESTEMUNHA_1_NOME', t1?.nome || '_____________________________________');
-    setTag('TESTEMUNHA_1_CPF', t1?.cpf || '_________________');
-    setTag('TESTEMUNHA_1_RG', t1?.rg || '_________________');
-    setTag('TESTEMUNHA_2_NOME', t2?.nome || '_____________________________________');
-    setTag('TESTEMUNHA_2_CPF', t2?.cpf || '_________________');
-    setTag('TESTEMUNHA_2_RG', t2?.rg || '_________________');
-    setTag('TESTEMUNHA_3_NOME', '');
-    setTag('TESTEMUNHA_3_CPF', '');
-    setTag('TESTEMUNHA_3_RG', '');
+  setTag('TESTEMUNHA_1_NOME', t1?.nome || '');
+  setTag('TESTEMUNHA_1_CPF', t1?.cpf || '');
+  setTag('TESTEMUNHA_1_RG', t1?.rg || '');
+  setTag('TESTEMUNHA_2_NOME', t2?.nome || '');
+  setTag('TESTEMUNHA_2_CPF', t2?.cpf || '');
+  setTag('TESTEMUNHA_2_RG', t2?.rg || '');
+  setTag('TESTEMUNHA_3_NOME', t3?.nome || '');
+  setTag('TESTEMUNHA_3_CPF', t3?.cpf || '');
+  setTag('TESTEMUNHA_3_RG', t3?.rg || '');
 
-    const blocoManual = `TESTEMUNHAS:\n1. _____________________________________________\nNome: ${t1?.nome || ''}  CPF: ${t1?.cpf || ''}  RG: ${t1?.rg || ''}\n\n2. _____________________________________________\nNome: ${t2?.nome || ''}  CPF: ${t2?.cpf || ''}  RG: ${t2?.rg || ''}`;
-    setTag('BLOCO_TESTEMUNHAS', blocoManual);
-    setTag('TESTEMUNHAS', blocoManual);
-  }
+  const partesTestemunhas: string[] = [];
+  if (t1?.nome) partesTestemunhas.push(`1. Nome: ${t1.nome}${t1.cpf ? `  CPF: ${t1.cpf}` : ''}${t1.rg ? `  RG: ${t1.rg}` : ''}`);
+  if (t2?.nome) partesTestemunhas.push(`2. Nome: ${t2.nome}${t2.cpf ? `  CPF: ${t2.cpf}` : ''}${t2.rg ? `  RG: ${t2.rg}` : ''}`);
+  if (t3?.nome) partesTestemunhas.push(`3. Nome: ${t3.nome}${t3.cpf ? `  CPF: ${t3.cpf}` : ''}${t3.rg ? `  RG: ${t3.rg}` : ''}`);
+
+  const blocoTestemunhas = partesTestemunhas.length > 0 ? `TESTEMUNHAS:\n${partesTestemunhas.join('\n\n')}` : '';
+  setTag('BLOCO_TESTEMUNHAS', blocoTestemunhas);
+  setTag('TESTEMUNHAS', blocoTestemunhas);
 
   return tags;
 }

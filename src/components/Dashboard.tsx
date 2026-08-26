@@ -1090,87 +1090,104 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {!isContractsListCollapsed && (
           <div className="space-y-4 animate-in fade-in duration-200">
 
-        {/* Barra de Filtros: Categorias e Status de Assinatura */}
-        <div className="space-y-2.5">
-          {/* 1. Filtros por Categoria de Contrato */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+        {/* Barra de Filtros: Categorias e Status de Assinatura (100% Responsivo sem rolagem lateral) */}
+        <div className="space-y-3">
+          {/* 1. Filtros por Categoria de Contrato - Grid responsivo de 4 botões (2 colunas em celular, 4 colunas em tela maior) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
+            {/* Todos */}
             <button
               onClick={() => setSelectedCategory('todos')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0 ${
+              className={`px-3 py-2 sm:py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-between sm:justify-center gap-2 cursor-pointer border ${
                 selectedCategory === 'todos'
-                  ? 'bg-slate-950 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
+                  ? 'bg-slate-950 text-white border-slate-950 shadow-sm'
+                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200/90 hover:border-slate-300'
               }`}
             >
-              <span>Todos</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                selectedCategory === 'todos' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Layers className={`w-3.5 h-3.5 shrink-0 ${selectedCategory === 'todos' ? 'text-yellow-400' : 'text-slate-500'}`} />
+                <span className="truncate">Todos</span>
+              </div>
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                selectedCategory === 'todos' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
               }`}>
                 {contracts.length}
               </span>
             </button>
 
+            {/* À Vista */}
             <button
               onClick={() => setSelectedCategory('venda_vista')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0 ${
+              className={`px-3 py-2 sm:py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-between sm:justify-center gap-2 cursor-pointer border ${
                 selectedCategory === 'venda_vista'
-                  ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 text-slate-950 shadow-sm border border-yellow-400'
-                  : 'bg-yellow-50/70 text-yellow-900 hover:bg-yellow-100/70 border border-yellow-200/50'
+                  ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 text-slate-950 border-yellow-400 shadow-sm'
+                  : 'bg-amber-50/50 text-amber-950 hover:bg-amber-100/60 border-amber-200/70 hover:border-amber-300'
               }`}
             >
-              <Home className="w-3.5 h-3.5" />
-              <span>À Vista</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                selectedCategory === 'venda_vista' ? 'bg-slate-950/20 text-slate-950' : 'bg-yellow-100 text-yellow-900'
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Home className={`w-3.5 h-3.5 shrink-0 ${selectedCategory === 'venda_vista' ? 'text-slate-950' : 'text-amber-800'}`} />
+                <span className="truncate">À Vista</span>
+              </div>
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                selectedCategory === 'venda_vista' ? 'bg-slate-950/20 text-slate-950' : 'bg-amber-200 text-amber-950'
               }`}>
                 {countVendasAVista}
               </span>
             </button>
 
+            {/* Parcelada */}
             <button
               onClick={() => setSelectedCategory('venda_parcelada')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0 ${
+              className={`px-3 py-2 sm:py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-between sm:justify-center gap-2 cursor-pointer border ${
                 selectedCategory === 'venda_parcelada'
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200/70 border border-slate-200/50'
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200/90 hover:border-slate-300'
               }`}
             >
-              <CalendarDays className="w-3.5 h-3.5" />
-              <span>Parcelada</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                selectedCategory === 'venda_parcelada' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+              <div className="flex items-center gap-1.5 min-w-0">
+                <CalendarDays className={`w-3.5 h-3.5 shrink-0 ${selectedCategory === 'venda_parcelada' ? 'text-yellow-400' : 'text-slate-500'}`} />
+                <span className="truncate">Parcelada</span>
+              </div>
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                selectedCategory === 'venda_parcelada' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
               }`}>
                 {countVendasParceladas}
               </span>
             </button>
 
+            {/* Exclusividade */}
             <button
               onClick={() => setSelectedCategory('exclusividade')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0 ${
+              className={`px-3 py-2 sm:py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-between sm:justify-center gap-2 cursor-pointer border ${
                 selectedCategory === 'exclusividade'
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200/70 border border-slate-200/50'
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200/90 hover:border-slate-300'
               }`}
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-yellow-500" />
-              <span>Exclusividade</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                selectedCategory === 'exclusividade' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+              <div className="flex items-center gap-1.5 min-w-0">
+                <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${selectedCategory === 'exclusividade' ? 'text-yellow-400' : 'text-yellow-600'}`} />
+                <span className="truncate">Exclusividade</span>
+              </div>
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                selectedCategory === 'exclusividade' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
               }`}>
                 {exclusivityContracts.length}
               </span>
             </button>
           </div>
 
-          {/* 2. Filtros por Status de Assinatura */}
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Status:</span>
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto">
+          {/* 2. Filtros por Status de Assinatura - Ajuste Automático e Fluido sem Barra Lateral */}
+          <div className="flex flex-col xs:flex-row xs:items-center gap-2 pt-1 border-t border-slate-100">
+            <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
+              <Filter className="w-3 h-3 text-slate-400" />
+              <span className="text-[10px] font-extrabold uppercase tracking-wider">Status:</span>
+            </div>
+            
+            <div className="grid grid-cols-3 sm:flex sm:items-center gap-1.5 w-full sm:w-auto">
               <button
                 onClick={() => setStatusFilter('todos')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center flex items-center justify-center ${
                   statusFilter === 'todos'
-                    ? 'bg-slate-800 text-white font-bold'
+                    ? 'bg-slate-800 text-white shadow-xs'
                     : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
@@ -1178,27 +1195,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </button>
               <button
                 onClick={() => setStatusFilter('assinados')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center flex items-center justify-center gap-1 ${
                   statusFilter === 'assinados'
-                    ? 'bg-emerald-600 text-white font-bold shadow-xs'
-                    : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-emerald-50/80 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
                 }`}
               >
-                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                <span>100% Assinados</span>
-                <span className="text-[10px] opacity-80">({countVendasConcluidas})</span>
+                <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                <span className="truncate">Assinados</span>
+                <span className="text-[10px] opacity-90 shrink-0">({countVendasConcluidas})</span>
               </button>
               <button
                 onClick={() => setStatusFilter('pendentes')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center flex items-center justify-center gap-1 ${
                   statusFilter === 'pendentes'
-                    ? 'bg-amber-600 text-white font-bold shadow-xs'
-                    : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-amber-50/80 text-amber-800 hover:bg-amber-100 border border-amber-200'
                 }`}
               >
-                <Clock3 className="w-3 h-3 text-amber-500" />
-                <span>Pendentes</span>
-                <span className="text-[10px] opacity-80">({pendingSignaturesCount})</span>
+                <Clock3 className="w-3 h-3 text-amber-500 shrink-0" />
+                <span className="truncate">Pendentes</span>
+                <span className="text-[10px] opacity-90 shrink-0">({pendingSignaturesCount})</span>
               </button>
             </div>
           </div>
@@ -1232,314 +1249,166 @@ export const Dashboard: React.FC<DashboardProps> = ({
             )}
           </div>
         ) : (
-          <>
-            {/* VERSÃO MOBILE: Cards Otimizados para Touch com Visual Executivo Moderno */}
-            <div className="block md:hidden space-y-4">
-              {filteredContracts.map((contract) => {
-                const hasSignatures = contract.assinaturas && contract.assinaturas.length > 0;
-                const isFullySigned = contract.status === 'assinado_total' || (contract.tipo === 'venda_vista' && (contract.assinaturas?.length || 0) >= 2);
-                const isVendaVista = contract.tipo === 'venda_vista';
-                const isParcelada = contract.tipo === 'venda_parcelada';
-                const isExclusividade = contract.tipo === 'exclusividade';
+          /* LISTA DE CONTRATOS 100% RESPONSIVA (Sem rolagem lateral em nenhum dispositivo) */
+          <div className="space-y-3.5">
+            {filteredContracts.map((contract) => {
+              const isFullySigned = contract.status === 'assinado_total' || (contract.tipo === 'venda_vista' && (contract.assinaturas?.length || 0) >= 2);
+              const isVendaVista = contract.tipo === 'venda_vista';
+              const isParcelada = contract.tipo === 'venda_parcelada';
 
-                return (
+              return (
+                <div
+                  key={contract.id}
+                  className="rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col relative"
+                >
+                  {/* Linha de Destaque Superior Colorida por Tipo */}
                   <div
-                    key={contract.id}
-                    className="rounded-3xl border border-slate-200/90 bg-white shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col relative"
-                  >
-                    {/* Linha de Destaque Superior Colorida por Tipo */}
-                    <div
-                      className={`h-1.5 w-full ${
-                        isVendaVista
-                          ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500'
-                          : isParcelada
-                          ? 'bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900'
-                          : 'bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600'
-                      }`}
-                    />
+                    className={`h-1.5 w-full ${
+                      isVendaVista
+                        ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500'
+                        : isParcelada
+                        ? 'bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900'
+                        : 'bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600'
+                    }`}
+                  />
 
-                    <div className="p-4 space-y-3.5">
-                      {/* Topo do Card: Modalidade + Status de Assinatura */}
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="p-3.5 sm:p-4 lg:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 sm:gap-4">
+                    {/* Bloco 1: Informações do Contrato (Badges, Título, Identificador, Data) */}
+                    <div className="space-y-2 flex-1 min-w-0">
+                      {/* Badges e Identificadores */}
+                      <div className="flex items-center gap-2 flex-wrap">
                         <ModernModalidadeBadge contract={contract} />
                         <ModernAssinaturaBadge contract={contract} />
+                        <span className="font-mono bg-slate-900 text-white px-2 py-0.5 rounded-lg font-bold text-[10px] tracking-tight">
+                          {contract.numeroContrato}
+                        </span>
+                        <span className="flex items-center gap-1 text-slate-500 text-[11px] font-medium">
+                          <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
+                          {formatDate(contract.dataCriacao)}
+                        </span>
                       </div>
 
-                      {/* Título do Contrato & Identificador */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium">
-                          <span className="font-mono bg-slate-900 text-white px-2 py-0.5 rounded-lg font-bold text-[10px] tracking-tight">
-                            {contract.numeroContrato}
-                          </span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1 text-slate-500 text-[10px]">
-                            <Calendar className="w-3 h-3 text-slate-400" />
-                            {formatDate(contract.dataCriacao)}
-                          </span>
-                        </div>
-                        <h4 className="font-extrabold text-sm sm:text-base text-slate-950 leading-snug break-words">
+                      {/* Título do Contrato */}
+                      <div>
+                        <h4
+                          onClick={() => onSelectContract(contract)}
+                          className="font-extrabold text-sm sm:text-base text-slate-950 hover:text-yellow-700 transition-colors cursor-pointer leading-snug break-words"
+                        >
                           {contract.titulo}
                         </h4>
                       </div>
+                    </div>
 
-                      {/* Caixa das Partes Envolvidas (Vendedor/Proprietário & Comprador/Corretor) */}
-                      <div className="bg-slate-50/90 rounded-2xl p-3.5 border border-slate-200/70 space-y-2">
-                        <div className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
-                          <span className="flex items-center gap-1">
-                            <Users className="w-3 h-3 text-slate-400" /> Partes Envolvidas
-                          </span>
-                          <span className="text-[9px] lowercase font-normal text-slate-400">
-                            {contract.assinaturas?.length || 0}/2 assinados
-                          </span>
-                        </div>
+                    {/* Bloco 2: Partes Envolvidas & Valor Total */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3.5 shrink-0">
+                      {/* Caixa das Partes Envolvidas */}
+                      <div className="bg-slate-50/90 rounded-2xl p-2.5 sm:p-3 border border-slate-200/70 sm:w-64 lg:max-w-xs">
                         <ModernPartesEnvolvidas contract={contract} />
                       </div>
 
                       {/* Faixa Financeira */}
-                      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white rounded-2xl p-3.5 flex items-center justify-between border border-slate-800 shadow-2xs">
-                        <div className="space-y-0.5">
-                          <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 block">
-                            Valor do Contrato
-                          </span>
-                          {contract.tipo === 'venda_parcelada' && contract.vendaParcelada?.numeroParcelas && (
-                            <span className="text-[10px] text-yellow-400 font-bold block">
-                              Em {contract.vendaParcelada.numeroParcelas} parcelas
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-base sm:text-lg font-black text-white tracking-tight">
+                      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white rounded-2xl p-3 sm:px-4 sm:py-3 flex flex-col justify-center border border-slate-800 shadow-2xs sm:min-w-[130px] text-left">
+                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 block">
+                          Valor Total
+                        </span>
+                        <span className="text-base font-black text-white tracking-tight">
                           {canViewFinanceiro ? formatCurrency(contract.valorTotal) : '••••••'}
                         </span>
-                      </div>
-
-                      {/* BARRA DE AÇÕES MOBILE (Ergonomia Touch-First) */}
-                      <div className="space-y-2 pt-1">
-                        {/* Botão Primário: Visualizar Contrato */}
-                        <button
-                          onClick={() => onSelectContract(contract)}
-                          className="w-full min-h-[44px] py-2.5 px-4 rounded-xl btn-gold text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 shadow-md shadow-yellow-500/20 active:scale-[0.98] transition-all cursor-pointer"
-                        >
-                          <Eye className="w-4 h-4 text-slate-950 stroke-[2.5]" />
-                          <span>Visualizar Contrato Completo</span>
-                        </button>
-
-                        {/* Grid de Ações Secundárias (Word, PDF, Assinar, Excluir) */}
-                        <div className="grid grid-cols-4 gap-2">
-                          {/* 1. Botão Word (.docx) */}
-                          <button
-                            onClick={() => !isFullySigned && handleDownloadDocxDashboard(contract)}
-                            disabled={isFullySigned || downloadingDocxId === contract.id}
-                            className={`min-h-[42px] py-2 px-1 rounded-xl text-[10px] font-bold flex flex-col items-center justify-center gap-1 transition-all border ${
-                              isFullySigned
-                                ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed'
-                                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200 active:scale-95 cursor-pointer'
-                            }`}
-                            title={isFullySigned ? 'Indisponível: contrato já assinado digitalmente (use o PDF)' : 'Baixar documento Word (.docx)'}
-                          >
-                            {downloadingDocxId === contract.id ? (
-                              <CircularProgress percentage={downloadDocxProgress} colorClass="text-slate-700" size={22} />
-                            ) : (
-                              <>
-                                <FileDown className={`w-4 h-4 ${isFullySigned ? 'text-slate-300' : 'text-slate-700'}`} />
-                                <span>Word</span>
-                              </>
-                            )}
-                          </button>
-
-                          {/* 2. Botão PDF (.pdf) */}
-                          <button
-                            onClick={() => handleDownloadPdfDashboard(contract)}
-                            disabled={downloadingPdfId === contract.id}
-                            className="min-h-[42px] py-2 px-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[10px] font-bold flex flex-col items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer disabled:opacity-60"
-                            title="Baixar PDF Oficial com Selos"
-                          >
-                            {downloadingPdfId === contract.id ? (
-                              <CircularProgress percentage={downloadPdfProgress} colorClass="text-slate-700" size={22} />
-                            ) : (
-                              <>
-                                <FileText className="w-4 h-4 text-slate-700" />
-                                <span>PDF</span>
-                              </>
-                            )}
-                          </button>
-
-                          {/* 3. Botão Assinatura / Carimbo Digital */}
-                          {isFullySigned ? (
-                            <button
-                              onClick={() => onSelectContract(contract)}
-                              className="min-h-[42px] py-2 px-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold flex flex-col items-center justify-center gap-1 cursor-pointer"
-                              title="Contrato 100% Assinado"
-                            >
-                              <ShieldCheck className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
-                              <span>Assinado</span>
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => onSignContractDirect(contract)}
-                              className="min-h-[42px] py-2 px-1 rounded-xl btn-gold text-slate-950 text-[10px] font-extrabold flex flex-col items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer shadow-xs"
-                              title="Assinar com Carimbo Digital"
-                            >
-                              <PenTool className="w-4 h-4 text-slate-950 stroke-[2.5]" />
-                              <span>Assinar</span>
-                            </button>
-                          )}
-
-                          {/* 4. Botão Excluir */}
-                          {canDeleteContracts && (
-                            <button
-                              onClick={() => setContractToDelete(contract)}
-                              className="min-h-[42px] py-2 px-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold flex flex-col items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
-                              title="Mover para Lixeira"
-                            >
-                              <Trash2 className="w-4 h-4 text-rose-600" />
-                              <span>Excluir</span>
-                            </button>
-                          )}
-                        </div>
+                        {contract.tipo === 'venda_parcelada' && contract.vendaParcelada?.numeroParcelas && (
+                          <span className="text-[10px] text-yellow-400 font-bold block mt-0.5">
+                            {contract.vendaParcelada.numeroParcelas}x parcelas
+                          </span>
+                        )}
                       </div>
                     </div>
+
+                    {/* Bloco 3: Barra de Ações (Todos os Ícones 100% Visíveis Sem Rolagem Lateral) */}
+                    <div className="flex items-center gap-1.5 pt-2.5 lg:pt-0 border-t lg:border-t-0 border-slate-100 justify-end flex-wrap sm:flex-nowrap shrink-0">
+                      {/* 1. Botão Ver / Visualizar */}
+                      <button
+                        onClick={() => onSelectContract(contract)}
+                        className="flex-1 sm:flex-initial px-3.5 py-2.5 rounded-xl btn-gold text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition-all cursor-pointer"
+                        title="Visualizar Contrato Completo"
+                      >
+                        <Eye className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                        <span>Ver</span>
+                      </button>
+
+                      {/* 2. Botão Word (.docx) */}
+                      <button
+                        onClick={() => !isFullySigned && handleDownloadDocxDashboard(contract)}
+                        disabled={isFullySigned || downloadingDocxId === contract.id}
+                        className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border active:scale-95 cursor-pointer ${
+                          isFullySigned
+                            ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                        }`}
+                        title={isFullySigned ? 'Indisponível: contrato já assinado digitalmente' : 'Baixar documento Word (.docx)'}
+                      >
+                        {downloadingDocxId === contract.id ? (
+                          <CircularProgress percentage={downloadDocxProgress} colorClass="text-slate-700" size={18} />
+                        ) : (
+                          <>
+                            <FileDown className={`w-4 h-4 ${isFullySigned ? 'text-slate-300' : 'text-slate-700'}`} />
+                            <span className="hidden sm:inline text-[11px]">Word</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* 3. Botão PDF (.pdf) */}
+                      <button
+                        onClick={() => handleDownloadPdfDashboard(contract)}
+                        disabled={downloadingPdfId === contract.id}
+                        className="px-3 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition-all cursor-pointer disabled:opacity-60"
+                        title="Baixar PDF Oficial com Selos (.pdf)"
+                      >
+                        {downloadingPdfId === contract.id ? (
+                          <CircularProgress percentage={downloadPdfProgress} colorClass="text-slate-700" size={18} />
+                        ) : (
+                          <>
+                            <FileText className="w-4 h-4 text-slate-700" />
+                            <span className="hidden sm:inline text-[11px]">PDF</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* 4. Botão Assinar / Assinado */}
+                      {isFullySigned ? (
+                        <button
+                          onClick={() => onSelectContract(contract)}
+                          className="px-3 py-2.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                          title="Contrato 100% Assinado"
+                        >
+                          <ShieldCheck className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
+                          <span className="hidden sm:inline text-[11px]">Assinado</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => onSignContractDirect(contract)}
+                          className="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-yellow-400 text-xs font-extrabold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer shadow-xs"
+                          title="Assinar com Carimbo Digital"
+                        >
+                          <PenTool className="w-4 h-4 text-yellow-400 stroke-[2.5]" />
+                          <span className="hidden sm:inline text-[11px]">Assinar</span>
+                        </button>
+                      )}
+
+                      {/* 5. Botão Excluir */}
+                      {canDeleteContracts && (
+                        <button
+                          onClick={() => setContractToDelete(contract)}
+                          className="p-2.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-all cursor-pointer active:scale-95"
+                          title="Mover para Lixeira"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-
-            {/* VERSÃO DESKTOP: Tabela Executiva Elegante */}
-            <div className="hidden md:block overflow-x-auto rounded-3xl border border-slate-200/90 shadow-2xs">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/90 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold text-[11px]">
-                    <th className="py-3.5 px-4">Contrato / Título</th>
-                    <th className="py-3.5 px-3">Modalidade</th>
-                    <th className="py-3.5 px-4 min-w-[240px]">Partes Envolvidas</th>
-                    <th className="py-3.5 px-3">Valor Total</th>
-                    <th className="py-3.5 px-3">Assinaturas</th>
-                    <th className="py-3.5 px-4 text-right">Ações Rápidas</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
-                  {filteredContracts.map((contract) => {
-                    const isFullySigned = contract.status === 'assinado_total' || (contract.tipo === 'venda_vista' && (contract.assinaturas?.length || 0) >= 2);
-
-                    return (
-                      <tr key={contract.id} className="hover:bg-slate-50/90 transition-colors">
-                        {/* Título & Número */}
-                        <td className="py-4 px-4 align-middle">
-                          <div
-                            onClick={() => onSelectContract(contract)}
-                            className="font-extrabold text-slate-950 text-sm hover:text-yellow-700 transition-colors cursor-pointer"
-                          >
-                            {contract.titulo}
-                          </div>
-                          <div className="font-mono text-[11px] text-slate-500 flex items-center gap-1.5 mt-1">
-                            <span className="bg-slate-900 text-white px-2 py-0.5 rounded-md font-bold text-[10px] tracking-tight shadow-2xs">
-                              {contract.numeroContrato}
-                            </span>
-                            <span>•</span>
-                            <span className="flex items-center gap-1 text-slate-500 font-sans text-[11px]">
-                              <Calendar className="w-3 h-3 text-slate-400" />
-                              {formatDate(contract.dataCriacao)}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Modalidade */}
-                        <td className="py-4 px-3 align-middle">
-                          <ModernModalidadeBadge contract={contract} />
-                        </td>
-
-                        {/* Partes Envolvidas (Redesenhada com Micro-Avatares e Tags) */}
-                        <td className="py-4 px-4 align-middle">
-                          <div className="bg-slate-50/80 rounded-2xl p-2.5 border border-slate-200/60 max-w-xs">
-                            <ModernPartesEnvolvidas contract={contract} />
-                          </div>
-                        </td>
-
-                        {/* Valor Total */}
-                        <td className="py-4 px-3 align-middle">
-                          <div className="font-black text-slate-950 text-sm tracking-tight">
-                            {canViewFinanceiro ? formatCurrency(contract.valorTotal) : '••••••'}
-                          </div>
-                          {contract.tipo === 'venda_parcelada' && contract.vendaParcelada?.numeroParcelas && (
-                            <div className="text-[10px] font-bold text-slate-500 mt-0.5">
-                              {contract.vendaParcelada.numeroParcelas}x parcelas
-                            </div>
-                          )}
-                        </td>
-
-                        {/* Status de Assinatura */}
-                        <td className="py-4 px-3 align-middle">
-                          <ModernAssinaturaBadge contract={contract} />
-                        </td>
-
-                        {/* Ações Rápidas */}
-                        <td className="py-4 px-4 text-right align-middle">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => onSelectContract(contract)}
-                              className="p-2 text-yellow-800 hover:text-yellow-950 bg-yellow-50/80 hover:bg-yellow-100 rounded-xl transition-all cursor-pointer border border-yellow-200 shadow-2xs active:scale-95"
-                              title="Visualizar Contrato Completo"
-                            >
-                              <Eye className="w-4 h-4 stroke-[2.5]" />
-                            </button>
-
-                            <button
-                              onClick={() => !isFullySigned && handleDownloadDocxDashboard(contract)}
-                              disabled={isFullySigned || downloadingDocxId === contract.id}
-                              className={`p-2 min-w-[34px] rounded-xl transition-all flex items-center justify-center border ${
-                                isFullySigned
-                                  ? 'text-slate-300 bg-slate-50 border-slate-100 cursor-not-allowed'
-                                  : 'text-slate-700 hover:text-slate-950 bg-slate-50 hover:bg-slate-100 border-slate-200 shadow-2xs active:scale-95 cursor-pointer'
-                              }`}
-                              title={isFullySigned ? 'Indisponível: contrato já assinado digitalmente (use o PDF)' : 'Baixar Word (.docx)'}
-                            >
-                              {downloadingDocxId === contract.id ? (
-                                <CircularProgress percentage={downloadDocxProgress} colorClass="text-slate-700" size={20} />
-                              ) : (
-                                <FileDown className="w-4 h-4" />
-                              )}
-                            </button>
-
-                            <button
-                              onClick={() => handleDownloadPdfDashboard(contract)}
-                              disabled={downloadingPdfId === contract.id}
-                              className="p-2 min-w-[34px] text-slate-700 hover:text-slate-950 bg-slate-50 hover:bg-slate-100 border border-slate-200 shadow-2xs disabled:opacity-60 rounded-xl transition-all cursor-pointer flex items-center justify-center active:scale-95"
-                              title="Baixar PDF Oficial (.pdf)"
-                            >
-                              {downloadingPdfId === contract.id ? (
-                                <CircularProgress percentage={downloadPdfProgress} colorClass="text-slate-700" size={20} />
-                              ) : (
-                                <FileText className="w-4 h-4" />
-                              )}
-                            </button>
-
-                            {!isFullySigned && (
-                              <button
-                                onClick={() => onSignContractDirect(contract)}
-                                className="p-2 btn-gold text-slate-950 rounded-xl transition-all cursor-pointer shadow-2xs active:scale-95"
-                                title="Assinar com Carimbo Digital"
-                              >
-                                <PenTool className="w-4 h-4 stroke-[2.5]" />
-                              </button>
-                            )}
-
-                            {canDeleteContracts && (
-                              <button
-                                onClick={() => setContractToDelete(contract)}
-                                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer border border-transparent hover:border-rose-200"
-                                title="Mover para Lixeira"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </>
+                </div>
+              );
+            })}
+          </div>
         )}
           </div>
         )}

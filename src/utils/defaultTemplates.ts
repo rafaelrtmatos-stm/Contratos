@@ -94,36 +94,31 @@ export function generateVendaVistaTemplate(): string {
     Santarém-PA, {{DIA}} de {{MES_EXTENSO}} de {{ANO}}.
   </p>
 
-  <div style="margin-top: 80px;">
+  <div style="margin-top: 40px;">
     <p>
-      ________________________________________<br>
       {{VENDEDOR_NOME}}<br>
       CPF: {{CPF_VENDEDOR}}
     </p>
 
-    <p style="margin-top: 50px;">
-      ________________________________________<br>
+    <p style="margin-top: 30px;">
       {{COMPRADOR_NOME}}<br>
       CPF: {{CPF_COMPRADOR}}
     </p>
   </div>
 
-  <h2 style="margin-top: 80px;">TESTEMUNHAS</h2>
-  <div style="margin-top: 40px;">
+  <h2 style="margin-top: 40px;">TESTEMUNHAS</h2>
+  <div style="margin-top: 20px;">
     <p>
-      ________________________________________<br>
       {{TESTEMUNHA_1_NOME}}<br>
       CPF: {{TESTEMUNHA_1_CPF}} | RG: {{TESTEMUNHA_1_RG}}
     </p>
 
-    <p style="margin-top: 40px;">
-      ________________________________________<br>
+    <p style="margin-top: 20px;">
       {{TESTEMUNHA_2_NOME}}<br>
       CPF: {{TESTEMUNHA_2_CPF}} | RG: {{TESTEMUNHA_2_RG}}
     </p>
 
-    <p style="margin-top: 40px;">
-      ________________________________________<br>
+    <p style="margin-top: 20px;">
       {{TESTEMUNHA_3_NOME}}<br>
       CPF: {{TESTEMUNHA_3_CPF}} | RG: {{TESTEMUNHA_3_RG}}
     </p>

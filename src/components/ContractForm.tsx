@@ -70,16 +70,16 @@ const emptyParty: PartyDetailedInfo = {
 const emptyProperty: PropertyDetails = {
   nomeEmpreendimento: '',
   localizacaoImovel: '',
-  cidadeImovel: 'Santarém',
-  ufImovel: 'PA',
+  cidadeImovel: '',
+  ufImovel: '',
   numeroLote: '',
   numeroQuadra: '',
   enderecoLote: '',
-  metragemFrente: '10,00',
-  metragemLateralDireita: '30,00',
-  metragemLateralEsquerda: '30,00',
-  metragemFundos: '10,00',
-  areaTotalM2: '300,00',
+  metragemFrente: '',
+  metragemLateralDireita: '',
+  metragemLateralEsquerda: '',
+  metragemFundos: '',
+  areaTotalM2: '',
 };
 
 const emptyGoods: VehicleOrGoodsDetails = {
@@ -95,9 +95,9 @@ const emptyGoods: VehicleOrGoodsDetails = {
   renavam: '',
   numeroSerie: '',
   quilometragemOuUso: '',
-  estadoConservacao: 'Em perfeito estado de uso e funcionamento',
+  estadoConservacao: '',
   acessoriosInclusos: '',
-  documentacaoSituacao: 'Documentação 100% regularizada e sem débitos',
+  documentacaoSituacao: '',
 };
 
 export const ContractForm: React.FC<ContractFormProps> = ({
@@ -133,18 +133,17 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   );
 
   // Foro e Assinatura
-  const [cidadeForo, setCidadeForo] = useState(initialData?.cidadeForo || 'Santarém');
-  const [ufForo, setUfForo] = useState(initialData?.ufForo || 'PA');
-  const [cidadeAssinatura, setCidadeAssinatura] = useState(initialData?.cidadeAssinatura || 'Santarém');
-  const [ufAssinatura, setUfAssinatura] = useState(initialData?.ufAssinatura || 'PA');
+  const [cidadeForo, setCidadeForo] = useState(initialData?.cidadeForo || '');
+  const [ufForo, setUfForo] = useState(initialData?.ufForo || '');
+  const [cidadeAssinatura, setCidadeAssinatura] = useState(initialData?.cidadeAssinatura || '');
+  const [ufAssinatura, setUfAssinatura] = useState(initialData?.ufAssinatura || '');
   
   // Data de Assinatura desmembrada
-  const today = new Date();
-  const [diaAssinatura, setDiaAssinatura] = useState(initialData?.diaAssinatura || String(today.getDate()));
+  const [diaAssinatura, setDiaAssinatura] = useState(initialData?.diaAssinatura || '');
   const [mesExtensoAssinatura, setMesExtensoAssinatura] = useState(
-    initialData?.mesExtensoAssinatura || MONTH_NAMES_PT[today.getMonth()] || 'agosto'
+    initialData?.mesExtensoAssinatura || ''
   );
-  const [anoAssinatura, setAnoAssinatura] = useState(initialData?.anoAssinatura || String(today.getFullYear()));
+  const [anoAssinatura, setAnoAssinatura] = useState(initialData?.anoAssinatura || '');
 
   // Partes Detalhadas
   const [vendedor, setVendedor] = useState<PartyDetailedInfo>(
@@ -194,9 +193,9 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   );
 
   // Condições Financeiras
-  const [valorTotal, setValorTotal] = useState<number>(initialData?.valorTotal || 180000);
+  const [valorTotal, setValorTotal] = useState<number>(initialData?.valorTotal || 0);
   const [valorTotalExtenso, setValorTotalExtenso] = useState(
-    initialData?.valorTotalExtenso || 'cento e oitenta mil reais'
+    initialData?.valorTotalExtenso || ''
   );
 
   // Venda à Vista
@@ -211,9 +210,9 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   );
 
   // Venda Parcelada
-  const [valorEntrada, setValorEntrada] = useState<number>(initialData?.valorEntrada || 50000);
-  const [numeroParcelas, setNumeroParcelas] = useState<number>(initialData?.numeroParcelas || 36);
-  const [valorParcela, setValorParcela] = useState<number>(initialData?.valorParcela || 3611.11);
+  const [valorEntrada, setValorEntrada] = useState<number>(initialData?.valorEntrada || 0);
+  const [numeroParcelas, setNumeroParcelas] = useState<number>(initialData?.numeroParcelas || 0);
+  const [valorParcela, setValorParcela] = useState<number>(initialData?.valorParcela || 0);
   // Cálculo bilateral SEM seletor manual: os 2 campos editados mais
   // recentemente (entre Entrada / Valor da Parcela / Total) são tratados
   // como "dados conhecidos", e o terceiro é sempre recalculado sozinho -
@@ -232,11 +231,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   );
 
   // Exclusividade
-  const [percentualComissao, setPercentualComissao] = useState<number>(initialData?.percentualComissao || 6);
-  const [prazoMesesOuDias, setPrazoMesesOuDias] = useState<number>(initialData?.prazoMesesOuDias || 90);
+  const [percentualComissao, setPercentualComissao] = useState<number>(initialData?.percentualComissao || 0);
+  const [prazoMesesOuDias, setPrazoMesesOuDias] = useState<number>(initialData?.prazoMesesOuDias || 0);
   const [unidadePrazo, setUnidadePrazo] = useState<'dias' | 'meses'>(initialData?.unidadePrazo || 'dias');
   const [dataInicioExcl, setDataInicioExcl] = useState<string>(
-    initialData?.dataInicioExcl || new Date().toISOString().split('T')[0]
+    initialData?.dataInicioExcl || ''
   );
 
   // Dados do imóvel específicos do Contrato de Exclusividade
@@ -261,7 +260,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   // Atualizar cálculo de extenso quando o valor muda
   const handleValorTotalChange = (val: number) => {
     setValorTotal(val);
-    setValorTotalExtenso(numeroPorExtensoReais(val));
+    setValorTotalExtenso(val > 0 ? numeroPorExtensoReais(val) : '');
     if (tipo === 'venda_parcelada') tocarCampoParcelado('total');
   };
 
@@ -362,90 +361,6 @@ export const ContractForm: React.FC<ContractFormProps> = ({
 
     if (partes.length > 0) setTitulo(partes.join('_'));
   }, [tipo, subcategoria, imovel.numeroLote, imovel.numeroQuadra, imovel.nomeEmpreendimento, comprador.nome, tituloTimestamp]);
-
-  // Preenchimento de exemplo rápido
-  const preencherExemplo = () => {
-    if (subcategoria === 'outros_bens') {
-      setBemOutros({
-        tipoBem: 'carro',
-        descricao: 'Veículo automotor Toyota Corolla XEi 2.0 Flex Automático',
-        marca: 'Toyota',
-        modelo: 'Corolla XEi 2.0 Flex',
-        anoFabricacao: '2023',
-        anoModelo: '2024',
-        cor: 'Prata Metálico',
-        placa: 'QEZ-8A90',
-        chassi: '9BRBL42E4N0198421',
-        renavam: '01298471203',
-        numeroSerie: 'BR-2023-9842',
-        quilometragemOuUso: '18.500 km',
-        estadoConservacao: 'Excelente estado de conservação, revisões em concessionária',
-        acessoriosInclusos: 'Chave reserva, manual do proprietário, multimídia original',
-        documentacaoSituacao: 'IPVA 2026 pago, sem multas, restrições ou gravames',
-      });
-    } else {
-      setImovel({
-        nomeEmpreendimento: 'Loteamento Residencial Tapajós',
-        localizacaoImovel: 'Rodovia Fernando Guilhon, Km 06, Bairro Aeroporto Velho',
-        cidadeImovel: 'Santarém',
-        ufImovel: 'PA',
-        numeroLote: '14',
-        numeroQuadra: '08',
-        enderecoLote: 'Rua das Palmeiras, Quadra 08, Lote 14, Loteamento Tapajós',
-        metragemFrente: '12,00',
-        metragemLateralDireita: '30,00',
-        metragemLateralEsquerda: '30,00',
-        metragemFundos: '12,00',
-        areaTotalM2: '360,00',
-      });
-    }
-
-    setVendedor({
-      nome: 'José Maria Figueira de Alencar',
-      nacionalidade: 'brasileiro',
-      estadoCivil: 'casado',
-      rg: '3456789',
-      rgOrgao: 'SSP/PA',
-      cpfCnpj: '234.567.890-12',
-      endereco: 'Av. Mendonça Furtado',
-      numero: '1420',
-      bairro: 'Aldeia',
-      cep: '68040-050',
-      cidade: 'Santarém',
-      uf: 'PA',
-      telefone: '(93) 99122-3344',
-      email: 'jose.alencar@email.com',
-    });
-
-    setComprador({
-      nome: 'Cláudia Beatriz Menezes Silva',
-      nacionalidade: 'brasileira',
-      estadoCivil: 'solteira',
-      rg: '4567890',
-      rgOrgao: 'SSP/PA',
-      cpfCnpj: '456.789.012-34',
-      endereco: 'Travessa dos Mártires',
-      numero: '580',
-      bairro: 'Centro',
-      cep: '68005-090',
-      cidade: 'Santarém',
-      uf: 'PA',
-      telefone: '(93) 98400-5566',
-      email: 'claudia.menezes@email.com',
-    });
-
-    setCidadeForo('Santarém');
-    setUfForo('PA');
-    setCidadeAssinatura('Santarém');
-    setUfAssinatura('PA');
-    setDiaAssinatura('23');
-    setMesExtensoAssinatura('agosto');
-    setAnoAssinatura('2026');
-
-    handleValorTotalChange(subcategoria === 'outros_bens' ? 145000 : 220000);
-    setValorEntrada(subcategoria === 'outros_bens' ? 45000 : 60000);
-    setNumeroParcelas(subcategoria === 'outros_bens' ? 24 : 36);
-  };
 
   // Todos os campos que aparecem na tela (dado o tipo/subcategoria/variante
   // escolhidos) são obrigatórios - exceto "Cláusulas Adicionais", que o
@@ -818,120 +733,87 @@ export const ContractForm: React.FC<ContractFormProps> = ({
           )}
         </div>
 
-        {/* Stepper / Barra de Abas Executiva */}
-        <div className="bg-white p-2 rounded-2xl border border-slate-200/90 shadow-2xs overflow-x-auto">
-          <div className="flex items-center gap-1 min-w-max">
-            <button
-              type="button"
-              onClick={() => setActiveTab('comprador')}
-              className={`flex items-center gap-2 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'comprador'
-                  ? 'bg-slate-950 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
-              }`}
-            >
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                activeTab === 'comprador' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-700'
-              }`}>
-                1
-              </span>
-              <User className="w-3.5 h-3.5 shrink-0" />
-              <span>{tipo === 'exclusividade' ? 'Contratado' : 'Comprador'}</span>
-            </button>
+        {/* Stepper / Barra de Etapas 100% Responsiva sem Rolagem Lateral */}
+        <div className="bg-white p-2 sm:p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 sm:gap-2">
+            {[
+              {
+                id: 'comprador' as TabKey,
+                num: 1,
+                label: tipo === 'exclusividade' ? 'Contratado' : 'Comprador',
+                icon: <User className="w-3.5 h-3.5 shrink-0" />,
+              },
+              {
+                id: 'vendedor' as TabKey,
+                num: 2,
+                label: tipo === 'exclusividade' ? 'Contratante' : 'Vendedor',
+                icon: <User className="w-3.5 h-3.5 shrink-0" />,
+              },
+              {
+                id: 'imovel' as TabKey,
+                num: 3,
+                label: subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? 'Bem / Veículo' : 'Imóvel',
+                icon: subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? (
+                  <Car className="w-3.5 h-3.5 shrink-0" />
+                ) : (
+                  <Building2 className="w-3.5 h-3.5 shrink-0" />
+                ),
+              },
+              {
+                id: 'financeiro' as TabKey,
+                num: 4,
+                label: 'Financeiro',
+                icon: <Banknote className="w-3.5 h-3.5 shrink-0" />,
+              },
+              {
+                id: 'foro' as TabKey,
+                num: 5,
+                label: 'Foro & Data',
+                icon: <Scale className="w-3.5 h-3.5 shrink-0" />,
+              },
+              {
+                id: 'revisao' as TabKey,
+                num: 6,
+                label: 'Revisão',
+                icon: <ClipboardCheck className="w-3.5 h-3.5 shrink-0" />,
+              },
+            ].map((step) => {
+              const isActive = activeTab === step.id;
+              const hasErrors = missingFields.some((f) => f.tab === step.id);
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('vendedor')}
-              className={`flex items-center gap-2 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'vendedor'
-                  ? 'bg-slate-950 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
-              }`}
-            >
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                activeTab === 'vendedor' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-700'
-              }`}>
-                2
-              </span>
-              <User className="w-3.5 h-3.5 shrink-0" />
-              <span>{tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('imovel')}
-              className={`flex items-center gap-2 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'imovel'
-                  ? 'bg-slate-950 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
-              }`}
-            >
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                activeTab === 'imovel' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-700'
-              }`}>
-                3
-              </span>
-              {subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? (
-                <Car className="w-3.5 h-3.5 shrink-0" />
-              ) : (
-                <Building2 className="w-3.5 h-3.5 shrink-0" />
-              )}
-              <span>{subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? 'Bem / Veículo' : 'Imóvel'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('financeiro')}
-              className={`flex items-center gap-2 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'financeiro'
-                  ? 'bg-slate-950 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
-              }`}
-            >
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                activeTab === 'financeiro' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-700'
-              }`}>
-                4
-              </span>
-              <Banknote className="w-3.5 h-3.5 shrink-0" />
-              <span>Condições Financeiras</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('foro')}
-              className={`flex items-center gap-2 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'foro'
-                  ? 'bg-slate-950 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
-              }`}
-            >
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                activeTab === 'foro' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-700'
-              }`}>
-                5
-              </span>
-              <Scale className="w-3.5 h-3.5 shrink-0" />
-              <span>Foro e Datação</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('revisao')}
-              className={`flex items-center gap-2 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'revisao'
-                  ? 'bg-slate-950 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
-              }`}
-            >
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                activeTab === 'revisao' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-700'
-              }`}>
-                6
-              </span>
-              <ClipboardCheck className="w-3.5 h-3.5 shrink-0" />
-              <span>Revisão & Emissão</span>
-            </button>
+              return (
+                <button
+                  key={step.id}
+                  type="button"
+                  onClick={() => setActiveTab(step.id)}
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer border relative text-center sm:text-left ${
+                    isActive
+                      ? 'bg-slate-950 text-white border-slate-950 shadow-xs'
+                      : hasErrors
+                      ? 'bg-rose-50/80 text-rose-900 border-rose-200 hover:bg-rose-100/70'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-950 border-slate-200/90'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span
+                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                        isActive
+                          ? 'bg-yellow-400 text-slate-950'
+                          : hasErrors
+                          ? 'bg-rose-200 text-rose-900'
+                          : 'bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      {step.num}
+                    </span>
+                    <span className={isActive ? 'text-yellow-400' : hasErrors ? 'text-rose-600' : 'text-slate-500'}>
+                      {step.icon}
+                    </span>
+                  </div>
+                  <span className="truncate text-[11px] sm:text-xs font-bold">{step.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -1977,13 +1859,14 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     type="number"
                     min="0"
                     step="100"
-                    value={valorTotal}
-                    onChange={(e) => handleValorTotalChange(parseFloat(e.target.value) || 0)}
+                    value={valorTotal > 0 ? valorTotal : ''}
+                    onChange={(e) => handleValorTotalChange(e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
+                    placeholder="0,00"
                     className={`w-full pl-9 pr-3 py-2 text-sm font-bold text-slate-900 border border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-400 focus:border-yellow-500 ${errCls('Valor Total da Negociação')}`}
                   />
                 </div>
                 <span className="text-[11px] text-slate-500 mt-1 block">
-                  Exibição formatada: <strong className="text-amber-700">R$ {formatDecimalNumber(valorTotal)}</strong>
+                  Exibição formatada: <strong className="text-amber-700">{valorTotal > 0 ? `R$ ${formatDecimalNumber(valorTotal)}` : 'R$ 0,00'}</strong>
                 </span>
               </div>
 
@@ -1995,7 +1878,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   type="text"
                   value={valorTotalExtenso}
                   onChange={(e) => setValorTotalExtenso(e.target.value)}
-                  placeholder="cento e oitenta mil reais"
+                  placeholder="Ex: duzentos e vinte mil reais"
                   className={`w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-400 focus:border-yellow-500 ${errCls('Valor por Extenso')}`}
                 />
                 <span className="text-[11px] text-slate-500 mt-1 block">
@@ -2070,11 +1953,12 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     <label className="block text-xs font-bold text-slate-700 mb-1">Valor da Entrada (R$)</label>
                     <input
                       type="number"
-                      value={valorEntrada}
+                      value={valorEntrada > 0 ? valorEntrada : ''}
                       onChange={(e) => {
-                        setValorEntrada(parseFloat(e.target.value) || 0);
+                        setValorEntrada(e.target.value === '' ? 0 : parseFloat(e.target.value) || 0);
                         tocarCampoParcelado('entrada');
                       }}
+                      placeholder="0,00"
                       className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-yellow-400"
                     />
                   </div>
@@ -2083,8 +1967,9 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     <input
                       type="number"
                       min="1"
-                      value={numeroParcelas}
-                      onChange={(e) => setNumeroParcelas(parseInt(e.target.value, 10) || 1)}
+                      value={numeroParcelas > 0 ? numeroParcelas : ''}
+                      onChange={(e) => setNumeroParcelas(e.target.value === '' ? 0 : parseInt(e.target.value, 10) || 0)}
+                      placeholder="Ex: 36"
                       className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-yellow-400"
                     />
                   </div>
@@ -2092,11 +1977,12 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     <label className="block text-xs font-bold text-slate-700 mb-1">Valor de Cada Parcela (R$)</label>
                     <input
                       type="number"
-                      value={valorParcela}
+                      value={valorParcela > 0 ? valorParcela : ''}
                       onChange={(e) => {
-                        setValorParcela(parseFloat(e.target.value) || 0);
+                        setValorParcela(e.target.value === '' ? 0 : parseFloat(e.target.value) || 0);
                         tocarCampoParcelado('parcela');
                       }}
+                      placeholder="0,00"
                       className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-yellow-400"
                     />
                   </div>
@@ -2104,19 +1990,22 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     <label className="block text-xs font-bold text-slate-700 mb-1">Valor Total (R$)</label>
                     <input
                       type="number"
-                      value={valorTotal}
-                      onChange={(e) => handleValorTotalChange(parseFloat(e.target.value) || 0)}
+                      value={valorTotal > 0 ? valorTotal : ''}
+                      onChange={(e) => handleValorTotalChange(e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
+                      placeholder="0,00"
                       className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-yellow-400"
                     />
                   </div>
                 </div>
 
-                <p className="text-[11px] text-amber-900">
-                  R$ {valorEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} de entrada + {numeroParcelas}x
-                  de R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} = R${' '}
-                  {valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} no total. Mexa em qualquer 2
-                  desses 3 campos (Entrada / Valor da Parcela / Total) que o terceiro se ajusta sozinho.
-                </p>
+                {valorTotal > 0 && (
+                  <p className="text-[11px] text-amber-900">
+                    R$ {valorEntrada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} de entrada + {numeroParcelas}x
+                    de R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} = R${' '}
+                    {valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} no total. Mexa em qualquer 2
+                    desses 3 campos (Entrada / Valor da Parcela / Total) que o terceiro se ajusta sozinho.
+                  </p>
+                )}
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Forma de Cobrança</label>
@@ -2169,8 +2058,9 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       <input
                         type="number"
                         min="1"
-                        value={prazoMesesOuDias}
-                        onChange={(e) => setPrazoMesesOuDias(parseInt(e.target.value, 10) || 30)}
+                        value={prazoMesesOuDias > 0 ? prazoMesesOuDias : ''}
+                        onChange={(e) => setPrazoMesesOuDias(e.target.value === '' ? 0 : parseInt(e.target.value, 10) || 0)}
+                        placeholder="Ex: 90"
                         className="w-1/2 px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white"
                       />
                       <select
@@ -2188,8 +2078,9 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     <input
                       type="number"
                       step="0.5"
-                      value={percentualComissao}
-                      onChange={(e) => setPercentualComissao(parseFloat(e.target.value) || 6)}
+                      value={percentualComissao > 0 ? percentualComissao : ''}
+                      onChange={(e) => setPercentualComissao(e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
+                      placeholder="Ex: 6"
                       className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white"
                     />
                   </div>
