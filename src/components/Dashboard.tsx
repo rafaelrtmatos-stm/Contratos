@@ -62,6 +62,8 @@ interface DashboardProps {
   onDeleteContract: (contractId: string) => void;
   onSignContractDirect: (contract: ContractData) => void;
   onOpenWordTemplates?: () => void;
+  canDeleteContracts?: boolean;
+  canViewFinanceiro?: boolean;
 }
 
 /** Indica se a parte (vendedor/contratante ou comprador/contratado) já assinou o contrato. */
@@ -336,6 +338,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onDeleteContract,
   onSignContractDirect,
   onOpenWordTemplates,
+  canDeleteContracts = true,
+  canViewFinanceiro = true,
 }) => {
   // Filtros principais
   const [selectedCategory, setSelectedCategory] = useState<ContractType | 'todos'>('todos');
@@ -1304,7 +1308,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           )}
                         </div>
                         <span className="text-base sm:text-lg font-black text-white tracking-tight">
-                          {formatCurrency(contract.valorTotal)}
+                          {canViewFinanceiro ? formatCurrency(contract.valorTotal) : '••••••'}
                         </span>
                       </div>
 
@@ -1381,14 +1385,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           )}
 
                           {/* 4. Botão Excluir */}
-                          <button
-                            onClick={() => setContractToDelete(contract)}
-                            className="min-h-[42px] py-2 px-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold flex flex-col items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
-                            title="Mover para Lixeira"
-                          >
-                            <Trash2 className="w-4 h-4 text-rose-600" />
-                            <span>Excluir</span>
-                          </button>
+                          {canDeleteContracts && (
+                            <button
+                              onClick={() => setContractToDelete(contract)}
+                              className="min-h-[42px] py-2 px-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold flex flex-col items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
+                              title="Mover para Lixeira"
+                            >
+                              <Trash2 className="w-4 h-4 text-rose-600" />
+                              <span>Excluir</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1451,7 +1457,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         {/* Valor Total */}
                         <td className="py-4 px-3 align-middle">
                           <div className="font-black text-slate-950 text-sm tracking-tight">
-                            {formatCurrency(contract.valorTotal)}
+                            {canViewFinanceiro ? formatCurrency(contract.valorTotal) : '••••••'}
                           </div>
                           {contract.tipo === 'venda_parcelada' && contract.vendaParcelada?.numeroParcelas && (
                             <div className="text-[10px] font-bold text-slate-500 mt-0.5">
@@ -1516,13 +1522,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                               </button>
                             )}
 
-                            <button
-                              onClick={() => setContractToDelete(contract)}
-                              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer border border-transparent hover:border-rose-200"
-                              title="Mover para Lixeira"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            {canDeleteContracts && (
+                              <button
+                                onClick={() => setContractToDelete(contract)}
+                                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer border border-transparent hover:border-rose-200"
+                                title="Mover para Lixeira"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -1574,7 +1582,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="text-[10px] text-yellow-700 font-semibold pt-1 border-t border-slate-200 flex justify-between">
                     <span>Ref: {c.numeroContrato} - {c.titulo}</span>
-                    <span>{formatCurrency(c.valorTotal)}</span>
+                    <span>{canViewFinanceiro ? formatCurrency(c.valorTotal) : '••••••'}</span>
                   </div>
                 </div>
               ))}

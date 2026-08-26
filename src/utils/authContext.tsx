@@ -6,6 +6,26 @@ export interface Profile {
   id: string;
   nome: string | null;
   role: 'admin' | 'user';
+  permissions: {
+    ver_financeiro?: boolean;
+    excluir_contratos?: boolean;
+    gerenciar_templates?: boolean;
+    gerenciar_usuarios?: boolean;
+  };
+}
+
+/**
+ * Confere uma permissão do usuário logado - admin sempre tem acesso a
+ * tudo, independente do que estiver salvo em permissions (evita o
+ * próprio admin se trancar fora de uma tela por engano).
+ */
+export function hasPermission(
+  profile: Profile | null,
+  key: keyof NonNullable<Profile['permissions']>
+): boolean {
+  if (!profile) return false;
+  if (profile.role === 'admin') return true;
+  return !!profile.permissions?.[key];
 }
 
 interface AuthContextValue {
@@ -27,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('id, nome, role')
+        .select('id, nome, role, permissions')
         .eq('id', userId)
         .single();
       setProfile(data as Profile | null);

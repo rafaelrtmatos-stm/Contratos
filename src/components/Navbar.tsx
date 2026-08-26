@@ -10,6 +10,7 @@ import {
   User,
   ArrowLeft,
   CheckCircle2,
+  Settings2,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -17,11 +18,13 @@ interface NavbarProps {
   onNavigateDashboard: () => void;
   onOpenSettings?: () => void;
   onOpenWordTemplates?: () => void;
+  onOpenTemplateManager?: () => void;
   onOpenTrash?: () => void;
   contractCount: number;
   onSignOut?: () => void;
   userEmail?: string;
   userName?: string;
+  canManageTemplates?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -29,11 +32,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigateDashboard,
   onOpenSettings,
   onOpenWordTemplates,
+  onOpenTemplateManager,
   onOpenTrash,
   contractCount,
   onSignOut,
   userEmail,
   userName,
+  canManageTemplates = true,
 }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
@@ -177,7 +182,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </button>
 
                       {/* Central de Modelos Word (.docx) */}
-                      {onOpenWordTemplates && (
+                      {onOpenWordTemplates && canManageTemplates && (
                         <button
                           onClick={() => {
                             setIsProfileMenuOpen(false);

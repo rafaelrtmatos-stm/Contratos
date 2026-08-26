@@ -12,7 +12,7 @@ import { WordTemplateModal } from './components/WordTemplateModal';
 import { TrashModal } from './components/TrashModal';
 import { SettingsPanel } from './components/SettingsPanel';
 import { LoginScreen } from './components/LoginScreen';
-import { AuthProvider, useAuth } from './utils/authContext';
+import { AuthProvider, useAuth, hasPermission } from './utils/authContext';
 import { fetchContracts, saveContract, deleteContract, saveSignature } from './utils/contractsRepository';
 import { SignatureLink } from './pages/SignatureLink';
 import { ValidatePage } from './pages/ValidatePage';
@@ -312,6 +312,7 @@ function MainApp() {
         onSignOut={signOut}
         userEmail={profile?.email}
         userName={profile?.nome}
+        canManageTemplates={hasPermission(profile, 'gerenciar_templates')}
       />
 
       {/* Conteúdo Principal */}
@@ -340,6 +341,8 @@ function MainApp() {
               setQuickSignContract(contract);
             }}
             onOpenWordTemplates={() => setIsWordTemplateModalOpen(true)}
+            canDeleteContracts={hasPermission(profile, 'excluir_contratos')}
+            canViewFinanceiro={hasPermission(profile, 'ver_financeiro')}
           />
         )}
 
@@ -402,7 +405,7 @@ function MainApp() {
           onClose={() => setIsSettingsPanelOpen(false)}
           contracts={contracts}
           onDeleteAllContracts={handleDeleteAllContracts}
-          isAdmin={profile?.role === 'admin'}
+          isAdmin={hasPermission(profile, 'gerenciar_usuarios')}
         />
       )}
 
