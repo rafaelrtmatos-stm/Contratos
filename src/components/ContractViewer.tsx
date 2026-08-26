@@ -422,7 +422,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           signature: sigCorretorAtual,
           nome: dadosCorretor.nome,
           documento: dadosCorretor.cpfCnpj,
-          roleLabel: isExclDownload ? getTratamento('contratado', dadosCorretor.genero) : vTermo,
+          roleLabel: isExclDownload ? getTratamento('contratado', dadosCorretor.genero) : corretorTermo,
         };
         const compradorInfo: PartySignatureInfo = {
           assinou: estadoAssinatura.compradorAssinou,
@@ -430,7 +430,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           signature: sigClienteAtual,
           nome: dadosCliente.nome,
           documento: dadosCliente.cpfCnpj,
-          roleLabel: isExclDownload ? getTratamento('contratante', dadosCliente.genero) : cTermo,
+          roleLabel: isExclDownload ? getTratamento('contratante', dadosCliente.genero) : clienteTermo,
         };
 
         const tagsConfig = mapTagsToConfig(tagsEncontradas, usuarioInfo, compradorInfo);
@@ -463,14 +463,31 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   const isExcl = contract.tipo === 'exclusividade';
   const allCompradores = getAllCompradores(contract);
   const anyTags = tags as unknown as Record<string, string>;
-  const vNome = anyTags.CONTRATANTE_NOME || anyTags.vendedor_nome || anyTags.vendedor || (isExcl ? 'CONTRATANTE' : 'PROMITENTE VENDEDOR(A)');
-  const cNome = anyTags.VENDEDOR_NOME || anyTags.comprador_nome || anyTags.comprador || (isExcl ? 'CONTRATADO(A)' : 'PROMITENTE COMPRADOR(A)');
-  const vDoc = anyTags.CONTRATANTE_CPF || anyTags.vendedor_cpf_cnpj || anyTags.cpf_vendedor || '';
-  const cDoc = isExcl
+
+  // ATENÇÃO: em exclusividade os papéis são invertidos em relação ao resto
+  // do sistema - vendedor = Contratante/proprietário (o CLIENTE), comprador =
+  // Contratado (o CORRETOR, você). As variáveis abaixo já resolvem isso: uma
+  // representa sempre "você/corretor" e a outra sempre "o cliente",
+  // independente do tipo de contrato - antes disso, os dois cartões do
+  // Status das Assinaturas pegavam sempre os dados de "vendedor" pro card
+  // "(Você/Corretor)" e "comprador" pro card "(Cliente)", o que em
+  // exclusividade mostrava o nome do proprietário rotulado como você/corretor
+  // e o seu próprio nome rotulado como cliente - exatamente invertido.
+  const corretorTermo = isExcl ? 'CONTRATADO(A)' : (anyTags.vendedor_termo || 'PROMITENTE VENDEDOR(A)');
+  const corretorNome = isExcl
+    ? (anyTags.VENDEDOR_NOME || anyTags.comprador_nome || anyTags.comprador || 'CONTRATADO(A)')
+    : (anyTags.vendedor_nome || anyTags.vendedor || 'PROMITENTE VENDEDOR(A)');
+  const corretorDoc = isExcl
     ? (anyTags.VENDEDOR_CRECI ? `CRECI nº ${anyTags.VENDEDOR_CRECI} | CPF/CNPJ: ${anyTags.VENDEDOR_CPF || ''}` : (anyTags.VENDEDOR_CPF || ''))
+    : (anyTags.vendedor_cpf_cnpj || anyTags.cpf_vendedor || '');
+
+  const clienteTermo = isExcl ? 'CONTRATANTE' : (anyTags.comprador_termo || 'PROMITENTE COMPRADOR(A)');
+  const clienteNome = isExcl
+    ? (anyTags.CONTRATANTE_NOME || anyTags.vendedor_nome || anyTags.vendedor || 'CONTRATANTE')
+    : (anyTags.comprador_nome || anyTags.comprador || 'PROMITENTE COMPRADOR(A)');
+  const clienteDoc = isExcl
+    ? (anyTags.CONTRATANTE_CPF || anyTags.vendedor_cpf_cnpj || anyTags.cpf_vendedor || '')
     : (anyTags.comprador_cpf || anyTags.cpf_comprador || '');
-  const vTermo = isExcl ? 'CONTRATANTE' : (anyTags.vendedor_termo || 'PROMITENTE VENDEDOR(A)');
-  const cTermo = isExcl ? 'CONTRATADO(A)' : (anyTags.comprador_termo || 'PROMITENTE COMPRADOR(A)');
 
   const isDigital = currentModality === 'digital';
   const isFullySigned = contract.modalidadeAssinatura === 'digital' && (contract.assinaturas?.length || 0) >= 2;
@@ -746,12 +763,12 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                      {vTermo} (Você / Corretor)
+                      {corretorTermo} (Você / Corretor)
                     </span>
                     <p className="text-sm font-bold text-slate-900 leading-tight">
-                      {vNome}
+                      {corretorNome}
                     </p>
-                    {vDoc && <p className="text-[11px] text-slate-500">{vDoc}</p>}
+                    {corretorDoc && <p className="text-[11px] text-slate-500">{corretorDoc}</p>}
                   </div>
 
                   {sigVendedor ? (
@@ -801,12 +818,12 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                      {cTermo} (Cliente)
+                      {clienteTermo} (Cliente)
                     </span>
                     <p className="text-sm font-bold text-slate-900 leading-tight">
-                      {cNome}
+                      {clienteNome}
                     </p>
-                    {cDoc && <p className="text-[11px] text-slate-500">{cDoc}</p>}
+                    {clienteDoc && <p className="text-[11px] text-slate-500">{clienteDoc}</p>}
                   </div>
 
                   {clienteJaAssinou ? (

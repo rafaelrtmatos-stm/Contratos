@@ -1209,28 +1209,37 @@ export function exportToDoc(contract: ContractData): void {
     `;
   } else {
     const isExcl = contract.tipo === 'exclusividade';
-    const vNome = tags.CONTRATANTE_NOME || tags.vendedor_nome || tags.vendedor || (isExcl ? 'CONTRATANTE' : 'PROMITENTE VENDEDOR(A)');
-    const cNome = tags.VENDEDOR_NOME || tags.comprador_nome || tags.comprador || (isExcl ? 'CONTRATADO(A)' : 'PROMITENTE COMPRADOR(A)');
-    const vDoc = tags.CONTRATANTE_CPF || tags.vendedor_cpf_cnpj || tags.cpf_vendedor || '';
-    const cDoc = isExcl
+    // Mesma correção do ContractViewer.tsx: em exclusividade os papéis são
+    // invertidos (vendedor=Contratante/cliente, comprador=Contratado/corretor).
+    const corretorNome = isExcl
+      ? (tags.VENDEDOR_NOME || tags.comprador_nome || tags.comprador || 'CONTRATADO(A)')
+      : (tags.vendedor_nome || tags.vendedor || 'PROMITENTE VENDEDOR(A)');
+    const corretorDoc = isExcl
       ? (tags.VENDEDOR_CRECI ? `CRECI nº ${tags.VENDEDOR_CRECI} | CPF/CNPJ: ${tags.VENDEDOR_CPF || ''}` : (tags.VENDEDOR_CPF || ''))
+      : (tags.vendedor_cpf_cnpj || tags.cpf_vendedor || '');
+    const corretorTermo = isExcl ? 'CONTRATADO(A)' : (tags.vendedor_termo || 'PROMITENTE VENDEDOR(A)');
+
+    const clienteNome = isExcl
+      ? (tags.CONTRATANTE_NOME || tags.vendedor_nome || tags.vendedor || 'CONTRATANTE')
+      : (tags.comprador_nome || tags.comprador || 'PROMITENTE COMPRADOR(A)');
+    const clienteDoc = isExcl
+      ? (tags.CONTRATANTE_CPF || tags.vendedor_cpf_cnpj || tags.cpf_vendedor || '')
       : (tags.comprador_cpf || tags.cpf_comprador || '');
-    const vTermo = isExcl ? 'CONTRATANTE' : (tags.vendedor_termo || 'PROMITENTE VENDEDOR(A)');
-    const cTermo = isExcl ? 'CONTRATADO(A)' : (tags.comprador_termo || 'PROMITENTE COMPRADOR(A)');
+    const clienteTermo = isExcl ? 'CONTRATANTE' : (tags.comprador_termo || 'PROMITENTE COMPRADOR(A)');
 
     signaturesHtml = `
       <table style="width: 100%; margin-top: 40px; border-collapse: collapse;">
         <tr>
           <td style="width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 10px; vertical-align: top;">
-            <strong>${vNome}</strong><br/>
-            ${vTermo}<br/>
-            ${vDoc ? `CPF/CNPJ: ${vDoc}` : ''}
+            <strong>${corretorNome}</strong><br/>
+            ${corretorTermo}<br/>
+            ${corretorDoc ? `CPF/CNPJ: ${corretorDoc}` : ''}
           </td>
           <td style="width: 10%;"></td>
           <td style="width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 10px; vertical-align: top;">
-            <strong>${cNome}</strong><br/>
-            ${cTermo}<br/>
-            ${cDoc ? (isExcl ? cDoc : `CPF/CNPJ: ${cDoc}`) : ''}
+            <strong>${clienteNome}</strong><br/>
+            ${clienteTermo}<br/>
+            ${clienteDoc ? (isExcl ? clienteDoc : `CPF/CNPJ: ${clienteDoc}`) : ''}
           </td>
         </tr>
       </table>
