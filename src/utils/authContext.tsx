@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from './supabaseClient';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 
 export interface Profile {
@@ -24,24 +24,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   const loadProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, nome, role')
-      .eq('id', userId)
-      .single();
-    setProfile(data as Profile | null);
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, nome, role')
+        .eq('id', userId)
+        .single();
+      setProfile(data as Profile | null);
+    } catch {
+      setProfile(null);
+    }
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      setSession(data.session);
-      if (data.session) {
-        await loadProfile(data.session.user.id);
-      }
+    if (!isSupabaseConfigured) {
       setIsLoading(false);
-    });
+      return;
+    }
+
+    let isMounted = true;
+
+    supabase.auth
+      .getSession()
+      .then(async ({ data }) => {
+        if (!isMounted) return;
+        setSession(data?.session ?? null);
+        if (data?.session) {
+          await loadProfile(data.session.user.id);
+        }
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.warn('Erro ao obter sessão inicial:', err);
+        if (isMounted) setIsLoading(false);
+      });
 
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      if (!isMounted) return;
       setSession(newSession);
       if (newSession) {
         await loadProfile(newSession.user.id);
@@ -50,7 +69,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      listener?.subscription?.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

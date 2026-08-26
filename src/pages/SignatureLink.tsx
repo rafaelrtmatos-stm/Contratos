@@ -237,11 +237,7 @@ export const SignatureLink: React.FC = () => {
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      const nomeClientePdf =
-        (contract.tipo === 'exclusividade' ? contract.vendedor?.nome : contract.comprador?.nome) ||
-        contract.imovel?.nomeEmpreendimento ||
-        'documento';
-      a.download = buildPdfFileName(nomeClientePdf);
+      a.download = buildPdfFileName(contract);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -301,8 +297,8 @@ export const SignatureLink: React.FC = () => {
         {step === 'cpf' && (
           <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
             <div className="flex justify-center mb-6">
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Lock className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-yellow-100 text-yellow-900 rounded-full border border-yellow-300">
+                <Lock className="w-6 h-6 text-yellow-800" />
               </div>
             </div>
 
@@ -326,8 +322,8 @@ export const SignatureLink: React.FC = () => {
                   placeholder="____"
                   maxLength={4}
                   disabled={loading}
-                  className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 text-center text-lg tracking-widest font-bold
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                  className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-400 text-center text-lg tracking-widest font-bold
+                    focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-500
                     disabled:bg-slate-100 disabled:cursor-not-allowed"
                 />
               </div>
@@ -343,8 +339,7 @@ export const SignatureLink: React.FC = () => {
                 type="button"
                 onClick={handleValidateCPF}
                 disabled={loading}
-                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-sm font-bold rounded-lg
-                  transition-colors flex items-center justify-center gap-2"
+                className="w-full btn-gold text-slate-950 font-extrabold text-sm py-3 rounded-xl transition-all shadow-md shadow-yellow-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
               >
                 {loading ? (
                   <>
@@ -400,7 +395,7 @@ export const SignatureLink: React.FC = () => {
                       type="checkbox"
                       checked={accepted.leu}
                       onChange={(e) => setAccepted((prev) => ({ ...prev, leu: e.target.checked }))}
-                      className="w-5 h-5 mt-0.5 accent-green-600"
+                      className="w-5 h-5 mt-0.5 accent-amber-600"
                     />
                     <span className="text-sm text-slate-700">
                       Li e entendi o contrato e todos os seus termos e condições.
@@ -412,7 +407,7 @@ export const SignatureLink: React.FC = () => {
                       type="checkbox"
                       checked={accepted.concorda}
                       onChange={(e) => setAccepted((prev) => ({ ...prev, concorda: e.target.checked }))}
-                      className="w-5 h-5 mt-0.5 accent-green-600"
+                      className="w-5 h-5 mt-0.5 accent-amber-600"
                     />
                     <span className="text-sm text-slate-700">
                       Concordo em assinar este contrato digitalmente.
@@ -427,11 +422,11 @@ export const SignatureLink: React.FC = () => {
                   type="button"
                   onClick={() => setSignatureModalOpen(true)}
                   disabled={signed || !accepted.leu || !accepted.concorda}
-                  className={`w-full mt-6 px-4 py-3 text-white text-sm font-bold rounded-lg
-                    transition-colors flex items-center justify-center gap-2 ${
+                  className={`w-full mt-6 px-4 py-3.5 text-sm font-extrabold rounded-xl
+                    transition-all flex items-center justify-center gap-2 cursor-pointer ${
                       signed || !accepted.leu || !accepted.concorda
-                        ? 'bg-slate-300 cursor-not-allowed'
-                        : 'bg-green-600 hover:bg-green-700'
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        : 'btn-gold text-slate-950 shadow-md shadow-yellow-500/20 hover:scale-[1.005]'
                     }`}
                 >
                   {signed ? (
@@ -450,8 +445,8 @@ export const SignatureLink: React.FC = () => {
                   type="button"
                   onClick={handleDownload}
                   disabled={downloading}
-                  className={`w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold rounded-lg
-                    transition-colors flex items-center justify-center gap-2 ${previouslySigned ? '' : 'mt-2'}`}
+                  className={`w-full px-4 py-3.5 bg-slate-950 hover:bg-slate-900 active:bg-black disabled:opacity-60 text-white text-sm font-extrabold rounded-xl
+                    transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs border border-slate-800 ${previouslySigned ? '' : 'mt-2'}`}
                 >
                   {downloading ? 'Gerando PDF...' : '📥 Baixar Contrato Assinado'}
                 </button>
@@ -462,17 +457,17 @@ export const SignatureLink: React.FC = () => {
                   sendo gerado de verdade (não no atalho de link já salvo,
                   que abre na hora). */}
               {downloading && downloadProgress > 0 && (
-                <div className="mt-3 bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+                <div className="mt-3 bg-white border border-amber-200 rounded-xl shadow-sm p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                      <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
                       Gerando PDF...
                     </span>
-                    <span className="text-sm font-bold text-blue-600 tabular-nums">{downloadProgress}%</span>
+                    <span className="text-sm font-bold text-amber-600 tabular-nums">{downloadProgress}%</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                     <div
-                      className="h-full bg-blue-600 transition-all duration-500 ease-out"
+                      className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 transition-all duration-500 ease-out"
                       style={{ width: `${downloadProgress}%` }}
                     />
                   </div>

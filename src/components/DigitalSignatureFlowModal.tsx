@@ -96,11 +96,7 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      const nomeClientePdf =
-        (contract.tipo === 'exclusividade' ? contract.vendedor?.nome : contract.comprador?.nome) ||
-        contract.imovel?.nomeEmpreendimento ||
-        'documento';
-      a.download = buildPdfFileName(nomeClientePdf);
+      a.download = buildPdfFileName(contract);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -113,8 +109,8 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-sm w-full shadow-2xl">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden border border-neutral-200">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 p-4">
           <h3 className="font-bold text-slate-900 flex items-center gap-2">
@@ -167,8 +163,7 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
                   type="button"
                   onClick={handleConfirmPassword}
                   disabled={loading}
-                  className="w-full px-4 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:bg-slate-300 text-slate-950 text-sm font-bold rounded-lg
-                    transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  className="w-full btn-gold text-slate-950 font-extrabold text-sm py-3 rounded-xl transition-all shadow-md shadow-yellow-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                 >
                   {loading ? (
                     <>
@@ -212,13 +207,12 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
                   type="button"
                   onClick={handleDownloadPdf}
                   disabled={downloading}
-                  className="w-full px-4 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white text-sm font-bold rounded-lg
-                    transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3 px-4 bg-slate-950 hover:bg-slate-900 active:bg-black disabled:opacity-60 text-white text-sm font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs border border-slate-800"
                 >
                   {downloading ? (
                     <Loader className="w-4 h-4 animate-spin" />
                   ) : (
-                    <FileDown className="w-4 h-4" />
+                    <FileDown className="w-4 h-4 text-yellow-400" />
                   )}
                   PDF Assinado por Mim
                 </button>
@@ -226,8 +220,7 @@ export const DigitalSignatureFlowModal: React.FC<DigitalSignatureFlowModalProps>
                 <button
                   type="button"
                   onClick={() => setIsCodeModalOpen(true)}
-                  className="w-full px-4 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-sm font-bold rounded-lg
-                    transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  className="w-full btn-gold text-slate-950 font-extrabold text-sm py-3 rounded-xl transition-all shadow-md shadow-yellow-500/20 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <KeyRound className="w-4 h-4 text-slate-950" />
                   Gerar Código para Cliente

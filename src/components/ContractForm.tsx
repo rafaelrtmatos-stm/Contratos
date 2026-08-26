@@ -32,6 +32,8 @@ import { ValidatedInput } from './ValidatedInput';
 import { CEPSearch } from './CEPSearch';
 import { GenderSelect } from './GenderSelect';
 import { EstadoCivilSelect } from './EstadoCivilSelect';
+import { NacionalidadeSelect } from './NacionalidadeSelect';
+import { OrgaoEmissorInput } from './OrgaoEmissorInput';
 import { convertEstadoCivilToGenero } from '../utils/civilStatus';
 import { convertNacionalidadeToGenero } from '../utils/nacionalidade';
 import { SavedPartyPicker } from './SavedPartyPicker';
@@ -457,6 +459,15 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     revisao: 'Resumo e Emissão',
   };
 
+  const TAB_ORDER: TabKey[] = ['comprador', 'vendedor', 'imovel', 'financeiro', 'foro', 'revisao'];
+  const currentTabIndex = TAB_ORDER.indexOf(activeTab);
+  const handlePrevTab = () => {
+    if (currentTabIndex > 0) setActiveTab(TAB_ORDER[currentTabIndex - 1]);
+  };
+  const handleNextTab = () => {
+    if (currentTabIndex < TAB_ORDER.length - 1) setActiveTab(TAB_ORDER[currentTabIndex + 1]);
+  };
+
   const getMissingFields = (): { label: string; tab: TabKey }[] => {
     const missing: { label: string; tab: TabKey }[] = [];
     const req = (val: string | undefined | null, label: string, tab: TabKey) => {
@@ -710,197 +721,233 @@ export const ContractForm: React.FC<ContractFormProps> = ({
   ]);
 
   return (
-    <div className="max-w-5xl mx-auto pb-16">
+    <div className="max-w-5xl mx-auto pb-20">
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Cabeçalho do Formulário */}
-        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-xs">
+        {/* Cabeçalho do Formulário com Visual Executivo */}
+        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200/90 shadow-xs space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
-            <div>
-              <span className="text-xs font-bold tracking-wider text-amber-600 uppercase">
-                {initialData ? 'Edição de Contrato' : 'Elaboração de Instrumento Contratual'}
-              </span>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-yellow-50 text-yellow-900 border border-yellow-300/80 text-[11px] font-extrabold uppercase tracking-wide">
+                  {initialData ? 'Edição de Contrato' : 'Novo Instrumento Contratual'}
+                </span>
+                <span className="font-mono bg-slate-900 text-white px-2 py-0.5 rounded-md font-bold text-[10px] tracking-tight">
+                  {numeroContrato}
+                </span>
+              </div>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
                 {tipo === 'venda_vista'
-                  ? 'Contrato de Compra e Venda de Imóvel à Vista'
+                  ? 'Contrato de Compra e Venda à Vista'
                   : tipo === 'venda_parcelada'
                   ? 'Contrato de Compra e Venda Parcelada'
-                  : 'Contrato de Exclusividade com Monitor de Prazos'}
+                  : 'Contrato de Prestação de Serviços com Exclusividade'}
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                Preencha as informações cadastrais e financeiras do contrato para emissão imediata e assinatura.
+              <p className="text-xs sm:text-sm text-slate-500">
+                Preencha as informações cadastrais e financeiras para emissão jurídica e colheita de assinaturas.
               </p>
             </div>
 
-            <div className="flex items-center gap-2 self-start sm:self-auto">
+            <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                className="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
               >
                 Cancelar
               </button>
               <button
-                type="submit"
-                className="flex items-center gap-2 px-5 py-2 text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 shadow-sm rounded-lg transition-all cursor-pointer"
+                type="button"
+                onClick={handleSaveDraft}
+                disabled={savingDraft}
+                className="px-4 py-2.5 text-xs font-bold text-yellow-900 bg-yellow-100/70 hover:bg-yellow-200/80 border border-yellow-300 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
               >
-                <CheckCircle2 className="w-4 h-4 text-slate-950" />
-                <span>{initialData ? 'Atualizar Contrato' : 'Gerar Contrato'}</span>
+                <FileText className="w-3.5 h-3.5" />
+                <span>{savingDraft ? 'Salvando...' : 'Salvar Rascunho'}</span>
               </button>
             </div>
           </div>
 
           {/* SELETOR DE SUBCATEGORIA (Imóvel vs Outros Bens) */}
-            {tipo !== 'exclusividade' && (
-              <div className="pt-4 border-t border-slate-100">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
-                  1. Subcategoria do Objeto Negociado:
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleSubcategoriaChange('imovel')}
-                    className={`p-3 rounded-lg border text-left transition-all flex items-center gap-3 cursor-pointer ${
-                      subcategoria === 'imovel'
-                        ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-xs'
-                        : 'border-slate-200 hover:border-slate-300 bg-slate-50/40'
-                    }`}
-                  >
-                    <div className={`p-2 rounded-lg ${subcategoria === 'imovel' ? 'bg-amber-500 text-slate-950' : 'bg-slate-200 text-slate-600'}`}>
-                      <Building2 className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-slate-900 block">Imóvel (Terreno / Lote / Casa)</span>
-                      <span className="text-[11px] text-slate-500 block mt-0.5">
-                        Metragens, loteamento, quadra e confrontações
-                      </span>
-                    </div>
-                  </button>
+          {tipo !== 'exclusividade' && (
+            <div className="space-y-2.5">
+              <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                Subcategoria do Objeto Negociado:
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleSubcategoriaChange('imovel')}
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3.5 cursor-pointer ${
+                    subcategoria === 'imovel'
+                      ? 'border-yellow-400 bg-yellow-50/70 ring-2 ring-yellow-400/30 shadow-2xs'
+                      : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                  }`}
+                >
+                  <div className={`p-2.5 rounded-xl ${subcategoria === 'imovel' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-600'}`}>
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-extrabold text-slate-900 block">Imóvel (Terreno / Lote / Casa)</span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5">
+                      Metragens, loteamento, quadra e confrontações
+                    </span>
+                  </div>
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => handleSubcategoriaChange('outros_bens')}
-                    className={`p-3 rounded-lg border text-left transition-all flex items-center gap-3 cursor-pointer ${
-                      subcategoria === 'outros_bens'
-                        ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-xs'
-                        : 'border-slate-200 hover:border-slate-300 bg-slate-50/40'
-                    }`}
-                  >
-                    <div className={`p-2 rounded-lg ${subcategoria === 'outros_bens' ? 'bg-amber-500 text-slate-950' : 'bg-slate-200 text-slate-600'}`}>
-                      <Car className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-slate-900 block">Outros Bens (Carro, Moto, Embarcação, etc.)</span>
-                      <span className="text-[11px] text-slate-500 block mt-0.5">
-                        Marca, modelo, placa, chassi, renavam e estado
-                      </span>
-                    </div>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => handleSubcategoriaChange('outros_bens')}
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3.5 cursor-pointer ${
+                    subcategoria === 'outros_bens'
+                      ? 'border-yellow-400 bg-yellow-50/70 ring-2 ring-yellow-400/30 shadow-2xs'
+                      : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                  }`}
+                >
+                  <div className={`p-2.5 rounded-xl ${subcategoria === 'outros_bens' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-600'}`}>
+                    <Car className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-extrabold text-slate-900 block">Outros Bens (Carro, Moto, Embarcação, etc.)</span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5">
+                      Marca, modelo, placa, chassi, renavam e estado
+                    </span>
+                  </div>
+                </button>
               </div>
-            )}
+            </div>
+          )}
         </div>
 
-        {/* Barra de Abas do Formulário */}
-        <div className="flex border-b border-slate-200 bg-white rounded-t-lg px-2 sm:px-4 overflow-x-auto shadow-2xs">
-          <button
-            type="button"
-            onClick={() => setActiveTab('comprador')}
-            className={`flex items-center gap-2 py-3 px-2 sm:px-3 min-h-[44px] text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === 'comprador'
-                ? 'border-amber-500 text-amber-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <User className={`w-4 h-4 shrink-0 ${activeTab === 'comprador' ? 'text-amber-600' : 'text-slate-400'}`} />
-            <span className="hidden sm:inline">1. {tipo === 'exclusividade' ? 'Contratado' : 'Comprador'}</span>
-            <span className="sm:hidden">{tipo === 'exclusividade' ? 'Contratado' : 'Comprador'}</span>
-          </button>
+        {/* Stepper / Barra de Abas Executiva */}
+        <div className="bg-white p-2 rounded-2xl border border-slate-200/90 shadow-2xs overflow-x-auto">
+          <div className="flex items-center gap-1 min-w-max">
+            <button
+              type="button"
+              onClick={() => setActiveTab('comprador')}
+              className={`flex items-center gap-2 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'comprador'
+                  ? 'bg-slate-950 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                activeTab === 'comprador' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-700'
+              }`}>
+                1
+              </span>
+              <User className="w-3.5 h-3.5 shrink-0" />
+              <span>{tipo === 'exclusividade' ? 'Contratado' : 'Comprador'}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('vendedor')}
-            className={`flex items-center gap-2 py-3 px-2 sm:px-3 min-h-[44px] text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === 'vendedor'
-                ? 'border-amber-500 text-amber-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <User className={`w-4 h-4 shrink-0 ${activeTab === 'vendedor' ? 'text-amber-600' : 'text-slate-400'}`} />
-            <span className="hidden sm:inline">2. {tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}</span>
-            <span className="sm:hidden">{tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('vendedor')}
+              className={`flex items-center gap-2 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'vendedor'
+                  ? 'bg-slate-950 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                activeTab === 'vendedor' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-700'
+              }`}>
+                2
+              </span>
+              <User className="w-3.5 h-3.5 shrink-0" />
+              <span>{tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('imovel')}
-            className={`flex items-center gap-2 py-3 px-2 sm:px-3 min-h-[44px] text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === 'imovel'
-                ? 'border-amber-500 text-amber-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            {subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? (
-              <Car className={`w-4 h-4 shrink-0 ${activeTab === 'imovel' ? 'text-amber-600' : 'text-slate-400'}`} />
-            ) : (
-              <Building2 className={`w-4 h-4 shrink-0 ${activeTab === 'imovel' ? 'text-amber-600' : 'text-slate-400'}`} />
-            )}
-            <span className="hidden sm:inline">3. {subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? 'Bem / Veículo' : 'Imóvel'}</span>
-            <span className="sm:hidden">{subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? 'Bem' : 'Imóvel'}</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('imovel')}
+              className={`flex items-center gap-2 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'imovel'
+                  ? 'bg-slate-950 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                activeTab === 'imovel' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-700'
+              }`}>
+                3
+              </span>
+              {subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? (
+                <Car className="w-3.5 h-3.5 shrink-0" />
+              ) : (
+                <Building2 className="w-3.5 h-3.5 shrink-0" />
+              )}
+              <span>{subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? 'Bem / Veículo' : 'Imóvel'}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('financeiro')}
-            className={`flex items-center gap-2 py-3 px-2 sm:px-3 min-h-[44px] text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === 'financeiro'
-                ? 'border-amber-500 text-amber-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Banknote className={`w-4 h-4 shrink-0 ${activeTab === 'financeiro' ? 'text-amber-600' : 'text-slate-400'}`} />
-            <span>3. Condições Financeiras</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('financeiro')}
+              className={`flex items-center gap-2 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'financeiro'
+                  ? 'bg-slate-950 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                activeTab === 'financeiro' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-700'
+              }`}>
+                4
+              </span>
+              <Banknote className="w-3.5 h-3.5 shrink-0" />
+              <span>Condições Financeiras</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('foro')}
-            className={`flex items-center gap-2 py-3 px-3 min-h-[44px] text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === 'foro'
-                ? 'border-amber-500 text-amber-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Scale className={`w-4 h-4 shrink-0 ${activeTab === 'foro' ? 'text-amber-600' : 'text-slate-400'}`} />
-            <span>4. Foro e Datação</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('foro')}
+              className={`flex items-center gap-2 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'foro'
+                  ? 'bg-slate-950 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                activeTab === 'foro' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-700'
+              }`}>
+                5
+              </span>
+              <Scale className="w-3.5 h-3.5 shrink-0" />
+              <span>Foro e Datação</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('revisao')}
-            className={`flex items-center gap-2 py-3 px-3 min-h-[44px] text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === 'revisao'
-                ? 'border-amber-500 text-amber-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <ClipboardCheck className={`w-4 h-4 shrink-0 ${activeTab === 'revisao' ? 'text-amber-600' : 'text-slate-400'}`} />
-            <span>5. Resumo e Emissão</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('revisao')}
+              className={`flex items-center gap-2 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'revisao'
+                  ? 'bg-slate-950 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                activeTab === 'revisao' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-700'
+              }`}>
+                6
+              </span>
+              <ClipboardCheck className="w-3.5 h-3.5 shrink-0" />
+              <span>Revisão & Emissão</span>
+            </button>
+          </div>
         </div>
 
         {/* Banner de campos obrigatórios faltando */}
         {missingFields.length > 0 && (
-          <div className="bg-red-50 border border-red-300 rounded-lg p-4 space-y-2">
-            <p className="text-sm font-bold text-red-800">
+          <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 space-y-2">
+            <p className="text-xs sm:text-sm font-black text-rose-800">
               Preencha os campos obrigatórios antes de gerar o contrato ({missingFields.length} pendente{missingFields.length > 1 ? 's' : ''}):
             </p>
-            <ul className="text-xs text-red-700 space-y-1 list-disc list-inside">
+            <ul className="text-xs text-rose-700 space-y-1 list-disc list-inside">
               {missingFields.map((f, i) => (
                 <li key={i}>
                   <button
                     type="button"
                     onClick={() => setActiveTab(f.tab)}
-                    className="underline hover:text-red-900 cursor-pointer"
+                    className="underline hover:text-rose-950 font-bold cursor-pointer"
                   >
                     {TAB_LABELS[f.tab]}
                   </button>
@@ -918,9 +965,9 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <div>
                 <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   {subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? (
-                    <Car className="w-5 h-5 text-green-600" />
+                    <Car className="w-5 h-5 text-amber-500" />
                   ) : (
-                    <Building2 className="w-5 h-5 text-green-600" />
+                    <Building2 className="w-5 h-5 text-amber-500" />
                   )}
                   {subcategoria === 'outros_bens' && tipo !== 'exclusividade'
                     ? 'Identificação do Bem Móvel / Veículo'
@@ -952,7 +999,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       ? 'Ex: Compra e Venda Toyota Corolla XEi 2024 - Placa QEZ-8A90'
                       : 'Ex: Compra e Venda Lote 14 Quadra 08 - Loteamento Tapajós'
                   }
-                  className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-hidden read-only:bg-slate-100 read-only:text-slate-600"
+                  className="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-400 focus:border-yellow-500 focus:outline-hidden read-only:bg-slate-100 read-only:text-slate-600"
                 />
                 {tipo !== 'exclusividade' && subcategoria !== 'outros_bens' && (
                   <p className="text-[11px] text-slate-500 mt-1">
@@ -1451,7 +1498,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={imovel.areaTotalM2}
                       onChange={(e) => setImovel({ ...imovel, areaTotalM2: e.target.value })}
                       placeholder="360,00"
-                      className={`w-full px-3 py-1.5 text-xs border border-green-300 bg-green-50/50 font-bold text-green-900 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls('Área Total (m²)')}`}
+                      className={`w-full px-3 py-1.5 text-xs border border-amber-300 bg-amber-50/50 font-bold text-amber-950 rounded-xl focus:ring-2 focus:ring-yellow-400 focus:border-yellow-500 ${errCls('Área Total (m²)')}`}
                     />
                   </div>
                 </div>
@@ -1462,7 +1509,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('vendedor')}
-                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-sm transition-all cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl shadow-xs transition-all cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Voltar: {tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}
@@ -1470,7 +1517,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('financeiro')}
-                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-white bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                className="flex items-center gap-2 px-6 py-2.5 min-h-[44px] text-xs font-extrabold text-slate-950 btn-gold rounded-xl shadow-md shadow-yellow-500/20 transition-all cursor-pointer"
               >
                 Próximo: Condições Financeiras
                 <ArrowRight className="w-4 h-4" />
@@ -1486,7 +1533,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center">1</span>
+                  <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold flex items-center justify-center">1</span>
                   {tipo === 'exclusividade' ? 'PROPRIETÁRIO / CONTRATANTE' : 'PROMITENTE VENDEDOR(A)'}
                 </h2>
                 <span className="text-[11px] font-medium text-slate-500">Dados do Transmitente / Vendedor</span>
@@ -1542,15 +1589,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Nacionalidade
-                  </label>
-                  <input
-                    type="text"
+                  <NacionalidadeSelect
                     value={vendedor.nacionalidade}
-                    onChange={(e) => setVendedor({ ...vendedor, nacionalidade: e.target.value })}
-                    placeholder="brasileiro(a)"
-                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls(`${vLabelUI}: Nacionalidade`)}`}
+                    onChange={(val) => setVendedor({ ...vendedor, nacionalidade: val })}
+                    genero={vendedor.genero || ''}
+                    error={missingLabelsSet.has(`${vLabelUI}: Nacionalidade`)}
                   />
                 </div>
 
@@ -1575,15 +1618,10 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Órgão Emissor
-                  </label>
-                  <input
-                    type="text"
+                  <OrgaoEmissorInput
                     value={vendedor.rgOrgao}
-                    onChange={(e) => setVendedor({ ...vendedor, rgOrgao: e.target.value })}
-                    placeholder="SSP/PA"
-                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 ${errCls(`${vLabelUI}: Órgão Emissor`)}`}
+                    onChange={(val) => setVendedor({ ...vendedor, rgOrgao: val })}
+                    error={missingLabelsSet.has(`${vLabelUI}: Órgão Emissor`)}
                   />
                 </div>
 
@@ -1675,7 +1713,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('comprador')}
-                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-sm transition-all cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl shadow-xs transition-all cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Voltar: {tipo === 'exclusividade' ? 'Contratado' : 'Comprador'}
@@ -1683,7 +1721,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('imovel')}
-                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                className="flex items-center gap-2 px-6 py-2.5 min-h-[44px] text-xs font-extrabold text-slate-950 btn-gold rounded-xl shadow-md shadow-yellow-500/20 transition-all cursor-pointer"
               >
                 Próximo: {subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? 'Bem / Veículo' : 'Imóvel'}
                 <ArrowRight className="w-4 h-4" />
@@ -1769,15 +1807,11 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Nacionalidade
-                  </label>
-                  <input
-                    type="text"
+                  <NacionalidadeSelect
                     value={comprador.nacionalidade}
-                    onChange={(e) => setComprador({ ...comprador, nacionalidade: e.target.value })}
-                    placeholder="brasileiro(a)"
-                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 ${errCls(`${cLabelUI}: Nacionalidade`)}`}
+                    onChange={(val) => setComprador({ ...comprador, nacionalidade: val })}
+                    genero={comprador.genero || ''}
+                    error={missingLabelsSet.has(`${cLabelUI}: Nacionalidade`)}
                   />
                 </div>
 
@@ -1802,15 +1836,10 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Órgão Emissor
-                  </label>
-                  <input
-                    type="text"
+                  <OrgaoEmissorInput
                     value={comprador.rgOrgao}
-                    onChange={(e) => setComprador({ ...comprador, rgOrgao: e.target.value })}
-                    placeholder="SSP/PA"
-                    className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 ${errCls(`${cLabelUI}: Órgão Emissor`)}`}
+                    onChange={(val) => setComprador({ ...comprador, rgOrgao: val })}
+                    error={missingLabelsSet.has(`${cLabelUI}: Órgão Emissor`)}
                   />
                 </div>
 
@@ -1915,7 +1944,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('vendedor')}
-                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                className="flex items-center gap-2 px-6 py-2.5 min-h-[44px] text-xs font-extrabold text-slate-950 btn-gold rounded-xl shadow-md shadow-yellow-500/20 transition-all cursor-pointer"
               >
                 Próximo: {tipo === 'exclusividade' ? 'Contratante' : 'Vendedor'}
                 <ArrowRight className="w-4 h-4" />
@@ -1950,7 +1979,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     step="100"
                     value={valorTotal}
                     onChange={(e) => handleValorTotalChange(parseFloat(e.target.value) || 0)}
-                    className={`w-full pl-9 pr-3 py-2 text-sm font-bold text-slate-900 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 ${errCls('Valor Total da Negociação')}`}
+                    className={`w-full pl-9 pr-3 py-2 text-sm font-bold text-slate-900 border border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-400 focus:border-yellow-500 ${errCls('Valor Total da Negociação')}`}
                   />
                 </div>
                 <span className="text-[11px] text-slate-500 mt-1 block">
@@ -1967,7 +1996,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   value={valorTotalExtenso}
                   onChange={(e) => setValorTotalExtenso(e.target.value)}
                   placeholder="cento e oitenta mil reais"
-                  className={`w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 ${errCls('Valor por Extenso')}`}
+                  className={`w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-400 focus:border-yellow-500 ${errCls('Valor por Extenso')}`}
                 />
                 <span className="text-[11px] text-slate-500 mt-1 block">
                   Formatado automaticamente em conformidade jurídica.
@@ -1987,7 +2016,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     <select
                       value={formaPagamentoVista}
                       onChange={(e) => setFormaPagamentoVista(e.target.value as any)}
-                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white ${errCls('Forma de Pagamento')}`}
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-yellow-400 ${errCls('Forma de Pagamento')}`}
                     >
                       <option value="PIX">PIX</option>
                       <option value="Cartão">Cartão</option>
@@ -2007,7 +2036,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={dadosBancariosRecebedor}
                       onChange={(e) => setDadosBancariosRecebedor(e.target.value)}
                       placeholder="Ex: Chave PIX (CPF): 234.567.890-12 (Banco do Brasil)"
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-yellow-400"
                     />
                   </div>
                 </div>
@@ -2022,7 +2051,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       onChange={(e) => setDetalhesPagamentoMesclado(e.target.value)}
                       placeholder="Ex: R$ 50.000,00 via PIX na assinatura + R$ 130.000,00 em dinheiro na entrega das chaves"
                       rows={2}
-                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white ${errCls('Detalhes do Pagamento Mesclado')}`}
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-yellow-400 ${errCls('Detalhes do Pagamento Mesclado')}`}
                     />
                   </div>
                 )}
@@ -2046,7 +2075,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                         setValorEntrada(parseFloat(e.target.value) || 0);
                         tocarCampoParcelado('entrada');
                       }}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-yellow-400"
                     />
                   </div>
                   <div>
@@ -2056,7 +2085,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       min="1"
                       value={numeroParcelas}
                       onChange={(e) => setNumeroParcelas(parseInt(e.target.value, 10) || 1)}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-yellow-400"
                     />
                   </div>
                   <div>
@@ -2068,7 +2097,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                         setValorParcela(parseFloat(e.target.value) || 0);
                         tocarCampoParcelado('parcela');
                       }}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-yellow-400"
                     />
                   </div>
                   <div>
@@ -2077,7 +2106,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       type="number"
                       value={valorTotal}
                       onChange={(e) => handleValorTotalChange(parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-yellow-400"
                     />
                   </div>
                 </div>
@@ -2094,7 +2123,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   <select
                     value={formaPagamentoParcelas}
                     onChange={(e) => setFormaPagamentoParcelas(e.target.value as any)}
-                    className="w-full sm:w-64 px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                    className="w-full sm:w-64 px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-yellow-400"
                   >
                     <option value="Boleto Bancário">Boleto Bancário</option>
                     <option value="PIX Recorrente">PIX</option>
@@ -2131,7 +2160,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       type="date"
                       value={dataInicioExcl}
                       onChange={(e) => setDataInicioExcl(e.target.value)}
-                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white ${errCls('Data Início da Exclusividade')}`}
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white ${errCls('Data Início da Exclusividade')}`}
                     />
                   </div>
                   <div>
@@ -2142,12 +2171,12 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                         min="1"
                         value={prazoMesesOuDias}
                         onChange={(e) => setPrazoMesesOuDias(parseInt(e.target.value, 10) || 30)}
-                        className="w-1/2 px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                        className="w-1/2 px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white"
                       />
                       <select
                         value={unidadePrazo}
                         onChange={(e) => setUnidadePrazo(e.target.value as any)}
-                        className="w-1/2 px-2 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                        className="w-1/2 px-2 py-2 text-xs border border-slate-300 rounded-xl bg-white"
                       >
                         <option value="dias">Dias</option>
                         <option value="meses">Meses</option>
@@ -2161,7 +2190,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       step="0.5"
                       value={percentualComissao}
                       onChange={(e) => setPercentualComissao(parseFloat(e.target.value) || 6)}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white"
                     />
                   </div>
                 </div>
@@ -2172,15 +2201,15 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('imovel')}
-                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-sm transition-all cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl shadow-xs transition-all cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Voltar: Imóvel
+                Voltar: {subcategoria === 'outros_bens' && tipo !== 'exclusividade' ? 'Bem / Veículo' : 'Imóvel'}
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('foro')}
-                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                className="flex items-center gap-2 px-6 py-2.5 min-h-[44px] text-xs font-extrabold text-slate-950 btn-gold rounded-xl shadow-md shadow-yellow-500/20 transition-all cursor-pointer"
               >
                 Próximo: Foro e Datação
                 <ArrowRight className="w-4 h-4" />
@@ -2216,7 +2245,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={cidadeForo}
                       onChange={(e) => setCidadeForo(e.target.value)}
                       placeholder="Santarém"
-                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg ${errCls('Cidade do Foro')}`}
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-400 ${errCls('Cidade do Foro')}`}
                     />
                   </div>
                   <div>
@@ -2227,7 +2256,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       onChange={(e) => setUfForo(e.target.value.toUpperCase())}
                       placeholder="PA"
                       maxLength={2}
-                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg uppercase ${errCls('UF do Foro')}`}
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-400 uppercase ${errCls('UF do Foro')}`}
                     />
                   </div>
                 </div>
@@ -2251,7 +2280,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={cidadeAssinatura}
                       onChange={(e) => setCidadeAssinatura(e.target.value)}
                       placeholder="Santarém"
-                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg ${errCls('Cidade da Assinatura')}`}
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-400 ${errCls('Cidade da Assinatura')}`}
                     />
                   </div>
                   <div>
@@ -2264,7 +2293,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       onChange={(e) => setUfAssinatura(e.target.value.toUpperCase())}
                       placeholder="PA"
                       maxLength={2}
-                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg uppercase ${errCls('UF da Assinatura')}`}
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-400 uppercase ${errCls('UF da Assinatura')}`}
                     />
                   </div>
                 </div>
@@ -2279,7 +2308,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={diaAssinatura}
                       onChange={(e) => setDiaAssinatura(e.target.value)}
                       placeholder="23"
-                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg ${errCls('Dia da Assinatura')}`}
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-400 ${errCls('Dia da Assinatura')}`}
                     />
                   </div>
                   <div>
@@ -2291,7 +2320,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={mesExtensoAssinatura}
                       onChange={(e) => setMesExtensoAssinatura(e.target.value)}
                       placeholder="agosto"
-                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg ${errCls('Mês da Assinatura')}`}
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-400 ${errCls('Mês da Assinatura')}`}
                     />
                   </div>
                   <div>
@@ -2303,7 +2332,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       value={anoAssinatura}
                       onChange={(e) => setAnoAssinatura(e.target.value)}
                       placeholder="2026"
-                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-lg ${errCls('Ano da Assinatura')}`}
+                      className={`w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-400 ${errCls('Ano da Assinatura')}`}
                     />
                   </div>
                 </div>
@@ -2324,7 +2353,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                 value={clausulasExtras}
                 onChange={(e) => setClausulasExtras(e.target.value)}
                 placeholder="Insira cláusulas particulares acordadas entre as partes..."
-                className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-400"
               />
             </div>
 
@@ -2332,7 +2361,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('financeiro')}
-                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-sm transition-all cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl shadow-xs transition-all cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Voltar: Condições Financeiras
@@ -2340,7 +2369,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('revisao')}
-                className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] text-sm font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                className="flex items-center gap-2 px-6 py-2.5 min-h-[44px] text-xs font-extrabold text-slate-950 btn-gold rounded-xl shadow-md shadow-yellow-500/20 transition-all cursor-pointer"
               >
                 Avançar: Revisão dos Dados
                 <ArrowRight className="w-4 h-4" />
@@ -2444,38 +2473,63 @@ export const ContractForm: React.FC<ContractFormProps> = ({
           </div>
         )}
 
-        {/* Botão Fixo Inferior de Ação */}
-        <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2 sm:gap-3 bg-white p-3 sm:p-4 rounded-lg border border-slate-200 shadow-2xs">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="w-full sm:w-auto min-h-[44px] sm:min-h-[40px] px-4 py-2.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer text-center"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleSaveDraft}
-            disabled={savingDraft}
-            title="Salva o que já foi preenchido no Supabase, sem exigir os campos obrigatórios - continue depois em outro dispositivo"
-            className="w-full sm:w-auto min-h-[44px] sm:min-h-[40px] flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 disabled:opacity-60 border border-amber-200 rounded-lg transition-colors cursor-pointer text-center"
-          >
-            {draftSaved ? (
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-green-600" />
-            ) : (
-              <FileText className="w-4 h-4 shrink-0" />
-            )}
-            <span>{savingDraft ? 'Salvando...' : draftSaved ? 'Rascunho salvo!' : 'Salvar Rascunho'}</span>
-          </button>
-          {activeTab === 'revisao' && (
+        {/* Barra Fixa / Inferior de Ação Executiva */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs">
+          <div className="flex items-center gap-2">
             <button
-              type="submit"
-              className="w-full sm:w-auto min-h-[44px] sm:min-h-[40px] flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 shadow-md rounded-lg transition-all cursor-pointer text-center"
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
             >
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-slate-950" />
-              <span>Salvar & Gerar Contrato</span>
+              Cancelar
             </button>
-          )}
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              disabled={savingDraft}
+              title="Salva o que já foi preenchido para continuar depois"
+              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-yellow-900 bg-yellow-50 hover:bg-yellow-100 disabled:opacity-60 border border-yellow-200 rounded-xl transition-all cursor-pointer"
+            >
+              {draftSaved ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+              ) : (
+                <FileText className="w-4 h-4 shrink-0" />
+              )}
+              <span>{savingDraft ? 'Salvando...' : draftSaved ? 'Rascunho salvo!' : 'Salvar Rascunho'}</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {currentTabIndex > 0 && (
+              <button
+                type="button"
+                onClick={handlePrevTab}
+                className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-slate-700 hover:text-slate-950 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Anterior</span>
+              </button>
+            )}
+
+            {currentTabIndex < TAB_ORDER.length - 1 ? (
+              <button
+                type="button"
+                onClick={handleNextTab}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-extrabold text-slate-950 btn-gold rounded-xl transition-all cursor-pointer shadow-md shadow-yellow-500/20"
+              >
+                <span>Próximo Passo</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                type="submit"
+                className="flex items-center justify-center gap-2 px-7 py-2.5 text-xs font-extrabold text-slate-950 btn-gold rounded-xl transition-all cursor-pointer shadow-lg shadow-yellow-500/30"
+              >
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-slate-950" />
+                <span>Salvar & Gerar Contrato</span>
+              </button>
+            )}
+          </div>
         </div>
       </form>
     </div>

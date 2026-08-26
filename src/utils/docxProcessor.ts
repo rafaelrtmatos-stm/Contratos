@@ -12,6 +12,7 @@ import {
 } from './contractGenerators';
 import { supabase } from './supabaseClient';
 import { buildFilledDocx } from './renderContractFromDocx';
+import { buildDocxFileName } from './pdfFileName';
 
 // Chaves de armazenamento de templates Word personalizados por modalidade de contrato
 export type CustomTemplateKey =
@@ -439,11 +440,8 @@ export async function downloadDocxContract(contract: ContractData): Promise<void
 
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const sanitizedName = (contract.comprador?.nome || contract.vendedor?.nome || 'contrato')
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '_');
   a.href = url;
-  a.download = `contrato_${contract.tipo}_${contract.subcategoria || 'imovel'}_${sanitizedName}.docx`;
+  a.download = buildDocxFileName(contract);
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

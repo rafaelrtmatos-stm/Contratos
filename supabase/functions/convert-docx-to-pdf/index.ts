@@ -47,9 +47,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const authHeader = req.headers.get('Authorization');
+    const authHeader = req.headers.get('Authorization') || req.headers.get('apikey');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Não autenticado.' }), {
+      return new Response(JSON.stringify({ error: 'Não autenticado no Supabase.' }), {
         status: 401,
         headers: jsonHeaders,
       });
@@ -57,10 +57,16 @@ Deno.serve(async (req) => {
 
     const publicKey = Deno.env.get('ILOVEAPI_PUBLIC_KEY');
     if (!publicKey) {
-      return new Response(JSON.stringify({ error: 'ILOVEAPI_PUBLIC_KEY não configurada no servidor.' }), {
-        status: 500,
-        headers: jsonHeaders,
-      });
+      return new Response(
+        JSON.stringify({
+          error:
+            'Chave ILOVEAPI_PUBLIC_KEY não configurada nos segredos do Supabase. Configure com: supabase secrets set ILOVEAPI_PUBLIC_KEY="sua_public_key"',
+        }),
+        {
+          status: 500,
+          headers: jsonHeaders,
+        }
+      );
     }
 
     const { docxBase64, filename } = await req.json();

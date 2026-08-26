@@ -63,8 +63,8 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-md w-full shadow-2xl">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-neutral-200">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 p-4">
           <h3 className="font-bold text-slate-900">Confirmar Assinatura Digital</h3>
@@ -99,13 +99,13 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
                   <button
                     type="button"
                     onClick={handleCopyOTP}
-                    className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-1 transition-colors cursor-pointer ${
+                    className={`px-4 py-2 rounded-xl font-extrabold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
                       copied
-                        ? 'bg-amber-500 text-slate-950 shadow-xs'
+                        ? 'btn-gold text-slate-950 shadow-xs'
                         : 'bg-slate-200 text-slate-900 hover:bg-slate-300'
                     }`}
                   >
-                    <Copy className="w-4 h-4" />
+                    <Copy className="w-3.5 h-3.5" />
                     {copied ? 'Copiado' : 'Copiar'}
                   </button>
                 </div>
@@ -121,8 +121,8 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
                   value={otpInput}
                   onChange={(e) => setOtpInput(e.target.value)}
                   placeholder={otp}
-                  className="w-full px-3 py-2.5 border-2 border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 text-sm font-mono
-                    focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500
+                  className="w-full px-3.5 py-3 border-2 border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-400 text-sm font-mono
+                    focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-500
                     disabled:bg-slate-100 disabled:cursor-not-allowed"
                 />
               </div>
@@ -140,10 +140,10 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
                   <button
                     type="button"
                     onClick={handlePasteOTP}
-                    className="flex-1 px-3 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-lg
-                      transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                    className="flex-1 px-4 py-3 bg-slate-950 hover:bg-slate-900 text-white text-xs font-extrabold rounded-xl
+                      transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs border border-slate-800"
                   >
-                    <Copy className="w-4 h-4" />
+                    <Copy className="w-4 h-4 text-yellow-400" />
                     Colar
                   </button>
                 )}
@@ -152,11 +152,11 @@ export const ClientSignatureModal: React.FC<ClientSignatureModalProps> = ({
                   type="button"
                   onClick={handleSign}
                   disabled={!otpInput || loading}
-                  className={`flex-1 px-3 py-2.5 text-slate-950 text-sm font-bold rounded-lg
-                    transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
+                  className={`flex-1 px-4 py-3 text-xs font-extrabold rounded-xl
+                    transition-all flex items-center justify-center gap-2 cursor-pointer ${
                       !otpInput || loading
-                        ? 'bg-slate-300 !text-slate-500 cursor-not-allowed'
-                        : 'bg-amber-500 hover:bg-amber-400 active:bg-amber-600'
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        : 'btn-gold text-slate-950 shadow-md shadow-yellow-500/20'
                     }`}
                 >
                   {loading ? (

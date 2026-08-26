@@ -86,18 +86,45 @@ export function generateContractTags(contract: ContractData): TagMapping {
 
     // DATA/LOCAL
     DATA: contract.dataCriacao || new Date().toLocaleDateString('pt-BR'),
-    DATA_ASSINATURA: new Date().toLocaleDateString('pt-BR'),
-    DIA: new Date().getDate().toString(),
-    MES_EXTENSO: getMesExtensoPT(new Date().getMonth()),
-    ANO: new Date().getFullYear().toString(),
-    CIDADE: contract.comprador.cidade || contract.vendedor.cidade || '',
-    ESTADO: contract.comprador.uf || contract.vendedor.uf || '',
-    UF: contract.comprador.uf || contract.vendedor.uf || '',
+    DATA_ASSINATURA: `${contract.diaAssinatura || new Date().getDate()} de ${contract.mesExtensoAssinatura || getMesExtensoPT(new Date().getMonth())} de ${contract.anoAssinatura || new Date().getFullYear()}`,
+    data_assinatura: `${contract.diaAssinatura || new Date().getDate()} de ${contract.mesExtensoAssinatura || getMesExtensoPT(new Date().getMonth())} de ${contract.anoAssinatura || new Date().getFullYear()}`,
+    DIA: contract.diaAssinatura || new Date().getDate().toString(),
+    dia: contract.diaAssinatura || new Date().getDate().toString(),
+    dia_assinatura: contract.diaAssinatura || new Date().getDate().toString(),
+    MES_EXTENSO: contract.mesExtensoAssinatura || getMesExtensoPT(new Date().getMonth()),
+    mes_extenso: contract.mesExtensoAssinatura || getMesExtensoPT(new Date().getMonth()),
+    mes_assinatura: contract.mesExtensoAssinatura || getMesExtensoPT(new Date().getMonth()),
+    ANO: contract.anoAssinatura || new Date().getFullYear().toString(),
+    ano: contract.anoAssinatura || new Date().getFullYear().toString(),
+    ano_assinatura: contract.anoAssinatura || new Date().getFullYear().toString(),
+    CIDADE: contract.cidadeAssinatura || contract.cidadeForo || contract.comprador.cidade || contract.vendedor.cidade || 'Santarém',
+    cidade: contract.cidadeAssinatura || contract.cidadeForo || contract.comprador.cidade || contract.vendedor.cidade || 'Santarém',
+    ESTADO: contract.ufAssinatura || contract.ufForo || contract.comprador.uf || contract.vendedor.uf || 'PA',
+    estado: contract.ufAssinatura || contract.ufForo || contract.comprador.uf || contract.vendedor.uf || 'PA',
+    UF: contract.ufAssinatura || contract.ufForo || contract.comprador.uf || contract.vendedor.uf || 'PA',
+    uf: contract.ufAssinatura || contract.ufForo || contract.comprador.uf || contract.vendedor.uf || 'PA',
+    CIDADE_ASSINATURA: contract.cidadeAssinatura || contract.cidadeForo || 'Santarém',
+    cidade_assinatura: contract.cidadeAssinatura || contract.cidadeForo || 'Santarém',
+    ESTADO_ASSINATURA: contract.ufAssinatura || contract.ufForo || 'PA',
+    estado_assinatura: contract.ufAssinatura || contract.ufForo || 'PA',
+    UF_ASSINATURA: contract.ufAssinatura || contract.ufForo || 'PA',
+    uf_assinatura: contract.ufAssinatura || contract.ufForo || 'PA',
+    CIDADE_FORO: contract.cidadeForo || 'Santarém',
+    cidade_foro: contract.cidadeForo || 'Santarém',
+    ESTADO_FORO: contract.ufForo || 'PA',
+    estado_foro: contract.ufForo || 'PA',
+    UF_FORO: contract.ufForo || 'PA',
+    uf_foro: contract.ufForo || 'PA',
+    FORO_COMARCA: `${contract.cidadeForo || 'Santarém'}/${contract.ufForo || 'PA'}`,
+    foro_comarca: `${contract.cidadeForo || 'Santarém'}/${contract.ufForo || 'PA'}`,
 
     // CONTRATO
     NUMERO_CONTRATO: contract.numeroContrato || '',
+    numero_contrato: contract.numeroContrato || '',
     TIPO_CONTRATO: getTipoContratoExtensoPT(contract.tipo),
+    tipo_contrato: getTipoContratoExtensoPT(contract.tipo),
     OBJETO_DESCRICAO: contract.objetoDescricao || '',
+    objeto_descricao: contract.objetoDescricao || '',
   };
 
   // TAGS DO CONTRATO DE EXCLUSIVIDADE (templates usam {tag} em minúsculo, chave única)
@@ -105,6 +132,9 @@ export function generateContractTags(contract: ContractData): TagMapping {
   // (contratante = vendedor/proprietário, contratado = comprador/corretor)
   if (contract.tipo === 'exclusividade') {
     const ex = getContractExclusividadeTags(contract);
+    const cidAss = ex.CIDADE_ASSINATURA || contract.cidadeAssinatura || contract.cidadeForo || 'Santarém';
+    const estAss = ex.ESTADO_ASSINATURA || contract.ufAssinatura || contract.ufForo || 'PA';
+
     Object.assign(tags, {
       contratante: ex.CONTRATANTE_NOME,
       estado_civil_contratante: ex.CONTRATANTE_ESTADO_CIVIL,
@@ -138,8 +168,18 @@ export function generateContractTags(contract: ContractData): TagMapping {
       prazo_exclusividade_dias: ex.PRAZO_EXCLUSIVIDADE_DIAS,
       data_termino_exclusividade: ex.DATA_TERMINO_EXCLUSIVIDADE,
 
-      cidade: ex.CIDADE_ASSINATURA,
-      estado: ex.ESTADO_ASSINATURA,
+      cidade: cidAss,
+      estado: estAss,
+      uf: estAss,
+      cidade_assinatura: cidAss,
+      estado_assinatura: estAss,
+      uf_assinatura: estAss,
+      CIDADE_ASSINATURA: cidAss,
+      ESTADO_ASSINATURA: estAss,
+      UF_ASSINATURA: estAss,
+      cidade_foro: contract.cidadeForo || 'Santarém',
+      estado_foro: contract.ufForo || 'PA',
+      uf_foro: contract.ufForo || 'PA',
       dia: ex.DIA,
       mes_extenso: ex.MES_EXTENSO,
       ano: ex.ANO,
@@ -148,10 +188,6 @@ export function generateContractTags(contract: ContractData): TagMapping {
 
   // TAGS DE VENDA À VISTA E VENDA PARCELADA (templates usam {tag} em minúsculo,
   // snake_case e ordem "campo_papel" - ex: {cpf_comprador}, {artigo_vendedor}).
-  // Faltava esse bloco inteiro: os templates .docx reais de venda_vista e
-  // venda_parcelada usam essas chaves, mas só existiam os equivalentes em
-  // MAIÚSCULO/ordem invertida acima (ex: COMPRADOR_CPF) - por isso nenhuma
-  // tag do contrato era substituída (chave não batia, tag ficava intocada).
   if (contract.tipo === 'venda_vista' || contract.tipo === 'venda_parcelada') {
     const v = contract.vendedor;
     const c = contract.comprador;
@@ -160,8 +196,8 @@ export function generateContractTags(contract: ContractData): TagMapping {
     const dia = contract.diaAssinatura || new Date().getDate().toString();
     const mesExtenso = contract.mesExtensoAssinatura || getMesExtensoPT(new Date().getMonth());
     const ano = contract.anoAssinatura || new Date().getFullYear().toString();
-    const cidadeAssinatura = contract.cidadeAssinatura || contract.cidadeForo || '';
-    const estadoAssinatura = contract.ufAssinatura || contract.ufForo || '';
+    const cidadeAssinatura = contract.cidadeAssinatura || contract.cidadeForo || 'Santarém';
+    const estadoAssinatura = contract.ufAssinatura || contract.ufForo || 'PA';
 
     const formatBRL = (n: number) => `R$ ${n.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
     const valorExtenso = contract.valorTotalExtenso || '';
@@ -221,6 +257,19 @@ export function generateContractTags(contract: ContractData): TagMapping {
       ano,
       cidade_assinatura: cidadeAssinatura,
       estado_assinatura: estadoAssinatura,
+      uf_assinatura: estadoAssinatura,
+      CIDADE_ASSINATURA: cidadeAssinatura,
+      ESTADO_ASSINATURA: estadoAssinatura,
+      UF_ASSINATURA: estadoAssinatura,
+      cidade: cidadeAssinatura,
+      estado: estadoAssinatura,
+      uf: estadoAssinatura,
+      cidade_foro: contract.cidadeForo || 'Santarém',
+      estado_foro: contract.ufForo || 'PA',
+      uf_foro: contract.ufForo || 'PA',
+      CIDADE_FORO: contract.cidadeForo || 'Santarém',
+      ESTADO_FORO: contract.ufForo || 'PA',
+      UF_FORO: contract.ufForo || 'PA',
 
       ...getGrammarTags(v.genero, 'vendedor'),
       ...getGrammarTags(c.genero, 'comprador'),
@@ -284,6 +333,29 @@ function escapeXml(value: string): string {
 }
 
 /**
+ * Verifica se a tag é exclusivamente um selo criptográfico de assinatura digital ou linha física
+ * gerada pelo signatureTagProcessor (ex: {{USUARIO_ASSINATURA_DIGITAL}}, {{COMPRADOR_ASSINATURA_MANUAL}}).
+ * Tags de dados como {cidade_assinatura}, {estado_assinatura}, {data_assinatura} NÃO são selos.
+ */
+function isSignatureStampTag(cleanTag: string): boolean {
+  const upper = cleanTag.toUpperCase();
+  return (
+    upper === 'USUARIO_ASSINATURA_DIGITAL' ||
+    upper === 'USUARIO_ASSINATURA_MANUAL' ||
+    upper === 'COMPRADOR_ASSINATURA_DIGITAL' ||
+    upper === 'COMPRADOR_ASSINATURA_MANUAL' ||
+    upper === 'CONTRATANTE_ASSINATURA_DIGITAL' ||
+    upper === 'CONTRATANTE_ASSINATURA_MANUAL' ||
+    upper === 'TESTEMUNHA1_ASSINATURA_DIGITAL' ||
+    upper === 'TESTEMUNHA1_ASSINATURA_MANUAL' ||
+    upper === 'TESTEMUNHA2_ASSINATURA_DIGITAL' ||
+    upper === 'TESTEMUNHA2_ASSINATURA_MANUAL' ||
+    upper.endsWith('_ASSINATURA_DIGITAL') ||
+    upper.endsWith('_ASSINATURA_MANUAL')
+  );
+}
+
+/**
  * Substitui tags {{TAG}} em uma string XML, mesmo quando o Word fragmenta a tag
  * em múltiplos nós <w:t> (ex: "{{VEN" + "DEDOR_NOME}}"). Não altera formatação:
  * apenas o conteúdo textual dentro dos nós <w:t> é trocado, os runs e estilos
@@ -318,7 +390,7 @@ function replaceTagsPreservingFormat(xml: string, tags: TagMapping): string {
     // Nunca mexe em tags de SELO de assinatura ({{USUARIO_ASSINATURA_DIGITAL}},
     // {{CONTRATANTE_ASSINATURA_DIGITAL}} etc.) — essas são de responsabilidade
     // exclusiva do signatureTagProcessor, processado ANTES desta função.
-    if (cleanTag.toUpperCase().includes('ASSINATURA')) {
+    if (isSignatureStampTag(cleanTag)) {
       return fullMatch;
     }
 
@@ -348,8 +420,8 @@ function replaceTagsPreservingFormat(xml: string, tags: TagMapping): string {
     }
 
     // Preserva tags de selo de assinatura não processadas (não deveria sobrar nenhuma aqui,
-    // mas por segurança nunca apaga algo com "ASSINATURA" no nome)
-    if (cleanTag.toUpperCase().includes('ASSINATURA')) {
+    // mas por segurança nunca apaga selos reais)
+    if (isSignatureStampTag(cleanTag)) {
       return fullMatch;
     }
 

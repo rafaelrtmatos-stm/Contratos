@@ -25,7 +25,7 @@ import {
   substituirTagsNoDocx,
 } from '../utils/dataTagsProcessor';
 import { saveContractDocumentToSupabase } from '../utils/contractDocumentsStorage';
-import { buildPdfFileName } from '../utils/pdfFileName';
+import { buildPdfFileName, buildDocxFileName } from '../utils/pdfFileName';
 import { startSimulatedPdfProgress } from '../utils/pdfProgressSimulator';
 import { saveSignature, fetchSignatures } from '../utils/contractsRepository';
 import { supabase } from '../utils/supabaseClient';
@@ -50,6 +50,13 @@ import {
   FileSearch,
   Link as LinkIcon,
   Loader2,
+  Trash2,
+  CheckCircle2,
+  Clock,
+  Send,
+  UserCheck,
+  ExternalLink,
+  Info,
 } from 'lucide-react';
 
 interface ContractViewerProps {
@@ -57,6 +64,7 @@ interface ContractViewerProps {
   onBack: () => void;
   onEdit: () => void;
   onUpdateContract: (updated: ContractData) => void;
+  onDelete?: (contractId: string) => void;
 }
 
 /** Nome de arquivo amigável a partir do nome do cliente (sem acentos/espaços/caracteres especiais). */
@@ -76,10 +84,13 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   onBack,
   onEdit,
   onUpdateContract,
+  onDelete,
 }) => {
   const [isDigitalSignFlowOpen, setIsDigitalSignFlowOpen] = useState(false);
   const [isEvidenceLogOpen, setIsEvidenceLogOpen] = useState(false);
   const [isShareLinkOpen, setIsShareLinkOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDeletingContract, setIsDeletingContract] = useState(false);
   const [signFlowParte, setSignFlowParte] = useState<'usuario' | 'comprador'>('usuario');
   const [copied, setCopied] = useState(false);
   const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
@@ -231,8 +242,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      const nomeClientePdf = (isExcl ? contract.vendedor?.nome : contract.comprador?.nome) || contract.imovel?.nomeEmpreendimento || 'documento';
-      a.download = buildPdfFileName(nomeClientePdf);
+      a.download = buildPdfFileName(contract);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -439,9 +449,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
       const docxComDados = await substituirTagsNoDocx(docxComSelos, tagsContrato);
 
       // 4. Fazer download + salvar no Supabase
-      const nomeClienteArquivo = dadosCliente.nome || contract.imovel?.nomeEmpreendimento || 'contrato';
-      const dataArquivo = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-      const nomeArquivo = `${slugifyNomeArquivo(nomeClienteArquivo)}_${dataArquivo}.docx`;
+      const nomeArquivo = buildDocxFileName(contract);
       await realizarDownloadESalvar(docxComDados, nomeArquivo);
     } catch (error: any) {
       console.error('Erro ao baixar DOCX:', error);
@@ -492,278 +500,466 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
     <div className="max-w-4xl mx-auto pb-16 space-y-6">
       {/* Barra de progresso do download do PDF (fixa, sobre o conteúdo) */}
       {isDownloadingPdf && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm bg-white border border-slate-200 rounded-xl shadow-lg p-4 print:hidden">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm bg-white border border-amber-200 rounded-xl shadow-lg p-4 print:hidden">
           <div className="flex items-center justify-between mb-2">
             <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-              <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+              <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
               Gerando PDF...
             </span>
-            <span className="text-sm font-bold text-rose-600 tabular-nums">{pdfProgress}%</span>
+            <span className="text-sm font-bold text-amber-600 tabular-nums">{pdfProgress}%</span>
           </div>
           <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
             <div
-              className="h-full bg-rose-500 transition-all duration-500 ease-out"
+              className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 transition-all duration-500 ease-out"
               style={{ width: `${pdfProgress}%` }}
             />
           </div>
         </div>
       )}
 
-      {/* Top Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs print:hidden">
-        <button
-          onClick={onBack}
-          className="flex items-center justify-center gap-2 px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-[38px] text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer w-full sm:w-auto"
-        >
-          <ArrowLeft className="w-4 h-4 shrink-0" />
-          <span>Voltar ao Dashboard</span>
-        </button>
+      {/* Top Action Bar (Navegação & Ações Rápidas) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs print:hidden">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="flex items-center justify-center gap-2 px-3.5 py-2 min-h-[40px] text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 border border-slate-200 rounded-xl transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 shrink-0" />
+            <span>Voltar ao Dashboard</span>
+          </button>
 
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 flex-wrap w-full sm:w-auto">
+          <div className="hidden sm:block border-l border-slate-200 h-6"></div>
+
+          <div className="hidden sm:block">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">
+              Nº {contract.numeroContrato || '---'}
+            </span>
+            <span className="text-xs font-bold text-slate-800">
+              {contract.tipo === 'venda_vista'
+                ? 'Venda à Vista'
+                : contract.tipo === 'venda_parcelada'
+                ? 'Venda Parcelada'
+                : 'Exclusividade de Venda'}
+            </span>
+          </div>
+        </div>
+
+        {/* Ações Rápidas: Editar, Copiar, Imprimir, Excluir */}
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-end">
           <button
             onClick={onEdit}
-            className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[38px] text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors cursor-pointer shadow-2xs"
             title={
               hasAnyDigitalSignature
-                ? 'Este contrato já tem assinatura registrada e não pode ser alterado - editar cria uma CÓPIA nova, sem assinaturas, e mantém este original intacto.'
-                : 'Editar contrato'
+                ? 'Este contrato já possui assinatura eletrônica registrada. Editar criará uma nova cópia limpa.'
+                : 'Editar dados do contrato'
             }
           >
-            <Edit3 className="w-3.5 h-3.5 shrink-0" />
-            <span>{hasAnyDigitalSignature ? 'Editar (cria cópia)' : 'Editar'}</span>
+            <Edit3 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+            <span>{hasAnyDigitalSignature ? 'Editar (Nova Cópia)' : 'Editar'}</span>
           </button>
 
           <button
             onClick={handleCopyText}
-            className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
-            title="Copiar texto do contrato"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[38px] text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors cursor-pointer shadow-2xs"
+            title="Copiar texto integral do contrato para a área de transferência"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> : <Copy className="w-3.5 h-3.5 shrink-0" />}
-            <span>{copied ? 'Copiado!' : 'Copiar'}</span>
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> : <Copy className="w-3.5 h-3.5 text-slate-500 shrink-0" />}
+            <span>{copied ? 'Copiado!' : 'Copiar Texto'}</span>
           </button>
 
           <button
             onClick={handlePrint}
-            className="hidden md:flex items-center justify-center gap-1.5 px-3 py-2 min-h-[38px] text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+            className="hidden md:flex items-center justify-center gap-1.5 px-3 py-2 min-h-[38px] text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors cursor-pointer shadow-2xs"
+            title="Imprimir documento via navegador"
           >
-            <Printer className="w-3.5 h-3.5 shrink-0" />
+            <Printer className="w-3.5 h-3.5 text-slate-500 shrink-0" />
             <span>Imprimir</span>
           </button>
 
-          {/* Exportar WORD (.DOCX) - desabilitado assim que qualquer parte assina digitalmente
-              (o .docx "cru" não reflete mais o selo já aplicado); some de vez quando 100% assinado */}
-          {!isFullySigned && (
+          {onDelete && (
             <button
-              onClick={handleDownloadDocx}
-              disabled={isDownloadingDocx || hasAnyDigitalSignature}
-              className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 disabled:opacity-50 disabled:hover:bg-amber-50 disabled:cursor-not-allowed border border-amber-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
-              title={
-                hasAnyDigitalSignature
-                  ? 'Indisponível: pelo menos uma parte já assinou digitalmente. Baixe em PDF para ver o contrato com o selo aplicado.'
-                  : 'Gera o arquivo Word (.docx) original substituindo apenas as TAGs com 100% de preservação de formatação'
-              }
+              onClick={() => setIsDeleteConfirmOpen(true)}
+              className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[38px] text-xs font-semibold text-slate-500 hover:text-red-700 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-xl transition-colors cursor-pointer shadow-2xs"
+              title="Mover contrato para a Lixeira"
             >
-              <FileDown className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>{isDownloadingDocx ? 'Gerando...' : 'Word (.docx)'}</span>
+              <Trash2 className="w-3.5 h-3.5 text-red-500 shrink-0" />
+              <span>Excluir</span>
             </button>
           )}
-
-          {/* Exportar PDF - gerado a partir do MESMO .docx real (não mais um texto desenhado à parte) */}
-          <button
-            onClick={handleDownloadPdf}
-            disabled={isDownloadingPdf}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 disabled:opacity-60 border border-rose-200 rounded-lg transition-colors cursor-pointer"
-            title="Baixar em formato PDF formatado"
-          >
-            <FileText className="w-3.5 h-3.5 shrink-0" />
-            <span>{isDownloadingPdf ? 'Gerando...' : 'PDF (.pdf)'}</span>
-          </button>
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* SELETOR DE MODALIDADE DE FINALIZAÇÃO / ASSINATURA DO CONTRATO            */}
-      {/* Some por completo quando o contrato digital já está 100% assinado        */}
+      {/* PAINEL DE FINALIZAÇÃO, ASSINATURA & DOWNLOAD DO CONTRATO                  */}
       {/* ========================================================================= */}
-      {isFullySigned ? (
-        <div className="bg-amber-50/70 p-4 sm:p-5 rounded-2xl border border-amber-200 shadow-sm print:hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="w-6 h-6 text-amber-600 shrink-0" />
-            <div>
-              <span className="text-sm font-bold text-amber-950 block">
-                Contrato assinado — somente visualização
-              </span>
-              <p className="text-xs text-amber-800 mt-0.5">
-                Ambas as partes já assinaram digitalmente. Não é mais possível reabrir o fluxo de assinatura.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setIsEvidenceLogOpen(true)}
-              className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-amber-200 hover:bg-amber-50 text-amber-900 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
-              title="Ver log de evidências das assinaturas"
-            >
-              <FileSearch className="w-4 h-4 text-amber-600" />
-              <span>Log de Evidências</span>
-            </button>
-            <button
-              onClick={() => setIsShareLinkOpen(true)}
-              className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-amber-200 hover:bg-amber-50 text-amber-900 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
-              title="Gerar/compartilhar link para o cliente rever e baixar o contrato"
-            >
-              <LinkIcon className="w-4 h-4 text-amber-600" />
-              <span>Compartilhar Link</span>
-            </button>
-          </div>
-        </div>
-      ) : (
-      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm print:hidden space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm print:hidden space-y-5">
+        {/* Cabeçalho do Painel com Status */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-amber-600 uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                Formalização & Assinatura
+              </span>
+            </div>
+            <h2 className="text-lg font-bold text-slate-900 mt-1">
               Finalização do Contrato
-            </span>
-            <h2 className="text-base font-bold text-slate-900">
-              Como deseja assinar?
             </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Escolha como deseja assinar e acompanhe o status de cada parte até a conclusão.
+            </p>
           </div>
-          <span className="text-xs text-slate-500">
-            {isDigital
-              ? '✨ 2 Partes (Sem Testemunhas) • Certificação Digital'
-              : '📄 2 Partes + 2 Testemunhas para Impressão'}
-          </span>
+
+          <div className="shrink-0">
+            {isFullySigned ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                100% Assinado Eletronicamente
+              </span>
+            ) : vendedorJaAssinouAguardandoCliente ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
+                <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
+                Aguardando Assinatura do Cliente
+              </span>
+            ) : clienteJaAssinou ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
+                <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
+                Aguardando Sua Assinatura
+              </span>
+            ) : isDigital ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                <ShieldCheck className="w-4 h-4 text-amber-600" />
+                Assinatura Eletrônica (Online)
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                <PrinterCheck className="w-4 h-4 text-slate-600" />
+                Assinatura Manual (Impressão)
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Opção 1: Assinatura Digital */}
-          <label
-            onClick={() => handleModalityChange('digital')}
-            className={`flex items-start gap-3.5 p-3.5 rounded-xl border-2 transition-all cursor-pointer select-none ${
-              isDigital
-                ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-xs'
-                : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/70'
-            }`}
-          >
-            <input
-              type="radio"
-              name="modalidadeAssinatura"
-              checked={isDigital}
-              onChange={() => handleModalityChange('digital')}
-              className="mt-1 w-4 h-4 text-amber-600 focus:ring-amber-500"
-            />
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
-                <strong className="text-sm font-bold text-slate-900">Assinatura digital</strong>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Contratado e Contratante assinam eletronicamente via sistema com código de confirmação. 
-                <strong className="text-amber-900 block mt-0.5">Sem campos ou linhas de testemunhas.</strong>
-              </p>
-            </div>
-          </label>
-
-          {/* Opção 2: PDF para Assinatura Manual - continua disponível mesmo
-              depois de UMA parte já ter assinado digitalmente: é exatamente
-              o caso de uso da modalidade "Mista" (um digital, outro manual
-              com testemunhas). Só trava de vez quando AMBAS as partes já
-              assinaram digitalmente (isFullySigned) - nesse ponto o painel
-              inteiro já é substituído pelo banner "somente visualização"
-              mais abaixo, então este bloco nem chega a renderizar. */}
-          <label
-            onClick={() => handleModalityChange('manual')}
-            className={`flex items-start gap-3.5 p-3.5 rounded-xl border-2 transition-all cursor-pointer select-none ${
-              !isDigital
-                ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-xs'
-                : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/70'
-            }`}
-          >
-            <input
-              type="radio"
-              name="modalidadeAssinatura"
-              checked={!isDigital}
-              onChange={() => handleModalityChange('manual')}
-              className="mt-1 w-4 h-4 text-amber-600 focus:ring-amber-500"
-            />
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <PrinterCheck className="w-4 h-4 text-slate-700 shrink-0" />
-                <strong className="text-sm font-bold text-slate-900">PDF para assinatura manual</strong>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                {hasAnyDigitalSignature
-                  ? 'Modalidade "Mista": mantém a assinatura digital já registrada e gera o documento para a outra parte assinar a próprio punho.'
-                  : 'Gera o documento para impressão e assinatura a próprio punho.'}
-                <strong className="text-slate-900 block mt-0.5">
-                  {hasAnyDigitalSignature ? 'Inclui a parte pendente + 2 Testemunhas.' : 'Inclui Contratado, Contratante e 2 Testemunhas.'}
-                </strong>
-              </p>
-            </div>
-          </label>
-        </div>
-
-        {/* Ação Rápida de Assinatura se for Modalidade Digital */}
-        {isDigital && (
-          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50/60 p-3 rounded-xl border border-amber-200/70">
-            <div className="text-xs text-amber-950">
-              {contract.assinaturas && contract.assinaturas.length === 2 ? (
-                <span className="font-bold text-amber-800 flex items-center gap-1">
-                  <Check className="w-4 h-4 text-amber-600" /> Ambas as partes já assinaram digitalmente!
-                </span>
-              ) : vendedorJaAssinouAguardandoCliente ? (
-                <span>
-                  ✅ Sua assinatura está registrada. Agora gere o link e envie para o cliente assinar.
-                </span>
-              ) : clienteJaAssinou ? (
-                <span>
-                  ✅ O cliente já assinou. Falta só a sua assinatura para concluir.
-                </span>
-              ) : (
-                <span>
-                  Nenhuma assinatura eletrônica registrada ainda. Clique no botão ao lado para iniciar o fluxo.
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => setIsEvidenceLogOpen(true)}
-                className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
-                title="Ver log de evidências das assinaturas"
+        {/* Seletor de Modalidade (Assinatura Eletrônica vs Assinatura Manual) */}
+        {!isFullySigned && (
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+              Como deseja formalizar este contrato?
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Opção 1: Assinatura Eletrônica */}
+              <label
+                onClick={() => handleModalityChange('digital')}
+                className={`relative flex items-start gap-3.5 p-4 rounded-xl border-2 transition-all cursor-pointer select-none ${
+                  isDigital
+                    ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-500/20 shadow-xs'
+                    : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/70'
+                }`}
               >
-                <FileSearch className="w-4 h-4" />
-                <span>Log de Evidências</span>
-              </button>
+                <input
+                  type="radio"
+                  name="modalidadeAssinatura"
+                  checked={isDigital}
+                  onChange={() => handleModalityChange('digital')}
+                  className="mt-1 w-4 h-4 text-amber-600 focus:ring-amber-500"
+                />
+                <div className="space-y-1 pr-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+                    <strong className="text-sm font-bold text-slate-900">
+                      Assinatura Eletrônica
+                    </strong>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
+                      Recomendado • Sem Testemunhas
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Você e o cliente assinam online pelo celular ou computador com confirmação por código, IP, data/hora e carimbo com QR Code.
+                    <span className="text-slate-500 block mt-1">
+                      *Não requer certificado digital ICP/e-CPF nem impressão. Válido pela Lei 14.063/2020.
+                    </span>
+                  </p>
+                </div>
+              </label>
 
-              {vendedorJaAssinouAguardandoCliente ? (
-                <button
-                  onClick={() => setIsShareLinkOpen(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
-                  title="Gerar código e link de assinatura para o cliente"
-                >
-                  <LinkIcon className="w-4 h-4 text-slate-950" />
-                  <span>Gerar Link para Cliente</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setSignFlowParte('usuario');
-                    setIsDigitalSignFlowOpen(true);
-                  }}
-                  className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg shadow-xs transition-colors cursor-pointer min-h-[38px]"
-                  title="Fluxo com OTP e carimbo digital"
-                >
-                  <ShieldCheck className="w-4 h-4 text-slate-950" />
-                  <span>Assinatura Digital</span>
-                </button>
-              )}
+              {/* Opção 2: Assinatura Manual */}
+              <label
+                onClick={() => handleModalityChange('manual')}
+                className={`relative flex items-start gap-3.5 p-4 rounded-xl border-2 transition-all cursor-pointer select-none ${
+                  !isDigital
+                    ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-500/20 shadow-xs'
+                    : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/70'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="modalidadeAssinatura"
+                  checked={!isDigital}
+                  onChange={() => handleModalityChange('manual')}
+                  className="mt-1 w-4 h-4 text-amber-600 focus:ring-amber-500"
+                />
+                <div className="space-y-1 pr-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <PrinterCheck className="w-4 h-4 text-slate-700 shrink-0" />
+                    <strong className="text-sm font-bold text-slate-900">
+                      PDF para Assinatura Manual
+                    </strong>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-200 text-slate-700">
+                      Em Papel
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    {hasAnyDigitalSignature
+                      ? 'Modalidade mista: mantém a assinatura eletrônica já feita e gera o documento para a outra parte assinar a próprio punho.'
+                      : 'Gera o documento formatado para impressão e coleta manual de assinaturas a próprio punho.'}
+                    <strong className="text-slate-800 block mt-1">
+                      {hasAnyDigitalSignature ? 'Inclui a parte pendente + 2 Testemunhas.' : 'Inclui Contratado, Contratante e 2 Testemunhas.'}
+                    </strong>
+                  </p>
+                </div>
+              </label>
             </div>
           </div>
         )}
+
+        {/* Quadro de Acompanhamento das Assinaturas (Modalidade Eletrônica) */}
+        {isDigital && (
+          <div className="space-y-3 pt-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                Status das Assinaturas
+              </span>
+              <span className="text-xs text-slate-500">
+                {contract.assinaturas?.length || 0} de 2 partes assinadas
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Card 1: Corretor / Contratado */}
+              <div
+                className={`p-3.5 rounded-xl border transition-all ${
+                  sigVendedor
+                    ? 'bg-emerald-50/50 border-emerald-200 ring-1 ring-emerald-500/20'
+                    : 'bg-slate-50/80 border-slate-200'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      {vTermo} (Você / Corretor)
+                    </span>
+                    <p className="text-sm font-bold text-slate-900 leading-tight">
+                      {vNome}
+                    </p>
+                    {vDoc && <p className="text-[11px] text-slate-500">{vDoc}</p>}
+                  </div>
+
+                  {sigVendedor ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      <Check className="w-3 h-3" /> Assinado
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                      <Clock className="w-3 h-3" /> Pendente
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-3 pt-2.5 border-t border-slate-200/70 flex items-center justify-between gap-2">
+                  {sigVendedor ? (
+                    <div className="text-[11px] text-emerald-800 leading-tight">
+                      <span>Assinado em {formatDate(sigVendedor.dataAssinatura)}</span>
+                      {sigVendedor.codigoConfirmacao && (
+                        <span className="block text-[10px] text-emerald-700 font-mono font-bold">
+                          Cód: {sigVendedor.codigoConfirmacao}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setSignFlowParte('usuario');
+                        setIsDigitalSignFlowOpen(true);
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                    >
+                      <ShieldCheck className="w-4 h-4 text-slate-950" />
+                      <span>Assinar como Corretor</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Card 2: Cliente / Contratante */}
+              <div
+                className={`p-3.5 rounded-xl border transition-all ${
+                  clienteJaAssinou
+                    ? 'bg-emerald-50/50 border-emerald-200 ring-1 ring-emerald-500/20'
+                    : 'bg-slate-50/80 border-slate-200'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      {cTermo} (Cliente)
+                    </span>
+                    <p className="text-sm font-bold text-slate-900 leading-tight">
+                      {cNome}
+                    </p>
+                    {cDoc && <p className="text-[11px] text-slate-500">{cDoc}</p>}
+                  </div>
+
+                  {clienteJaAssinou ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      <Check className="w-3 h-3" /> Assinado
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                      <Clock className="w-3 h-3" /> Pendente
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-3 pt-2.5 border-t border-slate-200/70 flex items-center justify-between gap-2">
+                  {clienteJaAssinou ? (
+                    <div className="text-[11px] text-emerald-800 leading-tight">
+                      <span>Assinado pelo cliente</span>
+                      {contract.assinaturas?.find(a => a.role === roleClienteAtual)?.codigoConfirmacao && (
+                        <span className="block text-[10px] text-emerald-700 font-mono font-bold">
+                          Cód: {contract.assinaturas.find(a => a.role === roleClienteAtual)?.codigoConfirmacao}
+                        </span>
+                      )}
+                    </div>
+                  ) : sigVendedor ? (
+                    <button
+                      onClick={() => setIsShareLinkOpen(true)}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                    >
+                      <LinkIcon className="w-4 h-4 text-slate-950" />
+                      <span>Gerar Link para o Cliente</span>
+                    </button>
+                  ) : (
+                    <span className="text-[11px] text-slate-500 italic py-1">
+                      Assine primeiro para liberar o link do cliente
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Rodapé de Ações Rápidas: Assinatura, Links e Auditoria */}
+        <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+          <div className="text-xs text-slate-700 flex items-center gap-2">
+            <Info className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>
+              {isFullySigned
+                ? 'Contrato concluído! Todas as assinaturas foram validadas e embutidas com QR Code.'
+                : vendedorJaAssinouAguardandoCliente
+                ? 'Sua assinatura foi registrada. Envie o link para o cliente assinar online.'
+                : clienteJaAssinou
+                ? 'O cliente já assinou. Clique em "Assinar como Corretor" para concluir.'
+                : isDigital
+                ? 'Inicie assinando o contrato como corretor para gerar o link de envio ao cliente.'
+                : 'Baixe o PDF abaixo para imprimir e coletar as assinaturas a próprio punho com 2 testemunhas.'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
+            {/* Log de Evidências */}
+            <button
+              onClick={() => setIsEvidenceLogOpen(true)}
+              className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-lg shadow-2xs transition-colors cursor-pointer min-h-[38px]"
+              title="Ver log de auditoria e evidências jurídicas"
+            >
+              <FileSearch className="w-4 h-4 text-slate-600" />
+              <span>Log de Evidências</span>
+            </button>
+
+            {/* Ação Primária Dinâmica */}
+            {isFullySigned ? (
+              <button
+                onClick={() => setIsShareLinkOpen(true)}
+                className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-800 font-bold text-xs rounded-lg shadow-2xs transition-colors cursor-pointer min-h-[38px]"
+                title="Compartilhar link de visualização com o cliente"
+              >
+                <LinkIcon className="w-4 h-4 text-emerald-700" />
+                <span>Compartilhar Link</span>
+              </button>
+            ) : isDigital && vendedorJaAssinouAguardandoCliente ? (
+              <button
+                onClick={() => setIsShareLinkOpen(true)}
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer min-h-[38px]"
+                title="Gerar link de assinatura do cliente"
+              >
+                <LinkIcon className="w-4 h-4 text-slate-950" />
+                <span>Enviar Link ao Cliente</span>
+              </button>
+            ) : isDigital && !sigVendedor ? (
+              <button
+                onClick={() => {
+                  setSignFlowParte('usuario');
+                  setIsDigitalSignFlowOpen(true);
+                }}
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer min-h-[38px]"
+                title="Assinar digitalmente com código OTP"
+              >
+                <ShieldCheck className="w-4 h-4 text-slate-950" />
+                <span>Assinar Contrato Agora</span>
+              </button>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Central de Downloads de Arquivos (PDF Oficial e Minuta Word) */}
+        <div className="pt-3 border-t border-slate-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80">
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-slate-900 block">
+                Baixar Documento do Contrato
+              </span>
+              <p className="text-[11px] text-slate-500 max-w-md">
+                {isFullySigned
+                  ? 'Baixe o PDF final com todos os carimbos, assinaturas digitais e validação com QR Code.'
+                  : isDigital
+                  ? 'O PDF é o documento oficial. Se precisar fazer ajustes no texto antes de assinar, baixe o Word (.docx).'
+                  : 'Documento formatado pronto para impressão e coleta manual de assinaturas.'}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0">
+              {/* Baixar Minuta Word (.docx) */}
+              {!isFullySigned && (
+                <button
+                  onClick={handleDownloadDocx}
+                  disabled={isDownloadingDocx || hasAnyDigitalSignature}
+                  className="flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[42px] text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 disabled:opacity-50 disabled:hover:bg-white disabled:cursor-not-allowed border border-slate-200 rounded-xl transition-all shadow-2xs cursor-pointer"
+                  title={
+                    hasAnyDigitalSignature
+                      ? 'Indisponível: o contrato já possui assinatura eletrônica registrada. Baixe em PDF para visualizar com os selos.'
+                      : 'Baixar arquivo Word (.docx) para edição de minuta'
+                  }
+                >
+                  <FileDown className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>{isDownloadingDocx ? 'Gerando Word...' : 'Word (.docx)'}</span>
+                </button>
+              )}
+
+              {/* Baixar PDF Oficial (.pdf) */}
+              <button
+                onClick={handleDownloadPdf}
+                disabled={isDownloadingPdf}
+                className="flex items-center justify-center gap-2 px-4.5 py-2.5 min-h-[42px] text-xs font-extrabold text-white bg-slate-950 hover:bg-slate-900 active:bg-black disabled:opacity-60 rounded-xl transition-all shadow-xs cursor-pointer border border-slate-800"
+                title="Baixar contrato oficial formatado em PDF"
+              >
+                <FileText className="w-4 h-4 text-yellow-400 shrink-0" />
+                <span>{isDownloadingPdf ? 'Gerando PDF...' : 'Baixar PDF (.pdf)'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-      )}
 
       {/* Banner de Monitor de Prazo se for Exclusividade */}
       {contract.tipo === 'exclusividade' && contract.exclusividade && (
@@ -864,6 +1060,67 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           onCodeGenerated={() => {}}
           isFullySigned={isFullySigned}
         />
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full border border-slate-200 shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center shrink-0 text-rose-600">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-black text-slate-900 leading-snug">
+                  Mover Contrato para a Lixeira?
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  O contrato <strong className="text-slate-800 font-bold">"{contract.titulo}"</strong> será enviado para a Lixeira por 30 dias e você retornará ao painel de controle.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                disabled={isDeletingContract}
+                onClick={() => setIsDeleteConfirmOpen(false)}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingContract}
+                onClick={async () => {
+                  if (!onDelete || !contract.id) return;
+                  try {
+                    setIsDeletingContract(true);
+                    await onDelete(contract.id);
+                  } catch (err) {
+                    console.error('Erro ao excluir:', err);
+                  } finally {
+                    setIsDeletingContract(false);
+                    setIsDeleteConfirmOpen(false);
+                  }
+                }}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-60"
+              >
+                {isDeletingContract ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Excluindo...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Mover para Lixeira</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
