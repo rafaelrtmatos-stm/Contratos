@@ -45,14 +45,25 @@ export async function downloadTemplate(
       .from(TEMPLATES_BUCKET)
       .download(arquivoNome);
 
-    if (error) {
-      return { sucesso: false, erro: error.message };
+    if (!error && data) {
+      return { sucesso: true, blob: data as Blob };
     }
-
-    return { sucesso: true, blob: data as Blob };
   } catch (err) {
-    return { sucesso: false, erro: String(err) };
+    console.warn(`Tentativa de carregar template ${arquivoNome} do Supabase falhou, buscando localmente...`, err);
   }
+
+  // Fallback local: busca da pasta /templates/ servida estaticamente
+  try {
+    const localRes = await fetch(`/templates/${encodeURIComponent(arquivoNome)}`);
+    if (localRes.ok) {
+      const blob = await localRes.blob();
+      return { sucesso: true, blob };
+    }
+  } catch (localErr) {
+    console.error(`Erro ao carregar template local ${arquivoNome}:`, localErr);
+  }
+
+  return { sucesso: false, erro: `Template ${arquivoNome} não encontrado no Supabase nem localmente.` };
 }
 
 /**

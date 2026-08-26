@@ -30,17 +30,17 @@ const TEMPLATES: Record<string, TemplateResolved> = {
 
   // VENDA PARCELADA
   'venda_parcelada_digital': {
-    arquivo: 'parcelado_assinatura_digital_sem_testemunhas.docx',
+    arquivo: 'venda_parcelada_assinatura_digital.docx',
     testemunhas: false,
     tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{COMPRADOR_ASSINATURA_DIGITAL}}'],
   },
   'venda_parcelada_manual': {
-    arquivo: 'parcelado_ambos_manuais_2_testemunhas.docx',
+    arquivo: 'venda_parcelada_assinatura_manual_2_testemunhas.docx',
     testemunhas: true,
     tagsAssinatura: ['{{USUARIO_ASSINATURA_MANUAL}}', '{{COMPRADOR_ASSINATURA_MANUAL}}'],
   },
   'venda_parcelada_mista': {
-    arquivo: 'parcelado_usuario_digital_comprador_manual_2_testemunhas.docx',
+    arquivo: 'venda_parcelada_mista_2_testemunhas.docx',
     testemunhas: true,
     tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{COMPRADOR_ASSINATURA_MANUAL}}'],
   },
@@ -49,30 +49,26 @@ const TEMPLATES: Record<string, TemplateResolved> = {
   'exclusividade_digital': {
     arquivo: 'exclusividade_digital_sem_testemunhas.docx',
     testemunhas: false,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{CONTRATANTE_ASSINATURA_DIGITAL}}'],
   },
   'exclusividade_mista': {
-    arquivo: 'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',
+    arquivo: 'exclusividade_mista_2_testemunhas.docx',
     testemunhas: true,
     tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{CONTRATANTE_ASSINATURA_MANUAL}}'],
   },
   // Totalmente manual (nenhuma das partes assina digitalmente): só linhas,
-  // nome e CPF de cada parte + testemunhas. Arquivo já existia no bucket,
-  // mas nunca era referenciado aqui - por isso o download "manual" sempre
-  // caía no template misto (com o aviso de assinatura eletrônica pendente).
+  // nome e CPF de cada parte + testemunhas.
   'exclusividade_manual': {
-    arquivo: 'exclusividade_ambos_manuais_2_testemunhas.docx',
+    arquivo: 'exclusividade_manual_2_testemunhas.docx',
     testemunhas: true,
-    tagsAssinatura: [],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA_MANUAL}}', '{{CONTRATANTE_ASSINATURA_MANUAL}}'],
   },
   // "sem_conjuge_mista" precisa ser um arquivo MISTO (um digital, um
-  // manual) - a lógica de determinarModalidade() pra exclusividade nunca
-  // escolhe "totalmente manual", então nunca aponte esta chave pro
-  // arquivo "ambos_manuais". Arquivo dedicado voltou a existir no bucket.
+  // manual)
   'exclusividade_sem_conjuge_mista': {
     arquivo: 'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{CONTRATANTE_ASSINATURA_MANUAL}}'],
   },
 };
 
