@@ -176,6 +176,17 @@ export const SIGNATURE_TAGS = {
   // Contrato de Exclusividade (modalidade mista): {{CONTRATANTE_ASSINATURA_MANUAL}} é o
   // espaço/linha de assinatura manuscrita do CONTRATANTE (mapeado para o slot "comprador")
   CONTRATANTE_MANUAL: '{{CONTRATANTE_ASSINATURA_MANUAL}}',
+
+  // Tags UNIFICADAS (uma só por parte, sem sufixo _DIGITAL/_MANUAL): permitem
+  // usar o MESMO arquivo .docx pras 3 modalidades (digital/manual/mista) de
+  // um tipo de contrato, já que aqui quem decide selo-imagem vs linha manual
+  // é a modalidade REAL da pessoa (info.modalidade), não o nome da tag no
+  // Word. Tags antigas acima continuam funcionando normalmente nos
+  // templates já existentes - isto é apenas uma opção nova pra templates
+  // novos que queiram ter um único arquivo mestre.
+  USUARIO_UNIFICADA: '{{USUARIO_ASSINATURA}}',
+  COMPRADOR_UNIFICADA: '{{COMPRADOR_ASSINATURA}}',
+  CONTRATANTE_UNIFICADA: '{{CONTRATANTE_ASSINATURA}}',
 };
 
 function escapeXml(value: string): string {
@@ -400,7 +411,17 @@ export function mapTagsToConfig(
   const config: SignatureTagConfig[] = [];
 
   for (const tag of foundTags) {
-    if (tag.includes('USUARIO') && tag.includes('DIGITAL')) {
+    // Tags UNIFICADAS (sem sufixo _DIGITAL/_MANUAL): a modalidade vem do
+    // dado real da pessoa (info.modalidade), não do nome da tag - é o que
+    // permite um único arquivo .docx atender as 3 modalidades.
+    if (tag === SIGNATURE_TAGS.USUARIO_UNIFICADA) {
+      config.push({ tag, tipo: usuarioInfo.modalidade, parte: 'usuario', info: usuarioInfo });
+    } else if (tag === SIGNATURE_TAGS.COMPRADOR_UNIFICADA) {
+      config.push({ tag, tipo: compradorInfo.modalidade, parte: 'comprador', info: compradorInfo });
+    } else if (tag === SIGNATURE_TAGS.CONTRATANTE_UNIFICADA) {
+      // Exclusividade: CONTRATANTE_ASSINATURA usa o mesmo slot de compradorInfo
+      config.push({ tag, tipo: compradorInfo.modalidade, parte: 'comprador', info: compradorInfo });
+    } else if (tag.includes('USUARIO') && tag.includes('DIGITAL')) {
       config.push({ tag, tipo: 'digital', parte: 'usuario', info: usuarioInfo });
     } else if (tag.includes('USUARIO') && tag.includes('MANUAL')) {
       config.push({ tag, tipo: 'manual', parte: 'usuario', info: usuarioInfo });

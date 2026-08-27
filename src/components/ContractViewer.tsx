@@ -25,6 +25,7 @@ import {
   substituirTagsNoDocx,
 } from '../utils/dataTagsProcessor';
 import { saveContractDocumentToSupabase } from '../utils/contractDocumentsStorage';
+import { processarBlocoTestemunhas } from '../utils/witnessBlockProcessor';
 import { buildPdfFileName, buildDocxFileName } from '../utils/pdfFileName';
 import { startSimulatedPdfProgress } from '../utils/pdfProgressSimulator';
 import { saveSignature, fetchSignatures } from '../utils/contractsRepository';
@@ -405,7 +406,15 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
         throw new Error(erro || 'Falha ao recuperar template do Supabase');
       }
 
-      const docxBuffer = await blob.arrayBuffer();
+      let docxBuffer = await blob.arrayBuffer();
+
+      // 1.5. Bloco de testemunhas: mantém ou remove {{BLOCO_TESTEMUNHAS_INICIO}}...
+      // {{BLOCO_TESTEMUNHAS_FIM}} conforme testemunhaprecisa (calculado acima a
+      // partir da modalidade real de cada parte). Precisa rodar antes da
+      // substituição de tags, senão a limpeza de tags desconhecidas apaga só os
+      // marcadores e o conteúdo do bloco fica sempre visível. No-op em templates
+      // antigos que não têm esses marcadores.
+      docxBuffer = await processarBlocoTestemunhas(docxBuffer, estadoAssinatura.testemunhaprecisa);
 
       // 2. Processar tags de assinatura PRIMEIRO (antes da substituição geral de dados,
       // que apaga qualquer {{TAG}} que não reconheça - incluindo as tags de selo).
