@@ -842,7 +842,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               }}
               className="w-full rounded-[1.75rem] p-4 sm:p-5 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/5 hover:bg-amber-500/20 border-2 border-dashed border-amber-400/80 text-slate-900 shadow-sm active:scale-[0.99] transition-all cursor-pointer flex items-center justify-between gap-4 group"
               role="button"
-              title="Gerar link para o cliente preencher seus dados (CPF, RG, CEP e Cônjuge) e avisar no WhatsApp"
+              title="Gerar link para o cliente preencher seus dados cadastrais e avisar no WhatsApp"
             >
               <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
                 <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform font-bold">
@@ -851,14 +851,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <div className="min-w-0 text-left">
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-950 leading-snug">
-                      Pedir Dados ao Cliente (Link com Busca CEP e WhatsApp)
+                      Pedir Dados ao Cliente (Link de Cadastro)
                     </h2>
                     <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 text-[10px] font-black uppercase tracking-tight">
                       Auto-Cadastro
                     </span>
                   </div>
                   <p className="text-slate-700 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
-                    Envie um link para o cliente preencher Nome, CPF/RG, CEP com busca automática e Cônjuge. Ao finalizar, o sistema avisa no seu WhatsApp!
+                    Envie um link para o cliente preencher seus dados com facilidade. Ao finalizar, o sistema avisa no seu WhatsApp!
                   </p>
                 </div>
               </div>
@@ -1514,7 +1514,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           setIsShareClientRegOpen(true);
                         }}
                         className="px-3 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition-all cursor-pointer"
-                        title="Enviar link para o cliente preencher dados (Nome, CPF/RG, CEP, Cônjuge) e avisar no WhatsApp"
+                        title="Enviar link para o cliente preencher seus dados cadastrais"
                       >
                         <UserPlus className="w-4 h-4 text-amber-700 stroke-[2.2]" />
                         <span className="hidden sm:inline text-[11px]">Pedir Dados</span>

@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
-  Link as LinkIcon,
   Copy,
   CheckCircle2,
-  Share2,
-  Send,
   UserPlus,
   ExternalLink,
-  Sparkles,
   Smartphone,
   FileText,
 } from 'lucide-react';
@@ -35,7 +31,6 @@ export const ShareClientRegistrationModal: React.FC<ShareClientRegistrationModal
 }) => {
   const [selectedRole, setSelectedRole] = useState(defaultRole);
   const [brokerPhone, setBrokerPhone] = useState('');
-  const [clientPhone, setClientPhone] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedMessage, setCopiedMessage] = useState(false);
 
@@ -54,10 +49,6 @@ export const ShareClientRegistrationModal: React.FC<ShareClientRegistrationModal
     const formatted = formatPhone(val);
     setBrokerPhone(formatted);
     setSavedBrokerPhone(val);
-  };
-
-  const handleClientPhoneChange = (val: string) => {
-    setClientPhone(formatPhone(val));
   };
 
   const generatedLink = generateClientRegistrationLink({
@@ -99,19 +90,6 @@ export const ShareClientRegistrationModal: React.FC<ShareClientRegistrationModal
     } catch {
       // Ignore
     }
-  };
-
-  const handleSendToClientWhatsApp = () => {
-    const cleanClientPhone = clientPhone.replace(/\D/g, '');
-    const encoded = encodeURIComponent(clientInviteMessage);
-    const target = cleanClientPhone
-      ? (cleanClientPhone.length <= 11 ? `55${cleanClientPhone}` : cleanClientPhone)
-      : '';
-    const url = target
-      ? `https://wa.me/${target}?text=${encoded}`
-      : `https://api.whatsapp.com/send?text=${encoded}`;
-    
-    window.open(url, '_blank');
   };
 
   return (
@@ -243,54 +221,31 @@ export const ShareClientRegistrationModal: React.FC<ShareClientRegistrationModal
             </div>
           </div>
 
-          {/* Envio Direto via WhatsApp */}
-          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-extrabold text-emerald-950 flex items-center gap-1.5">
-                <Send className="w-3.5 h-3.5 text-emerald-700" />
-                <span>Enviar Convite pelo WhatsApp do Cliente:</span>
-              </label>
-            </div>
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={clientPhone}
-                onChange={(e) => handleClientPhoneChange(e.target.value)}
-                placeholder="WhatsApp do cliente (opcional)"
-                maxLength={15}
-                className="flex-1 px-3 py-2 text-xs sm:text-sm font-mono font-bold rounded-xl border border-emerald-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              <button
-                type="button"
-                onClick={handleSendToClientWhatsApp}
-                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 active:scale-98 transition-all cursor-pointer shrink-0"
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span>Enviar no WhatsApp</span>
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between pt-1">
+          {/* Ações Rápidas de Cópia e Teste */}
+          <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <button
                 type="button"
                 onClick={handleCopyInviteMessage}
-                className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 underline cursor-pointer"
+                className="px-3.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
-                <Copy className="w-3 h-3" />
-                <span>{copiedMessage ? 'Mensagem de convite copiada!' : 'Copiar texto completo do convite'}</span>
+                <Copy className="w-3.5 h-3.5" />
+                <span>{copiedMessage ? 'Mensagem de convite copiada!' : 'Copiar mensagem completa de convite'}</span>
               </button>
 
               <a
                 href={generatedLink}
                 target="_blank"
                 rel="noreferrer"
-                className="text-[11px] font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1 transition-colors"
+                className="text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5 transition-colors py-1.5 px-2"
               >
                 <span>Testar formulário</span>
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
+            <p className="text-[11px] text-amber-900/80 leading-relaxed">
+              Você pode colar o link direto ou a mensagem pronta no WhatsApp, e-mail ou onde preferir conversar com o cliente.
+            </p>
           </div>
 
         </div>

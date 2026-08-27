@@ -594,7 +594,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           <button
             onClick={() => setIsShareClientRegOpen(true)}
             className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[38px] text-xs font-bold text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-xl transition-colors cursor-pointer shadow-2xs"
-            title="Enviar link para o cliente preencher dados (Nome, CPF/RG, CEP, Cônjuge) e avisar no WhatsApp"
+            title="Enviar link para o cliente preencher seus dados cadastrais"
           >
             <UserPlus className="w-3.5 h-3.5 text-amber-700 shrink-0" />
             <span>Pedir Dados (Auto-Cadastro)</span>
