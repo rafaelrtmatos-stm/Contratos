@@ -58,7 +58,9 @@ import {
   UserCheck,
   ExternalLink,
   Info,
+  UserPlus,
 } from 'lucide-react';
+import { ShareClientRegistrationModal } from './ShareClientRegistrationModal';
 
 interface ContractViewerProps {
   contract: ContractData;
@@ -90,6 +92,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   const [isDigitalSignFlowOpen, setIsDigitalSignFlowOpen] = useState(false);
   const [isEvidenceLogOpen, setIsEvidenceLogOpen] = useState(false);
   const [isShareLinkOpen, setIsShareLinkOpen] = useState(false);
+  const [isShareClientRegOpen, setIsShareClientRegOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDeletingContract, setIsDeletingContract] = useState(false);
   const [signFlowParte, setSignFlowParte] = useState<'usuario' | 'comprador'>('usuario');
@@ -586,8 +589,17 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
           </div>
         </div>
 
-        {/* Ações Rápidas: Editar, Copiar, Imprimir, Excluir */}
+        {/* Ações Rápidas: Editar, Copiar, Imprimir, Pedir Dados, Excluir */}
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-end">
+          <button
+            onClick={() => setIsShareClientRegOpen(true)}
+            className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[38px] text-xs font-bold text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-xl transition-colors cursor-pointer shadow-2xs"
+            title="Enviar link para o cliente preencher dados (Nome, CPF/RG, CEP, Cônjuge) e avisar no WhatsApp"
+          >
+            <UserPlus className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+            <span>Pedir Dados (Auto-Cadastro)</span>
+          </button>
+
           <button
             onClick={onEdit}
             className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[38px] text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors cursor-pointer shadow-2xs"
@@ -868,7 +880,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                   )}
                 </div>
 
-                <div className="mt-3 pt-2.5 border-t border-slate-200/70 flex items-center justify-between gap-2">
+                <div className="mt-3 pt-2.5 border-t border-slate-200/70 space-y-2">
                   {clienteJaAssinou ? (
                     <div className="text-[11px] text-emerald-800 leading-tight">
                       <span>Assinado pelo {isLoc ? 'locatário' : isExcl ? 'contratante' : 'comprador'}</span>
@@ -878,18 +890,31 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                         </span>
                       )}
                     </div>
-                  ) : sigVendedor ? (
-                    <button
-                      onClick={() => setIsShareLinkOpen(true)}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
-                    >
-                      <LinkIcon className="w-4 h-4 text-slate-950" />
-                      <span>{isLoc ? 'Gerar Link para o Locatário' : 'Gerar Link para o Cliente'}</span>
-                    </button>
                   ) : (
-                    <span className="text-[11px] text-slate-500 italic py-1">
-                      Assine primeiro para liberar o link do {isLoc ? 'locatário' : 'cliente'}
-                    </span>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      {sigVendedor ? (
+                        <button
+                          onClick={() => setIsShareLinkOpen(true)}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                        >
+                          <LinkIcon className="w-4 h-4 text-slate-950" />
+                          <span>{isLoc ? 'Link Assinatura Locatário' : 'Link Assinatura Cliente'}</span>
+                        </button>
+                      ) : (
+                        <span className="text-[11px] text-slate-500 italic py-1 block">
+                          Assine primeiro para liberar o link de assinatura
+                        </span>
+                      )}
+
+                      <button
+                        onClick={() => setIsShareClientRegOpen(true)}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 font-bold text-xs rounded-xl shadow-2xs transition-all cursor-pointer"
+                        title="Enviar link para o cliente preencher os dados dele pelo WhatsApp"
+                      >
+                        <UserPlus className="w-4 h-4 text-amber-700" />
+                        <span>Pedir Dados (Auto-Cadastro)</span>
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1169,6 +1194,15 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             </div>
           </div>
         </div>
+      )}
+      {/* Modal de Compartilhamento do Link de Auto-Cadastro do Cliente */}
+      {isShareClientRegOpen && (
+        <ShareClientRegistrationModal
+          isOpen={isShareClientRegOpen}
+          onClose={() => setIsShareClientRegOpen(false)}
+          contract={contract}
+          defaultRole={isExcl ? 'vendedor' : isLoc ? 'locatario' : 'comprador'}
+        />
       )}
     </div>
   );

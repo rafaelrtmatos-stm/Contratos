@@ -16,6 +16,7 @@ import { AuthProvider, useAuth, hasPermission } from './utils/authContext';
 import { fetchContracts, saveContract, deleteContract, saveSignature } from './utils/contractsRepository';
 import { SignatureLink } from './pages/SignatureLink';
 import { ValidatePage } from './pages/ValidatePage';
+import { ClientRegistrationPage } from './pages/ClientRegistrationPage';
 
 export default function App() {
   return (
@@ -26,6 +27,10 @@ export default function App() {
       }}
     >
       <Routes>
+        {/* Rota pública: auto-cadastro do cliente e envio no WhatsApp */}
+        <Route path="/cadastro-cliente" element={<ClientRegistrationPage />} />
+        <Route path="/cadastro" element={<ClientRegistrationPage />} />
+        <Route path="/cadastro/:id" element={<ClientRegistrationPage />} />
         {/* Rota pública: cliente assina o contrato sem precisar de login */}
         <Route path="/assinar/:token" element={<SignatureLink />} />
         {/* Rota pública: qualquer um valida um código de assinatura (QR/selo) */}
