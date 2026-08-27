@@ -539,25 +539,30 @@ export const ClientRegistrationPage: React.FC = () => {
 
                 {/* RG */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 block">
-                    {tipoPessoa === 'PJ' ? 'Inscrição Estadual' : 'RG (Registro Geral)'}
+                  <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                    <span>{tipoPessoa === 'PJ' ? 'Inscrição Estadual' : 'RG (Registro Geral)'}</span>
+                    {rg && (
+                      <span className={`text-[10px] font-bold ${isRgValid ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {isRgValid ? '✓ Válido' : '✗ Inválido'}
+                      </span>
+                    )}
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <input
-                      type="text"
-                      value={rg}
-                      onChange={(e) => handleRgChange(e.target.value)}
-                      placeholder="00.000.000-0"
-                      className="col-span-2 px-3.5 py-2.5 text-xs sm:text-sm font-mono font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
-                    />
-                    <input
-                      type="text"
-                      value={rgOrgao}
-                      onChange={(e) => setRgOrgao(e.target.value)}
-                      placeholder="SSP/PA"
-                      className="col-span-1 px-2.5 py-2.5 text-xs font-bold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 uppercase text-center"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    value={rg}
+                    onChange={(e) => handleRgChange(e.target.value)}
+                    placeholder="00.000.000-0"
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
+                  />
+                </div>
+
+                {/* Órgão Emissor */}
+                <div>
+                  <OrgaoEmissorInput
+                    value={rgOrgao}
+                    onChange={setRgOrgao}
+                    label="Órgão Emissor do RG"
+                  />
                 </div>
 
                 {/* Gênero e Estado Civil (se PF) */}
@@ -689,22 +694,21 @@ export const ClientRegistrationPage: React.FC = () => {
                       <label className="text-xs font-bold text-slate-700 block">
                         RG do Cônjuge
                       </label>
-                      <div className="grid grid-cols-3 gap-2">
-                        <input
-                          type="text"
-                          value={conjugeRg}
-                          onChange={(e) => handleConjugeRgChange(e.target.value)}
-                          placeholder="00.000.000-0"
-                          className="col-span-2 px-3.5 py-2.5 text-xs sm:text-sm font-mono font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                        />
-                        <input
-                          type="text"
-                          value={conjugeRgOrgao}
-                          onChange={(e) => setConjugeRgOrgao(e.target.value)}
-                          placeholder="SSP/PA"
-                          className="col-span-1 px-2.5 py-2.5 text-xs font-bold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 uppercase text-center"
-                        />
-                      </div>
+                      <input
+                        type="text"
+                        value={conjugeRg}
+                        onChange={(e) => handleConjugeRgChange(e.target.value)}
+                        placeholder="00.000.000-0"
+                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      />
+                    </div>
+
+                    <div>
+                      <OrgaoEmissorInput
+                        value={conjugeRgOrgao}
+                        onChange={setConjugeRgOrgao}
+                        label="Órgão Emissor (Cônjuge)"
+                      />
                     </div>
                   </div>
                 )}
