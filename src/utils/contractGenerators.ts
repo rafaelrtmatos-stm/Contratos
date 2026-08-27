@@ -566,9 +566,11 @@ export function getContractExclusividadeTags(contract: ContractData): ContractEx
 
     // ESPECÍFICO PARA LOCAÇÃO EM EXCLUSIVIDADE (Casas, Galpões, etc.)
     FINALIDADE_EXCLUSIVIDADE: ex?.finalidade === 'locacao' ? 'Locação de Imóvel' : (ex?.finalidade === 'ambos' ? 'Venda e Locação de Imóvel' : 'Venda de Imóvel'),
-    VALOR_LOCACAO_SUGERIDO: ex?.valorLocacaoSugerido ? formatCurrency(ex.valorLocacaoSugerido) : (contract.locacao?.valorAluguel ? formatCurrency(contract.locacao.valorAluguel) : 'A combinar'),
-    VALOR_LOCACAO_SUGERIDO_EXTENSO: ex?.valorLocacaoSugeridoExtenso || (ex?.valorLocacaoSugerido ? numeroPorExtensoReais(ex.valorLocacaoSugerido) : ''),
+    VALOR_LOCACAO_SUGERIDO: ex?.valorLocacaoSugerido ? formatCurrency(ex.valorLocacaoSugerido) : (contract.locacao?.valorAluguel ? formatCurrency(contract.locacao.valorAluguel) : (contract.valorTotal ? formatCurrency(contract.valorTotal) : 'A combinar')),
+    VALOR_LOCACAO_SUGERIDO_EXTENSO: ex?.valorLocacaoSugeridoExtenso || (ex?.valorLocacaoSugerido ? numeroPorExtensoReais(ex.valorLocacaoSugerido) : (contract.locacao?.valorAluguelExtenso || contract.valorTotalExtenso || '')),
     COMISSAO_LOCACAO: ex?.comissaoLocacao || '100% do primeiro aluguel mensal',
+    TAXA_ADMINISTRACAO_LOCACAO: ex?.taxaAdministracaoLocacao || '10% ao mês sobre os aluguéis recebidos',
+    GARANTIAS_ACEITAS_LOCACAO: ex?.garantiasAceitasLocacao || 'Caução em dinheiro (até 3 meses), Fiador idôneo ou Seguro-Fiança Locatícia',
     AUTORIZACAO_PROSPECCAO: ex?.autorizaProspeccaoClientes !== false ? 'Autorização expressa para prospecção ativa de clientes/inquilinos e veiculação de anúncios em nome do proprietário' : 'Prospecção sob consulta prévia',
   };
 }
@@ -936,6 +938,132 @@ CLÁUSULA 6ª – DO FORO
 Para dirimir quaisquer dúvidas ou litígios decorrentes da aplicação deste contrato, as partes elegem expressamente o Foro da Comarca de {{FORO_COMARCA}}, com renúncia irrevogável a qualquer outro por mais privilegiado que seja.
 
 E, por estarem assim justos e contratados, assinam o presente instrumento em vias de igual teor e forma, perante as testemunhas abaixo qualificadas.
+
+{{CIDADE_ASSINATURA}}/{{ESTADO_ASSINATURA}}, {{DIA}} de {{MES_EXTENSO}} de {{ANO}}.
+
+CONTRATANTE - {{CONTRATANTE_NOME}}
+CPF nº {{CONTRATANTE_CPF}}
+
+CONTRATADO - {{VENDEDOR_NOME}}
+CRECI nº {{VENDEDOR_CRECI}} | CPF/CNPJ nº {{VENDEDOR_CPF}}
+
+TESTEMUNHAS:
+1. Nome: {{TESTEMUNHA_1_NOME}}
+CPF: {{TESTEMUNHA_1_CPF}}
+RG: {{TESTEMUNHA_1_RG}}
+
+2. Nome: {{TESTEMUNHA_2_NOME}}
+CPF: {{TESTEMUNHA_2_CPF}}
+RG: {{TESTEMUNHA_2_RG}}
+`.trim();
+
+// Template para Contrato de Exclusividade com Finalidade de Locação
+export const TEMPLATE_CONTRATO_EXCLUSIVIDADE_LOCACAO = `
+CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE INTERMEDIAÇÃO DE LOCAÇÃO COM CLÁUSULA DE EXCLUSIVIDADE
+
+DAS PARTES CONTRATANTES
+
+DADOS DO CONTRATANTE (PROPRIETÁRIO / LOCADOR):
+{{CONTRATANTE_NOME}}, {{CONTRATANTE_ESTADO_CIVIL}}, inscrito(a) no CPF/CNPJ sob o nº {{CONTRATANTE_CPF}}, portador(a) do RG nº {{CONTRATANTE_RG}}, residente e domiciliado(a) no endereço: {{CONTRATANTE_ENDERECO}}, doravante denominado(a) simplesmente CONTRATANTE.
+[Dados do Cônjuge: {{CONJUGE_NOME}}, inscrito(a) no CPF sob o nº {{CONJUGE_CPF}}, portador(a) do RG nº {{CONJUGE_RG}}]
+
+DADOS DO CONTRATADO (CORRETOR / INTERMEDIADOR):
+{{VENDEDOR_NOME}}, inscrito(a) no CPF/CNPJ sob o nº {{VENDEDOR_CPF}}, registrado(a) no CRECI sob o nº {{VENDEDOR_CRECI}}, estabelecido(a) no endereço: {{VENDEDOR_ENDERECO}}, telefone/contato: {{VENDEDOR_TELEFONE}}, doravante denominado(a) simplesmente CONTRATADO.
+
+Têm entre si, justo e acordado, o presente CONTRATO DE INTERMEDIAÇÃO DE LOCAÇÃO DE IMÓVEIS COM CLÁUSULA DE EXCLUSIVIDADE, mediante as cláusulas e condições seguintes:
+
+CLÁUSULA 1ª – DO OBJETO DO CONTRATO E DADOS DO IMÓVEL
+O presente contrato tem por objeto a prestação de serviços profissionais de intermediação, corretagem e promoção imobiliária em caráter de EXCLUSIVIDADE visando à LOCAÇÃO do imóvel caracterizado como {{TIPO_IMOVEL}}, situado em {{LOCALIZACAO_IMOVEL}}, de legítima propriedade do(a) CONTRATANTE, com a seguinte especificação documental e registral:
+- Documento de Propriedade: {{DOCUMENTO_PROPRIEDADE}};
+- Matrícula nº: {{MATRICULA}};
+- Inscrição Municipal/Prefeitura: {{INSCRICAO_PREFEITURA}};
+- Descrição e Características: {{OUTROS_DADOS_IMOVEL}}.
+
+CLÁUSULA 2ª – DO VALOR DO ALUGUEL PRETENDIDO E CONDIÇÕES LOCATÍCIAS
+O imóvel objeto deste instrumento será anunciado e disponibilizado no mercado para locação pelo valor mensal sugerido/pretendido de {{VALOR_LOCACAO_SUGERIDO}} ({{VALOR_LOCACAO_SUGERIDO_EXTENSO}}), sob as seguintes modalidades de garantia aceitas: {{GARANTIAS_ACEITAS_LOCACAO}}.
+Parágrafo Único: O(A) CONTRATANTE poderá aceitar propostas com valores ou condições distintas, desde que expressamente autorizadas por escrito e de comum acordo.
+
+CLÁUSULA 3ª – DO PRAZO E DA CLÁUSULA DE EXCLUSIVIDADE
+A presente autorização de intermediação locatícia é outorgada em caráter irrevogável de EXCLUSIVIDADE pelo prazo de {{PRAZO_EXCLUSIVIDADE_DIAS}} dias, iniciando-se na data de assinatura deste instrumento e com termo final fixado improrrogavelmente em {{DATA_TERMINO_EXCLUSIVIDADE}}.
+Parágrafo Primeiro: Durante a vigência da exclusividade, o(a) CONTRATANTE obriga-se a não conferir poderes de locação a terceiros e a não realizar negociação direta do bem sem a prévia e expressa intermediação do(a) CONTRATADO.
+Parágrafo Segundo: Nos termos do Artigo 726 do Código Civil Brasileiro, se a locação do imóvel for consumada durante o prazo de vigência da exclusividade, ainda que efetuada diretamente pelo proprietário ou por intermédio de outrem, a remuneração integral de corretagem estipulada na Cláusula 4ª será devida ao(à) CONTRATADO.
+
+CLÁUSULA 4ª – DA REMUNERAÇÃO E COMISSÃO DE CORRETAGEM DE LOCAÇÃO
+Pelos serviços de intermediação e prospecção de inquilino, o(a) CONTRATANTE pagará ao(à) CONTRATADO a comissão de corretagem correspondente a {{COMISSAO_LOCACAO}}, exigível no ato da assinatura do Contrato de Locação ou no primeiro recebimento de aluguel.
+Parágrafo Primeiro: Caso convencionada a administração contínua da locação, a taxa mensal de administração corresponderá a {{TAXA_ADMINISTRACAO_LOCACAO}}.
+Parágrafo Segundo: Em consonância com o Artigo 727 do Código Civil, se o contrato de locação for firmado após o término deste instrumento com inquilino apresentado, cadastrado ou negociado pelo(a) CONTRATADO durante a vigência da exclusividade, a remuneração de corretagem permanecerá integralmente devida.
+
+CLÁUSULA 5ª – DAS OBRIGAÇÕES, DIVULGAÇÃO E VISTORIA
+O(A) CONTRATADO compromete-se a conduzir os trabalhos com zelo, prudência e dedicação profissional, ficando expressamente autorizado(a) a:
+a) {{AUTORIZACAO_PROSPECCAO}};
+b) Afixar placas e faixas de divulgação no imóvel, bem como veicular anúncios em portais imobiliários e redes sociais;
+c) Acompanhar as visitas de proponentes interessados e analisar a documentação e idoneidade cadastral de locatários e fiadores;
+d) Realizar laudo minucioso de vistoria inicial do imóvel por ocasião da entrega das chaves ao inquilino.
+
+CLÁUSULA 6ª – DO FORO
+Para dirimir quaisquer controvérsias ou litígios decorrentes da interpretação ou execução deste contrato, as partes elegem expressamente o Foro da Comarca de {{FORO_COMARCA}}, com renúncia a qualquer outro por mais privilegiado que seja.
+
+E, por estarem assim justos e contratados, assinam o presente instrumento em vias de igual teor e forma, perante as testemunhas abaixo qualificadas.
+
+{{CIDADE_ASSINATURA}}/{{ESTADO_ASSINATURA}}, {{DIA}} de {{MES_EXTENSO}} de {{ANO}}.
+
+CONTRATANTE - {{CONTRATANTE_NOME}}
+CPF nº {{CONTRATANTE_CPF}}
+
+CONTRATADO - {{VENDEDOR_NOME}}
+CRECI nº {{VENDEDOR_CRECI}} | CPF/CNPJ nº {{VENDEDOR_CPF}}
+
+TESTEMUNHAS:
+1. Nome: {{TESTEMUNHA_1_NOME}}
+CPF: {{TESTEMUNHA_1_CPF}}
+RG: {{TESTEMUNHA_1_RG}}
+
+2. Nome: {{TESTEMUNHA_2_NOME}}
+CPF: {{TESTEMUNHA_2_CPF}}
+RG: {{TESTEMUNHA_2_RG}}
+`.trim();
+
+// Template para Contrato de Exclusividade com Finalidade Mista (Venda e Locação)
+export const TEMPLATE_CONTRATO_EXCLUSIVIDADE_AMBOS = `
+CONTRATO DE INTERMEDIAÇÃO DE VENDA E LOCAÇÃO DE IMÓVEIS COM CLÁUSULA DE EXCLUSIVIDADE
+
+DAS PARTES CONTRATANTES
+
+DADOS DO CONTRATANTE (PROPRIETÁRIO):
+{{CONTRATANTE_NOME}}, {{CONTRATANTE_ESTADO_CIVIL}}, inscrito(a) no CPF/CNPJ sob o nº {{CONTRATANTE_CPF}}, portador(a) do RG nº {{CONTRATANTE_RG}}, residente e domiciliado(a) no endereço: {{CONTRATANTE_ENDERECO}}, doravante denominado(a) simplesmente CONTRATANTE.
+[Dados do Cônjuge: {{CONJUGE_NOME}}, inscrito(a) no CPF sob o nº {{CONJUGE_CPF}}, portador(a) do RG nº {{CONJUGE_RG}}]
+
+DADOS DO CONTRATADO (CORRETOR / IMOBILIÁRIA):
+{{VENDEDOR_NOME}}, inscrito(a) no CPF/CNPJ sob o nº {{VENDEDOR_CPF}}, registrado(a) no CRECI sob o nº {{VENDEDOR_CRECI}}, estabelecido(a) no endereço: {{VENDEDOR_ENDERECO}}, telefone/contato: {{VENDEDOR_TELEFONE}}, doravante denominado(a) simplesmente CONTRATADO.
+
+Têm entre si, justo e acordado, o presente CONTRATO DE INTERMEDIAÇÃO DE VENDA E LOCAÇÃO DE IMÓVEIS COM CLÁUSULA DE EXCLUSIVIDADE, mediante as cláusulas e condições seguintes:
+
+CLÁUSULA 1ª – DO OBJETO DO CONTRATO E DADOS DO IMÓVEL
+O presente contrato tem por objeto a prestação de serviços de corretagem e intermediação imobiliária em caráter de EXCLUSIVIDADE para a promoção de VENDA e/ou LOCAÇÃO do imóvel caracterizado como {{TIPO_IMOVEL}}, situado em {{LOCALIZACAO_IMOVEL}}, de propriedade do(a) CONTRATANTE, com a seguinte especificação:
+- Documento de Propriedade: {{DOCUMENTO_PROPRIEDADE}};
+- Matrícula nº: {{MATRICULA}};
+- Inscrição Municipal/Prefeitura: {{INSCRICAO_PREFEITURA}};
+- Descrição e Características: {{OUTROS_DADOS_IMOVEL}}.
+
+CLÁUSULA 2ª – DOS VALORES E CONDIÇÕES DE VENDA E LOCAÇÃO
+a) Para Venda: O imóvel será promovido pelo valor total de {{VALOR_TOTAL}} ({{VALOR_TOTAL_EXTENSO}}), sob as seguintes condições de pagamento: {{CONDICOES_PAGAMENTO}}.
+b) Para Locação: O imóvel será ofertado pelo valor mensal sugerido de {{VALOR_LOCACAO_SUGERIDO}} ({{VALOR_LOCACAO_SUGERIDO_EXTENSO}}), sob as seguintes garantias aceitas: {{GARANTIAS_ACEITAS_LOCACAO}}.
+
+CLÁUSULA 3ª – DO PRAZO E DA CLÁUSULA DE EXCLUSIVIDADE
+A presente autorização de intermediação é concedida com CLÁUSULA DE EXCLUSIVIDADE pelo prazo de {{PRAZO_EXCLUSIVIDADE_DIAS}} dias, iniciando-se na data de assinatura deste instrumento e encerrando-se em {{DATA_TERMINO_EXCLUSIVIDADE}}.
+Parágrafo Primeiro: Durante a vigência deste contrato, o(a) CONTRATANTE não poderá autorizar terceiros nem negociar diretamente o imóvel para venda ou locação sem a interveniência do(a) CONTRATADO.
+Parágrafo Segundo: Consoante o Artigo 726 do Código Civil, consumada a venda ou locação durante o prazo de vigência deste instrumento, os honorários correspondentes serão devidos ao(à) CONTRATADO.
+
+CLÁUSULA 4ª – DA REMUNERAÇÃO E COMISSÃO DE CORRETAGEM
+a) Em caso de Venda: A comissão corresponderá a {{PERCENTUAL_CORRETAGEM}} ({{PERCENTUAL_CORRETAGEM_EXTENSO}}) sobre o valor total da venda;
+b) Em caso de Locação: A comissão corresponderá a {{COMISSAO_LOCACAO}}, acrescida de taxa de administração de {{TAXA_ADMINISTRACAO_LOCACAO}} caso contratada a gestão do aluguel.
+Parágrafo Único: Aplica-se o Artigo 727 do Código Civil caso o negócio se concretize após o término deste contrato com cliente prospectado durante sua vigência.
+
+CLÁUSULA 5ª – DAS OBRIGAÇÕES E DIVULGAÇÃO
+O(A) CONTRATADO fica autorizado(a) a veicular publicidade em portais, redes sociais, afixar placas no imóvel e realizar visitas com interessados, prestando contas de todas as atividades ao(à) CONTRATANTE.
+
+CLÁUSULA 6ª – DO FORO
+Fica eleito o Foro da Comarca de {{FORO_COMARCA}} para dirimir qualquer dúvida ou litígio decorrente deste instrumento.
 
 {{CIDADE_ASSINATURA}}/{{ESTADO_ASSINATURA}}, {{DIA}} de {{MES_EXTENSO}} de {{ANO}}.
 
@@ -1393,17 +1521,35 @@ Têm entre si, justo e acertado, o presente CONTRATO DE LOCAÇÃO DE IMÓVEL, so
 
   // Exclusividade
   const exclTags = getContractExclusividadeTags(contract);
-  const textoRenderizado = replaceContractTags(TEMPLATE_CONTRATO_EXCLUSIVIDADE, exclTags as unknown as Record<string, string | undefined>);
-
   const isLocacaoExcl = contract.exclusividade?.tipoExclusividade === 'Locação de Imóvel' || contract.exclusividade?.finalidade === 'locacao';
   const isVendaELocacao = contract.exclusividade?.tipoExclusividade === 'Venda e Locação' || contract.exclusividade?.finalidade === 'ambos';
 
+  let templateExcl = TEMPLATE_CONTRATO_EXCLUSIVIDADE;
+  if (isLocacaoExcl) {
+    templateExcl = TEMPLATE_CONTRATO_EXCLUSIVIDADE_LOCACAO;
+  } else if (isVendaELocacao) {
+    templateExcl = TEMPLATE_CONTRATO_EXCLUSIVIDADE_AMBOS;
+  }
+  const textoRenderizado = replaceContractTags(templateExcl, exclTags as unknown as Record<string, string | undefined>);
+
   const titulo = isLocacaoExcl
-    ? 'CONTRATO DE INTERMEDIAÇÃO E ADMINISTRAÇÃO DE LOCAÇÃO COM CLÁUSULA DE EXCLUSIVIDADE'
+    ? 'CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE INTERMEDIAÇÃO DE LOCAÇÃO COM CLÁUSULA DE EXCLUSIVIDADE'
     : (isVendaELocacao
-        ? 'CONTRATO DE CORRETAGEM DE VENDA E LOCAÇÃO DE IMÓVEIS COM CLÁUSULA DE EXCLUSIVIDADE'
+        ? 'CONTRATO DE INTERMEDIAÇÃO DE VENDA E LOCAÇÃO DE IMÓVEIS COM CLÁUSULA DE EXCLUSIVIDADE'
         : 'CONTRATO DE CORRETAGEM DE VENDA DE BENS IMÓVEIS COM CLÁUSULA DE EXCLUSIVIDADE');
-  const preambulo = `
+
+  const preambulo = isLocacaoExcl
+    ? `
+DAS PARTES CONTRATANTES
+
+DADOS DO CONTRATANTE (PROPRIETÁRIO / LOCADOR):
+${exclTags.CONTRATANTE_NOME}, ${exclTags.CONTRATANTE_ESTADO_CIVIL}, inscrito(a) no CPF/CNPJ sob o nº ${exclTags.CONTRATANTE_CPF}, portador(a) do RG nº ${exclTags.CONTRATANTE_RG}, residente e domiciliado(a) no endereço: ${exclTags.CONTRATANTE_ENDERECO}, doravante denominado(a) simplesmente CONTRATANTE.
+[Dados do Cônjuge: ${exclTags.CONJUGE_NOME}, CPF nº ${exclTags.CONJUGE_CPF}, RG nº ${exclTags.CONJUGE_RG}]
+
+DADOS DO CONTRATADO (CORRETOR / INTERMEDIADOR):
+${exclTags.VENDEDOR_NOME}, inscrito(a) no CPF/CNPJ sob o nº ${exclTags.VENDEDOR_CPF}, registrado(a) no CRECI sob o nº ${exclTags.VENDEDOR_CRECI}, estabelecido(a) no endereço: ${exclTags.VENDEDOR_ENDERECO}, telefone/contato: ${exclTags.VENDEDOR_TELEFONE}, doravante denominado(a) simplesmente CONTRATADO.
+    `.trim()
+    : `
 DAS PARTES CONTRATANTES
 
 DADOS DO CONTRATANTE:
@@ -1412,49 +1558,141 @@ ${exclTags.CONTRATANTE_NOME}, ${exclTags.CONTRATANTE_ESTADO_CIVIL}, inscrito(a) 
 
 DADOS DO CONTRATADO:
 ${exclTags.VENDEDOR_NOME}, inscrito(a) no CPF/CNPJ sob o nº ${exclTags.VENDEDOR_CPF}, registrado(a) no CRECI sob o nº ${exclTags.VENDEDOR_CRECI}, estabelecido(a) no endereço: ${exclTags.VENDEDOR_ENDERECO}, telefone/contato: ${exclTags.VENDEDOR_TELEFONE}, doravante denominado(a) simplesmente CONTRATADO.
-  `.trim();
+    `.trim();
 
-  const clausulas = [
-    {
-      numero: 'CLÁUSULA 1ª',
-      titulo: 'DO OBJETO DO CONTRATO E DADOS DO IMÓVEL',
-      conteudo: `O presente contrato tem por objeto a prestação de serviços de intermediação e corretagem imobiliária com cláusula de exclusividade para a promoção e venda do bem imóvel caracterizado como ${exclTags.TIPO_IMOVEL}, situado em ${exclTags.LOCALIZACAO_IMOVEL}, de propriedade do(a) CONTRATANTE, com a seguinte especificação documental e registral:\n` +
-        `• Documento de Propriedade: ${exclTags.DOCUMENTO_PROPRIEDADE};\n` +
-        `• Matrícula nº: ${exclTags.MATRICULA};\n` +
-        `• Inscrição Municipal/Prefeitura: ${exclTags.INSCRICAO_PREFEITURA};\n` +
-        `• Descrição e Confrontações: ${exclTags.OUTROS_DADOS_IMOVEL}.`
-    },
-    {
-      numero: 'CLÁUSULA 2ª',
-      titulo: 'DO VALOR E CONDIÇÕES DE VENDA',
-      conteudo: `O imóvel objeto deste instrumento será promovido e disponibilizado no mercado imobiliário para venda pelo valor total de ${exclTags.VALOR_TOTAL} (${exclTags.VALOR_TOTAL_EXTENSO}), sob as seguintes condições de pagamento: ${exclTags.CONDICOES_PAGAMENTO}.\n` +
-        `Parágrafo Único: O(A) CONTRATANTE poderá aceitar propostas com condições ou valores distintos, desde que expressamente autorizados por escrito e de comum acordo.`
-    },
-    {
-      numero: 'CLÁUSULA 3ª',
-      titulo: 'DO PRAZO E DA CLÁUSULA DE EXCLUSIVIDADE',
-      conteudo: `A presente autorização de corretagem é outorgada em caráter irrevogável de EXCLUSIVIDADE pelo prazo de ${exclTags.PRAZO_EXCLUSIVIDADE_DIAS} dias, iniciando-se na data de assinatura deste instrumento e com termo final fixado improrrogavelmente em ${exclTags.DATA_TERMINO_EXCLUSIVIDADE}.\n` +
-        `Parágrafo Primeiro: Durante a vigência da exclusividade, o(a) CONTRATANTE obriga-se a não outorgar poderes de venda a terceiros e a não realizar negociação direta do bem sem a prévia e expressa intermediação do(a) CONTRATADO.\n` +
-        `Parágrafo Segundo: Nos termos do Artigo 726 do Código Civil Brasileiro, se a venda do imóvel for consumada durante o prazo de exclusividade, ainda que realizada diretamente pelo proprietário ou por intermédio de outrem, a remuneração integral de corretagem estipulada na Cláusula 4ª será devida ao(à) CONTRATADO.`
-    },
-    {
-      numero: 'CLÁUSULA 4ª',
-      titulo: 'DA REMUNERAÇÃO E COMISSÃO DE CORRETAGEM',
-      conteudo: `Pelos serviços de intermediação e assessoria na venda, o(a) CONTRATANTE pagará ao(à) CONTRATADO a comissão de corretagem correspondente a ${exclTags.PERCENTUAL_CORRETAGEM} (${exclTags.PERCENTUAL_CORRETAGEM_EXTENSO}) calculada sobre o valor total da venda concretizada.\n` +
-        `Parágrafo Primeiro: Os honorários de corretagem serão exigíveis no ato do recebimento do sinal/princípio de pagamento ou na celebração do instrumento de compra e venda ou lavratura da escritura definitiva.\n` +
-        `Parágrafo Segundo: Em consonância com o Artigo 727 do Código Civil, se o negócio for concluído após o término deste contrato com comprador atraído, apresentado ou negociado pelo(a) CONTRATADO durante a vigência da exclusividade, a remuneração de corretagem permanecerá integralmente devida.`
-    },
-    {
-      numero: 'CLÁUSULA 5ª',
-      titulo: 'DAS OBRIGAÇÕES E DIVULGAÇÃO',
-      conteudo: `O(A) CONTRATADO compromete-se a conduzir os trabalhos com probidade, prudência e dedicação, ficando autorizado(a) a afixar placas no imóvel, veicular anúncios em portais imobiliários, redes sociais e mídias do setor, bem como prestar contas de todas as tratativas ao(à) CONTRATANTE.`
-    },
-    {
-      numero: 'CLÁUSULA 6ª',
-      titulo: 'DO FORO',
-      conteudo: `Para dirimir quaisquer dúvidas ou litígios decorrentes da aplicação deste contrato, as partes elegem expressamente o Foro da Comarca de ${exclTags.FORO_COMARCA}, com renúncia irrevogável a qualquer outro por mais privilegiado que seja.`
-    }
-  ];
+  let clausulas: Array<{ numero: string; titulo: string; conteudo: string }> = [];
+
+  if (isLocacaoExcl) {
+    clausulas = [
+      {
+        numero: 'CLÁUSULA 1ª',
+        titulo: 'DO OBJETO DO CONTRATO E DADOS DO IMÓVEL',
+        conteudo: `O presente contrato tem por objeto a prestação de serviços profissionais de intermediação, corretagem e promoção imobiliária em caráter de EXCLUSIVIDADE visando à LOCAÇÃO do imóvel caracterizado como ${exclTags.TIPO_IMOVEL}, situado em ${exclTags.LOCALIZACAO_IMOVEL}, de legítima propriedade do(a) CONTRATANTE, com a seguinte especificação documental e registral:\n` +
+          `• Documento de Propriedade: ${exclTags.DOCUMENTO_PROPRIEDADE};\n` +
+          `• Matrícula nº: ${exclTags.MATRICULA};\n` +
+          `• Inscrição Municipal/Prefeitura: ${exclTags.INSCRICAO_PREFEITURA};\n` +
+          `• Descrição e Características: ${exclTags.OUTROS_DADOS_IMOVEL}.`
+      },
+      {
+        numero: 'CLÁUSULA 2ª',
+        titulo: 'DO VALOR DO ALUGUEL PRETENDIDO E CONDIÇÕES LOCATÍCIAS',
+        conteudo: `O imóvel objeto deste instrumento será anunciado e disponibilizado no mercado para locação pelo valor mensal sugerido/pretendido de ${exclTags.VALOR_LOCACAO_SUGERIDO} (${exclTags.VALOR_LOCACAO_SUGERIDO_EXTENSO}), sob as seguintes modalidades de garantia aceitas: ${exclTags.GARANTIAS_ACEITAS_LOCACAO}.\n` +
+          `Parágrafo Único: O(A) CONTRATANTE poderá aceitar propostas com valores ou condições distintas, desde que expressamente autorizadas por escrito e de comum acordo.`
+      },
+      {
+        numero: 'CLÁUSULA 3ª',
+        titulo: 'DO PRAZO E DA CLÁUSULA DE EXCLUSIVIDADE',
+        conteudo: `A presente autorização de intermediação locatícia é outorgada em caráter irrevogável de EXCLUSIVIDADE pelo prazo de ${exclTags.PRAZO_EXCLUSIVIDADE_DIAS} dias, iniciando-se na data de assinatura deste instrumento e com termo final fixado improrrogavelmente em ${exclTags.DATA_TERMINO_EXCLUSIVIDADE}.\n` +
+          `Parágrafo Primeiro: Durante a vigência da exclusividade, o(a) CONTRATANTE obriga-se a não conferir poderes de locação a terceiros e a não realizar negociação direta do bem sem a prévia e expressa intermediação do(a) CONTRATADO.\n` +
+          `Parágrafo Segundo: Nos termos do Artigo 726 do Código Civil Brasileiro, se a locação do imóvel for consumada durante o prazo de vigência da exclusividade, ainda que efetuada diretamente pelo proprietário ou por intermédio de outrem, a remuneração integral de corretagem estipulada na Cláusula 4ª será devida ao(à) CONTRATADO.`
+      },
+      {
+        numero: 'CLÁUSULA 4ª',
+        titulo: 'DA REMUNERAÇÃO E COMISSÃO DE CORRETAGEM DE LOCAÇÃO',
+        conteudo: `Pelos serviços de intermediação e prospecção de inquilino, o(a) CONTRATANTE pagará ao(à) CONTRATADO a comissão de corretagem correspondente a ${exclTags.COMISSAO_LOCACAO}, exigível no ato da assinatura do Contrato de Locação ou no primeiro recebimento de aluguel.\n` +
+          `Parágrafo Primeiro: Caso convencionada a administração contínua da locação, a taxa mensal de administração corresponderá a ${exclTags.TAXA_ADMINISTRACAO_LOCACAO}.\n` +
+          `Parágrafo Segundo: Em consonância com o Artigo 727 do Código Civil, se o contrato de locação for firmado após o término deste instrumento com inquilino apresentado, cadastrado ou negociado pelo(a) CONTRATADO durante a vigência da exclusividade, a remuneração de corretagem permanecerá integralmente devida.`
+      },
+      {
+        numero: 'CLÁUSULA 5ª',
+        titulo: 'DAS OBRIGAÇÕES, DIVULGAÇÃO E VISTORIA',
+        conteudo: `O(A) CONTRATADO compromete-se a conduzir os trabalhos com zelo, prudência e dedicação profissional, ficando expressamente autorizado(a) a:\n` +
+          `a) ${exclTags.AUTORIZACAO_PROSPECCAO};\n` +
+          `b) Afixar placas e faixas de divulgação no imóvel, bem como veicular anúncios em portais imobiliários e redes sociais;\n` +
+          `c) Acompanhar as visitas de proponentes interessados e analisar a documentação e idoneidade cadastral de locatários e fiadores;\n` +
+          `d) Realizar laudo minucioso de vistoria inicial do imóvel por ocasião da entrega das chaves ao inquilino.`
+      },
+      {
+        numero: 'CLÁUSULA 6ª',
+        titulo: 'DO FORO',
+        conteudo: `Para dirimir quaisquer controvérsias ou litígios decorrentes da interpretação ou execução deste contrato, as partes elegem expressamente o Foro da Comarca de ${exclTags.FORO_COMARCA}, com renúncia a qualquer outro por mais privilegiado que seja.`
+      }
+    ];
+  } else if (isVendaELocacao) {
+    clausulas = [
+      {
+        numero: 'CLÁUSULA 1ª',
+        titulo: 'DO OBJETO DO CONTRATO E DADOS DO IMÓVEL',
+        conteudo: `O presente contrato tem por objeto a prestação de serviços de corretagem e intermediação imobiliária em caráter de EXCLUSIVIDADE para a promoção de VENDA e/ou LOCAÇÃO do imóvel caracterizado como ${exclTags.TIPO_IMOVEL}, situado em ${exclTags.LOCALIZACAO_IMOVEL}, de propriedade do(a) CONTRATANTE, com a seguinte especificação:\n` +
+          `• Documento de Propriedade: ${exclTags.DOCUMENTO_PROPRIEDADE};\n` +
+          `• Matrícula nº: ${exclTags.MATRICULA};\n` +
+          `• Inscrição Municipal/Prefeitura: ${exclTags.INSCRICAO_PREFEITURA};\n` +
+          `• Descrição e Características: ${exclTags.OUTROS_DADOS_IMOVEL}.`
+      },
+      {
+        numero: 'CLÁUSULA 2ª',
+        titulo: 'DOS VALORES E CONDIÇÕES DE VENDA E LOCAÇÃO',
+        conteudo: `a) Para Venda: O imóvel será promovido pelo valor total de ${exclTags.VALOR_TOTAL} (${exclTags.VALOR_TOTAL_EXTENSO}), sob as seguintes condições de pagamento: ${exclTags.CONDICOES_PAGAMENTO}.\n` +
+          `b) Para Locação: O imóvel será ofertado pelo valor mensal sugerido de ${exclTags.VALOR_LOCACAO_SUGERIDO} (${exclTags.VALOR_LOCACAO_SUGERIDO_EXTENSO}), sob as seguintes garantias aceitas: ${exclTags.GARANTIAS_ACEITAS_LOCACAO}.`
+      },
+      {
+        numero: 'CLÁUSULA 3ª',
+        titulo: 'DO PRAZO E DA CLÁUSULA DE EXCLUSIVIDADE',
+        conteudo: `A presente autorização de intermediação é concedida com CLÁUSULA DE EXCLUSIVIDADE pelo prazo de ${exclTags.PRAZO_EXCLUSIVIDADE_DIAS} dias, iniciando-se na data de assinatura deste instrumento e encerrando-se em ${exclTags.DATA_TERMINO_EXCLUSIVIDADE}.\n` +
+          `Parágrafo Primeiro: Durante a vigência deste contrato, o(a) CONTRATANTE não poderá autorizar terceiros nem negociar diretamente o imóvel para venda ou locação sem a interveniência do(a) CONTRATADO.\n` +
+          `Parágrafo Segundo: Consoante o Artigo 726 do Código Civil, consumada a venda ou locação durante o prazo de vigência deste instrumento, os honorários correspondentes serão devidos ao(à) CONTRATADO.`
+      },
+      {
+        numero: 'CLÁUSULA 4ª',
+        titulo: 'DA REMUNERAÇÃO E COMISSÃO DE CORRETAGEM',
+        conteudo: `a) Em caso de Venda: A comissão corresponderá a ${exclTags.PERCENTUAL_CORRETAGEM} (${exclTags.PERCENTUAL_CORRETAGEM_EXTENSO}) sobre o valor total da venda;\n` +
+          `b) Em caso de Locação: A comissão corresponderá a ${exclTags.COMISSAO_LOCACAO}, acrescida de taxa de administração de ${exclTags.TAXA_ADMINISTRACAO_LOCACAO} caso contratada a gestão do aluguel.\n` +
+          `Parágrafo Único: Aplica-se o Artigo 727 do Código Civil caso o negócio se concretize após o término deste contrato com cliente prospectado durante sua vigência.`
+      },
+      {
+        numero: 'CLÁUSULA 5ª',
+        titulo: 'DAS OBRIGAÇÕES E DIVULGAÇÃO',
+        conteudo: `O(A) CONTRATADO fica autorizado(a) a veicular publicidade em portais, redes sociais, afixar placas no imóvel e realizar visitas com interessados, prestando contas de todas as atividades ao(à) CONTRATANTE.`
+      },
+      {
+        numero: 'CLÁUSULA 6ª',
+        titulo: 'DO FORO',
+        conteudo: `Fica eleito o Foro da Comarca de ${exclTags.FORO_COMARCA} para dirimir qualquer dúvida ou litígio decorrente deste instrumento.`
+      }
+    ];
+  } else {
+    clausulas = [
+      {
+        numero: 'CLÁUSULA 1ª',
+        titulo: 'DO OBJETO DO CONTRATO E DADOS DO IMÓVEL',
+        conteudo: `O presente contrato tem por objeto a prestação de serviços de intermediação e corretagem imobiliária com cláusula de exclusividade para a promoção e venda do bem imóvel caracterizado como ${exclTags.TIPO_IMOVEL}, situado em ${exclTags.LOCALIZACAO_IMOVEL}, de propriedade do(a) CONTRATANTE, com a seguinte especificação documental e registral:\n` +
+          `• Documento de Propriedade: ${exclTags.DOCUMENTO_PROPRIEDADE};\n` +
+          `• Matrícula nº: ${exclTags.MATRICULA};\n` +
+          `• Inscrição Municipal/Prefeitura: ${exclTags.INSCRICAO_PREFEITURA};\n` +
+          `• Descrição e Confrontações: ${exclTags.OUTROS_DADOS_IMOVEL}.`
+      },
+      {
+        numero: 'CLÁUSULA 2ª',
+        titulo: 'DO VALOR E CONDIÇÕES DE VENDA',
+        conteudo: `O imóvel objeto deste instrumento será promovido e disponibilizado no mercado imobiliário para venda pelo valor total de ${exclTags.VALOR_TOTAL} (${exclTags.VALOR_TOTAL_EXTENSO}), sob as seguintes condições de pagamento: ${exclTags.CONDICOES_PAGAMENTO}.\n` +
+          `Parágrafo Único: O(A) CONTRATANTE poderá aceitar propostas com condições ou valores distintos, desde que expressamente autorizados por escrito e de comum acordo.`
+      },
+      {
+        numero: 'CLÁUSULA 3ª',
+        titulo: 'DO PRAZO E DA CLÁUSULA DE EXCLUSIVIDADE',
+        conteudo: `A presente autorização de corretagem é outorgada em caráter irrevogável de EXCLUSIVIDADE pelo prazo de ${exclTags.PRAZO_EXCLUSIVIDADE_DIAS} dias, iniciando-se na data de assinatura deste instrumento e com termo final fixado improrrogavelmente em ${exclTags.DATA_TERMINO_EXCLUSIVIDADE}.\n` +
+          `Parágrafo Primeiro: Durante a vigência da exclusividade, o(a) CONTRATANTE obriga-se a não outorgar poderes de venda a terceiros e a não realizar negociação direta do bem sem a prévia e expressa intermediação do(a) CONTRATADO.\n` +
+          `Parágrafo Segundo: Nos termos do Artigo 726 do Código Civil Brasileiro, se a venda do imóvel for consumada durante o prazo de exclusividade, ainda que realizada diretamente pelo proprietário ou por intermédio de outrem, a remuneração integral de corretagem estipulada na Cláusula 4ª será devida ao(à) CONTRATADO.`
+      },
+      {
+        numero: 'CLÁUSULA 4ª',
+        titulo: 'DA REMUNERAÇÃO E COMISSÃO DE CORRETAGEM',
+        conteudo: `Pelos serviços de intermediação e assessoria na venda, o(a) CONTRATANTE pagará ao(à) CONTRATADO a comissão de corretagem correspondente a ${exclTags.PERCENTUAL_CORRETAGEM} (${exclTags.PERCENTUAL_CORRETAGEM_EXTENSO}) calculada sobre o valor total da venda concretizada.\n` +
+          `Parágrafo Primeiro: Os honorários de corretagem serão exigíveis no ato do recebimento do sinal/princípio de pagamento ou na celebração do instrumento de compra e venda ou lavratura da escritura definitiva.\n` +
+          `Parágrafo Segundo: Em consonância com o Artigo 727 do Código Civil, se o negócio for concluído após o término deste contrato com comprador atraído, apresentado ou negociado pelo(a) CONTRATADO durante a vigência da exclusividade, a remuneração de corretagem permanecerá integralmente devida.`
+      },
+      {
+        numero: 'CLÁUSULA 5ª',
+        titulo: 'DAS OBRIGAÇÕES E DIVULGAÇÃO',
+        conteudo: `O(A) CONTRATADO compromete-se a conduzir os trabalhos com probidade, prudência e dedicação, ficando autorizado(a) a afixar placas no imóvel, veicular anúncios em portais imobiliários, redes sociais e mídias do setor, bem como prestar contas de todas as tratativas ao(à) CONTRATANTE.`
+      },
+      {
+        numero: 'CLÁUSULA 6ª',
+        titulo: 'DO FORO',
+        conteudo: `Para dirimir quaisquer dúvidas ou litígios decorrentes da aplicação deste contrato, as partes elegem expressamente o Foro da Comarca de ${exclTags.FORO_COMARCA}, com renúncia irrevogável a qualquer outro por mais privilegiado que seja.`
+      }
+    ];
+  }
 
   if (contract.clausulasExtras?.trim()) {
     clausulas.push({

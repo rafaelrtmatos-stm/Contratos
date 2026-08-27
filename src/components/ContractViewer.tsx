@@ -461,32 +461,48 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
   };
 
   const isExcl = contract.tipo === 'exclusividade';
+  const isLoc = contract.tipo === 'locacao';
   const allCompradores = getAllCompradores(contract);
   const anyTags = tags as unknown as Record<string, string>;
 
-  // ATENÇÃO: em exclusividade os papéis são invertidos em relação ao resto
-  // do sistema - vendedor = Contratante/proprietário (o CLIENTE), comprador =
-  // Contratado (o CORRETOR, você). As variáveis abaixo já resolvem isso: uma
-  // representa sempre "você/corretor" e a outra sempre "o cliente",
-  // independente do tipo de contrato - antes disso, os dois cartões do
-  // Status das Assinaturas pegavam sempre os dados de "vendedor" pro card
-  // "(Você/Corretor)" e "comprador" pro card "(Cliente)", o que em
-  // exclusividade mostrava o nome do proprietário rotulado como você/corretor
-  // e o seu próprio nome rotulado como cliente - exatamente invertido.
-  const corretorTermo = isExcl ? 'CONTRATADO(A)' : (anyTags.vendedor_termo || 'PROMITENTE VENDEDOR(A)');
+  // Papéis contratuais específicos por tipo:
+  // - Venda: Vendedor (Você/Vendedor) e Comprador (Cliente)
+  // - Exclusividade: Contratado (Você/Corretor) e Contratante (Cliente)
+  // - Locação: Locador (Você/Locador/Proprietário) e Locatário (Cliente/Inquilino)
+  const corretorTermo = isExcl
+    ? 'CONTRATADO(A)'
+    : isLoc
+    ? 'LOCADOR(A)'
+    : (anyTags.vendedor_termo || 'PROMITENTE VENDEDOR(A)');
+
   const corretorNome = isExcl
     ? (anyTags.VENDEDOR_NOME || anyTags.comprador_nome || anyTags.comprador || 'CONTRATADO(A)')
+    : isLoc
+    ? (anyTags.locador || anyTags.vendedor_nome || anyTags.vendedor || 'LOCADOR(A)')
     : (anyTags.vendedor_nome || anyTags.vendedor || 'PROMITENTE VENDEDOR(A)');
+
   const corretorDoc = isExcl
     ? (anyTags.VENDEDOR_CRECI ? `CRECI nº ${anyTags.VENDEDOR_CRECI} | CPF/CNPJ: ${anyTags.VENDEDOR_CPF || ''}` : (anyTags.VENDEDOR_CPF || ''))
+    : isLoc
+    ? (anyTags.cpf_locador || anyTags.vendedor_cpf_cnpj || anyTags.cpf_vendedor || '')
     : (anyTags.vendedor_cpf_cnpj || anyTags.cpf_vendedor || '');
 
-  const clienteTermo = isExcl ? 'CONTRATANTE' : (anyTags.comprador_termo || 'PROMITENTE COMPRADOR(A)');
+  const clienteTermo = isExcl
+    ? 'CONTRATANTE'
+    : isLoc
+    ? 'LOCATÁRIO(A)'
+    : (anyTags.comprador_termo || 'PROMITENTE COMPRADOR(A)');
+
   const clienteNome = isExcl
     ? (anyTags.CONTRATANTE_NOME || anyTags.vendedor_nome || anyTags.vendedor || 'CONTRATANTE')
+    : isLoc
+    ? (anyTags.locatario || anyTags.comprador_nome || anyTags.comprador || 'LOCATÁRIO(A)')
     : (anyTags.comprador_nome || anyTags.comprador || 'PROMITENTE COMPRADOR(A)');
+
   const clienteDoc = isExcl
     ? (anyTags.CONTRATANTE_CPF || anyTags.vendedor_cpf_cnpj || anyTags.cpf_vendedor || '')
+    : isLoc
+    ? (anyTags.cpf_locatario || anyTags.comprador_cpf || anyTags.cpf_comprador || '')
     : (anyTags.comprador_cpf || anyTags.cpf_comprador || '');
 
   const isDigital = currentModality === 'digital';
@@ -725,12 +741,18 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                       Em Papel
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">
+                    <p className="text-xs text-slate-600 leading-relaxed">
                     {hasAnyDigitalSignature
                       ? 'Modalidade mista: mantém a assinatura eletrônica já feita e gera o documento para a outra parte assinar a próprio punho.'
                       : 'Gera o documento formatado para impressão e coleta manual de assinaturas a próprio punho.'}
                     <strong className="text-slate-800 block mt-1">
-                      {hasAnyDigitalSignature ? 'Inclui a parte pendente + 2 Testemunhas.' : 'Inclui Contratado, Contratante e 2 Testemunhas.'}
+                      {hasAnyDigitalSignature
+                        ? 'Inclui a parte pendente + 2 Testemunhas.'
+                        : isLoc
+                        ? 'Inclui Locador, Locatário e 2 Testemunhas.'
+                        : isExcl
+                        ? 'Inclui Contratado, Contratante e 2 Testemunhas.'
+                        : 'Inclui Vendedor, Comprador e 2 Testemunhas.'}
                     </strong>
                   </p>
                 </div>
@@ -752,7 +774,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Card 1: Corretor / Contratado */}
+              {/* Card 1: Corretor / Locador / Contratado */}
               <div
                 className={`p-3.5 rounded-xl border transition-all ${
                   sigVendedor
@@ -763,7 +785,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                      {corretorTermo} (Você / Corretor)
+                      {corretorTermo} ({isLoc ? 'Locador' : isExcl ? 'Você / Corretor' : 'Vendedor'})
                     </span>
                     <p className="text-sm font-bold text-slate-900 leading-tight">
                       {corretorNome}
@@ -801,13 +823,13 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                       className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
                     >
                       <ShieldCheck className="w-4 h-4 text-slate-950" />
-                      <span>Assinar como Corretor</span>
+                      <span>{isLoc ? 'Assinar como Locador' : isExcl ? 'Assinar como Corretor' : 'Assinar como Vendedor'}</span>
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* Card 2: Cliente / Contratante */}
+              {/* Card 2: Cliente / Locatário / Contratante */}
               <div
                 className={`p-3.5 rounded-xl border transition-all ${
                   clienteJaAssinou
@@ -818,7 +840,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                      {clienteTermo} (Cliente)
+                      {clienteTermo} ({isLoc ? 'Locatário / Inquilino' : 'Cliente'})
                     </span>
                     <p className="text-sm font-bold text-slate-900 leading-tight">
                       {clienteNome}
@@ -840,7 +862,7 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                 <div className="mt-3 pt-2.5 border-t border-slate-200/70 flex items-center justify-between gap-2">
                   {clienteJaAssinou ? (
                     <div className="text-[11px] text-emerald-800 leading-tight">
-                      <span>Assinado pelo cliente</span>
+                      <span>Assinado pelo {isLoc ? 'locatário' : isExcl ? 'contratante' : 'comprador'}</span>
                       {contract.assinaturas?.find(a => a.role === roleClienteAtual)?.codigoConfirmacao && (
                         <span className="block text-[10px] text-emerald-700 font-mono font-bold">
                           Cód: {contract.assinaturas.find(a => a.role === roleClienteAtual)?.codigoConfirmacao}
@@ -853,11 +875,11 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
                       className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 btn-gold text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
                     >
                       <LinkIcon className="w-4 h-4 text-slate-950" />
-                      <span>Gerar Link para o Cliente</span>
+                      <span>{isLoc ? 'Gerar Link para o Locatário' : 'Gerar Link para o Cliente'}</span>
                     </button>
                   ) : (
                     <span className="text-[11px] text-slate-500 italic py-1">
-                      Assine primeiro para liberar o link do cliente
+                      Assine primeiro para liberar o link do {isLoc ? 'locatário' : 'cliente'}
                     </span>
                   )}
                 </div>
@@ -874,11 +896,11 @@ export const ContractViewer: React.FC<ContractViewerProps> = ({
               {isFullySigned
                 ? 'Contrato concluído! Todas as assinaturas foram validadas e embutidas com QR Code.'
                 : vendedorJaAssinouAguardandoCliente
-                ? 'Sua assinatura foi registrada. Envie o link para o cliente assinar online.'
+                ? `Sua assinatura foi registrada. Envie o link para o ${isLoc ? 'locatário' : 'cliente'} assinar online.`
                 : clienteJaAssinou
-                ? 'O cliente já assinou. Clique em "Assinar como Corretor" para concluir.'
+                ? `O ${isLoc ? 'locatário' : 'cliente'} já assinou. Clique em "Assinar como ${isLoc ? 'Locador' : isExcl ? 'Corretor' : 'Vendedor'}" para concluir.`
                 : isDigital
-                ? 'Inicie assinando o contrato como corretor para gerar o link de envio ao cliente.'
+                ? `Inicie assinando o contrato como ${isLoc ? 'locador' : isExcl ? 'corretor' : 'vendedor'} para gerar o link de envio.`
                 : 'Baixe o PDF abaixo para imprimir e coletar as assinaturas a próprio punho com 2 testemunhas.'}
             </span>
           </div>
