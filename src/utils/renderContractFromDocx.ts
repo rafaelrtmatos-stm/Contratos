@@ -13,6 +13,7 @@ import {
 } from './signatureTagProcessor';
 import { appendAuditManifestPage } from './auditManifestPage';
 import { generateContractPdfBlob } from './contractGenerators';
+import { processarBlocoTestemunhas } from './witnessBlockProcessor';
 
 /**
  * Fonte única de verdade para qualquer exibição do contrato fora do
@@ -139,6 +140,16 @@ export async function buildFilledDocx(contract: ContractData): Promise<ArrayBuff
   }
 
   let docxBuffer = await blob.arrayBuffer();
+
+  // 0) Processar bloco de testemunhas ANTES de tudo: se o template mestre tiver
+  // {{BLOCO_TESTEMUNHAS_INICIO}}...{{BLOCO_TESTEMUNHAS_FIM}}, mantém ou remove
+  // esse trecho conforme estadoAssinatura.testemunhaprecisa (já calculado acima
+  // a partir da modalidade real de cada parte). Precisa rodar antes da
+  // substituição de tags porque os próprios marcadores são tags {{...}} - se
+  // rodasse depois, a limpeza de tags desconhecidas já teria apagado só os
+  // marcadores e deixado o conteúdo do bloco sempre visível.
+  // Templates antigos sem esses marcadores não são afetados (função é no-op).
+  docxBuffer = await processarBlocoTestemunhas(docxBuffer, estadoAssinatura.testemunhaprecisa);
 
   // 1) Processar selos de assinatura PRIMEIRO (mesma ordem do download real -
   // a substituição de dados abaixo apagaria qualquer {{TAG}} que não reconheça,
