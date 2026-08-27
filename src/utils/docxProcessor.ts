@@ -9,6 +9,7 @@ import {
   getContractTags,
   getContractParceladoTags,
   getContractExclusividadeTags,
+  getContractLocacaoTags,
 } from './contractGenerators';
 import { supabase } from './supabaseClient';
 import { buildFilledDocx } from './renderContractFromDocx';
@@ -20,7 +21,8 @@ export type CustomTemplateKey =
   | 'venda_vista_outros'
   | 'venda_parcelada_imovel'
   | 'venda_parcelada_outros'
-  | 'exclusividade';
+  | 'exclusividade'
+  | 'locacao_imovel';
 
 const TEMPLATE_STORAGE_KEYS: Record<CustomTemplateKey, string> = {
   venda_vista_imovel: 'custom_word_template_venda_vista_imovel',
@@ -28,6 +30,7 @@ const TEMPLATE_STORAGE_KEYS: Record<CustomTemplateKey, string> = {
   venda_parcelada_imovel: 'custom_word_template_venda_parcelada_imovel',
   venda_parcelada_outros: 'custom_word_template_venda_parcelada_outros',
   exclusividade: 'custom_word_template_exclusividade',
+  locacao_imovel: 'custom_word_template_locacao_imovel',
 };
 
 const TEMPLATE_META_STORAGE_KEYS: Record<CustomTemplateKey, string> = {
@@ -36,6 +39,7 @@ const TEMPLATE_META_STORAGE_KEYS: Record<CustomTemplateKey, string> = {
   venda_parcelada_imovel: 'custom_word_template_meta_venda_parcelada_imovel',
   venda_parcelada_outros: 'custom_word_template_meta_venda_parcelada_outros',
   exclusividade: 'custom_word_template_meta_exclusividade',
+  locacao_imovel: 'custom_word_template_meta_locacao_imovel',
 };
 
 const CUSTOM_TEMPLATES_BUCKET = 'contract-templates';
@@ -54,6 +58,7 @@ function customTemplateMetaStoragePath(ownerId: string, templateKey: CustomTempl
 }
 
 export function resolveTemplateKey(tipo: ContractType, subcategoria?: string): CustomTemplateKey {
+  if (tipo === 'locacao') return 'locacao_imovel';
   if (tipo === 'exclusividade') return 'exclusividade';
   if (tipo === 'venda_vista') {
     return subcategoria === 'outros_bens' ? 'venda_vista_outros' : 'venda_vista_imovel';
@@ -207,6 +212,7 @@ export function buildUnifiedContractTags(contract: ContractData): Record<string,
   const vistaTags = getContractTags(contract);
   const parceladoTags = getContractParceladoTags(contract);
   const exclusividadeTags = getContractExclusividadeTags(contract);
+  const locacaoTags = getContractLocacaoTags(contract);
 
   const tags: Record<string, string> = {};
 
@@ -230,6 +236,11 @@ export function buildUnifiedContractTags(contract: ContractData): Record<string,
 
   // Mapear tags do modelo de exclusividade
   Object.entries(exclusividadeTags).forEach(([k, v]) => {
+    if (v !== undefined) setTag(k, v as string);
+  });
+
+  // Mapear tags do modelo de locação
+  Object.entries(locacaoTags).forEach(([k, v]) => {
     if (v !== undefined) setTag(k, v as string);
   });
 

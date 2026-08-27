@@ -4,7 +4,8 @@ import {
   PartyDetailedInfo,
   ContractTagsMapping,
   ContractParceladoTagsMapping,
-  ContractExclusividadeTagsMapping
+  ContractExclusividadeTagsMapping,
+  ContractLocacaoTagsMapping,
 } from '../types/contract';
 import { numeroPorExtensoReais, numeroPorExtensoInteiro, percentualPorExtenso } from './numberToWords';
 import jsPDF from 'jspdf';
@@ -561,9 +562,212 @@ export function getContractExclusividadeTags(contract: ContractData): ContractEx
     ESTADO_ASSINATURA: contract.ufAssinatura || contract.ufForo || 'PA',
     DIA: dia,
     MES_EXTENSO: mesExtenso,
-    ANO: ano
+    ANO: ano,
+
+    // ESPECÍFICO PARA LOCAÇÃO EM EXCLUSIVIDADE (Casas, Galpões, etc.)
+    FINALIDADE_EXCLUSIVIDADE: ex?.finalidade === 'locacao' ? 'Locação de Imóvel' : (ex?.finalidade === 'ambos' ? 'Venda e Locação de Imóvel' : 'Venda de Imóvel'),
+    VALOR_LOCACAO_SUGERIDO: ex?.valorLocacaoSugerido ? formatCurrency(ex.valorLocacaoSugerido) : (contract.locacao?.valorAluguel ? formatCurrency(contract.locacao.valorAluguel) : 'A combinar'),
+    VALOR_LOCACAO_SUGERIDO_EXTENSO: ex?.valorLocacaoSugeridoExtenso || (ex?.valorLocacaoSugerido ? numeroPorExtensoReais(ex.valorLocacaoSugerido) : ''),
+    COMISSAO_LOCACAO: ex?.comissaoLocacao || '100% do primeiro aluguel mensal',
+    AUTORIZACAO_PROSPECCAO: ex?.autorizaProspeccaoClientes !== false ? 'Autorização expressa para prospecção ativa de clientes/inquilinos e veiculação de anúncios em nome do proprietário' : 'Prospecção sob consulta prévia',
   };
 }
+
+/**
+ * Gera mapa de tags padronizadas para Contrato de Locação (Aluguel de Casas, Galpões, etc.)
+ */
+export function getContractLocacaoTags(contract: ContractData): ContractLocacaoTagsMapping {
+  const v = contract.vendedor; // Locador / Proprietário
+  const c = contract.comprador; // Locatário / Inquilino
+  const loc = contract.locacao;
+  const im = contract.imovel;
+
+  const dia = contract.diaAssinatura || new Date().getDate().toString();
+  const mesExtenso = contract.mesExtensoAssinatura || MONTH_NAMES_PT[new Date().getMonth()] || 'janeiro';
+  const ano = contract.anoAssinatura || new Date().getFullYear().toString();
+  const dataAssinatura = `${dia} de ${mesExtenso} de ${ano}`;
+
+  // Gênero / concordância Locador
+  const isFemLocador = v.genero === 'feminino';
+  const artigoLocador = isFemLocador ? 'A' : 'O';
+  const tratamentoLocador = isFemLocador ? 'Sra.' : 'Sr.';
+  const concordanciaLocador = isFemLocador ? 'residente e domiciliada' : 'residente e domiciliado';
+
+  // Gênero / concordância Locatário
+  const isFemLocatario = c.genero === 'feminino';
+  const artigoLocatario = isFemLocatario ? 'A' : 'O';
+  const tratamentoLocatario = isFemLocatario ? 'Sra.' : 'Sr.';
+  const concordanciaLocatario = isFemLocatario ? 'residente e domiciliada' : 'residente e domiciliado';
+
+  // Valores
+  const valorAluguelNum = loc?.valorAluguel || contract.valorTotal || 0;
+  const valorAluguelStr = formatCurrency(valorAluguelNum);
+  const valorAluguelExtenso = loc?.valorAluguelExtenso?.trim() || contract.valorTotalExtenso?.trim() || numeroPorExtensoReais(valorAluguelNum);
+
+  // Caução / Garantia
+  const valorCaucaoNum = loc?.valorCaucao || (loc?.numeroMesesCaucao ? valorAluguelNum * loc.numeroMesesCaucao : 0);
+  const valorCaucaoStr = valorCaucaoNum > 0 ? formatCurrency(valorCaucaoNum) : 'Não aplicável';
+  const valorCaucaoExtenso = valorCaucaoNum > 0 ? numeroPorExtensoReais(valorCaucaoNum) : '';
+
+  let garantiaDescricao = 'Sem garantia locatícia específica';
+  if (loc?.garantiaTipo === 'caucao') {
+    garantiaDescricao = `Caução em dinheiro no valor de ${valorCaucaoStr} (${valorCaucaoExtenso}), correspondente a ${loc?.numeroMesesCaucao || 1} mês(es) de aluguel, depositada pelo(a) LOCATÁRIO(A) na conta do(a) LOCADOR(A).`;
+  } else if (loc?.garantiaTipo === 'fiador' && loc?.fiador?.nome) {
+    const f = loc.fiador;
+    garantiaDescricao = `Fiança prestada por ${f.nome}, ${f.nacionalidade || 'brasileiro(a)'}, ${f.estadoCivil || 'casado(a)'}, CPF nº ${f.cpfCnpj || 'não informado'}, RG nº ${f.rg || 'não informado'} ${f.rgOrgao || ''}, residente em ${f.endereco || ''}, nº ${f.numero || 'S/N'}, ${f.cidade || ''}/${f.uf || ''}, que assume a responsabilidade solidária por todas as obrigações deste contrato.`;
+  } else if (loc?.garantiaTipo === 'seguro_fianca') {
+    garantiaDescricao = 'Seguro Fiança Locatícia contratado pelo(a) LOCATÁRIO(A) junto a seguradora idônea.';
+  }
+
+  // Descrição do imóvel
+  const tipoImovelStr = loc?.tipoImovel === 'galpao' ? 'Galpão Comercial / Industrial' : (loc?.tipoImovel === 'casa' ? 'Casa Residencial' : (loc?.tipoImovel === 'predio' ? 'Prédio Comercial' : (loc?.tipoImovel === 'sala_comercial' ? 'Sala Comercial' : (loc?.tipoImovel === 'apartamento' ? 'Apartamento' : 'Imóvel'))));
+  const destinacaoStr = loc?.finalidadeLocacao === 'industrial_galpao' ? 'Armazenamento, logística e atividades industriais/comerciais' : (loc?.finalidadeLocacao === 'comercial' ? 'Comercial e prestação de serviços' : (loc?.finalidadeLocacao === 'residencial' ? 'Exclusivamente Residencial' : 'Comercial/Residencial'));
+  
+  const enderecoImovelStr = im?.enderecoLote || im?.localizacaoImovel || contract.objetoIdentificacao || `${v.endereco}, nº ${v.numero} - ${v.bairro}`;
+  const cidadeImovelStr = im?.cidadeImovel || contract.cidadeForo || v.cidade || 'Santarém';
+  const estadoImovelStr = im?.ufImovel || contract.ufForo || v.uf || 'PA';
+  const areaImovelStr = im?.areaTotalM2 ? `${im.areaTotalM2} m²` : 'Conforme vistoria';
+
+  const fiador = loc?.fiador;
+
+  return {
+    // LOCADOR (PROPRIETÁRIO)
+    artigo_locador: artigoLocador,
+    tratamento_locador: tratamentoLocador,
+    locador: v.nome || 'LOCADOR(A) / PROPRIETÁRIO(A)',
+    nacionalidade_locador: v.nacionalidade || 'brasileiro(a)',
+    estado_civil_locador: v.estadoCivil || 'solteiro(a)',
+    rg_locador: v.rg || '',
+    emissao_rg_locador: v.rgOrgao || 'SSP/PA',
+    cpf_locador: v.cpfCnpj || '',
+    concordancia_locador: concordanciaLocador,
+    endereco_locador: v.endereco || '',
+    numero_locador: v.numero || 'S/N',
+    bairro_locador: v.bairro || '',
+    cep_locador: v.cep || '',
+    cidade_locador: v.cidade || 'Santarém',
+    estado_locador: v.uf || 'PA',
+    telefone_locador: v.telefone || '',
+    email_locador: v.email || '',
+
+    // LOCATÁRIO (INQUILINO)
+    artigo_locatario: artigoLocatario,
+    tratamento_locatario: tratamentoLocatario,
+    locatario: c.nome || 'LOCATÁRIO(A) / INQUILINO(A)',
+    nacionalidade_locatario: c.nacionalidade || 'brasileiro(a)',
+    estado_civil_locatario: c.estadoCivil || 'solteiro(a)',
+    rg_locatario: c.rg || '',
+    emissao_rg_locatario: c.rgOrgao || 'SSP/PA',
+    cpf_locatario: c.cpfCnpj || '',
+    concordancia_locatario: concordanciaLocatario,
+    endereco_locatario: c.endereco || '',
+    numero_locatario: c.numero || 'S/N',
+    bairro_locatario: c.bairro || '',
+    cep_locatario: c.cep || '',
+    cidade_locatario: c.cidade || 'Santarém',
+    estado_locatario: c.uf || 'PA',
+    telefone_locatario: c.telefone || '',
+    email_locatario: c.email || '',
+
+    // FIADOR
+    tem_fiador: loc?.garantiaTipo === 'fiador' && fiador?.nome ? 'SIM' : 'NÃO',
+    fiador_nome: fiador?.nome || '',
+    fiador_cpf: fiador?.cpfCnpj || '',
+    fiador_rg: `${fiador?.rg || ''} ${fiador?.rgOrgao || ''}`.trim(),
+    fiador_nacionalidade: fiador?.nacionalidade || 'brasileiro(a)',
+    fiador_estado_civil: fiador?.estadoCivil || 'casado(a)',
+    fiador_endereco: fiador?.endereco ? `${fiador.endereco}, nº ${fiador.numero || 'S/N'} - ${fiador.bairro || ''}, ${fiador.cidade || ''}/${fiador.uf || ''}` : '',
+    fiador_telefone: fiador?.telefone || '',
+    conjuge_fiador_nome: fiador?.conjuge?.nome || '',
+    conjuge_fiador_cpf: fiador?.conjuge?.cpf || '',
+
+    // IMÓVEL LOCADO
+    tipo_imovel_locado: tipoImovelStr,
+    destinacao_locacao: destinacaoStr,
+    endereco_imovel_locado: enderecoImovelStr,
+    cidade_imovel_locado: cidadeImovelStr,
+    estado_imovel_locado: estadoImovelStr,
+    area_imovel_locado: areaImovelStr,
+    descricao_detalhada_imovel: im?.outrosDadosImovel || contract.objetoDescricao || `${tipoImovelStr} situado em ${enderecoImovelStr}, ${cidadeImovelStr}/${estadoImovelStr}, com área total aproximada de ${areaImovelStr}.`,
+
+    // VALORES E CONDIÇÕES
+    valor_aluguel: valorAluguelStr,
+    valor_aluguel_extenso: valorAluguelExtenso,
+    dia_vencimento: String(loc?.diaVencimento || 10),
+    forma_pagamento_aluguel: loc?.formaPagamento || 'Transferência / PIX',
+    dados_bancarios_locador: loc?.dadosBancariosLocador || 'Chave PIX a ser informada pelo(a) LOCADOR(A)',
+    indice_reajuste: loc?.indiceReajuste || 'IGP-M/FGV (ou IPCA/IBGE na sua falta)',
+    periodicidade_reajuste: loc?.periodicidadeReajuste || 'Anual',
+    prazo_locacao_meses: String(loc?.prazoMeses || 12),
+    data_inicio_locacao: loc?.dataInicio ? formatDateExtenso(loc.dataInicio) : dataAssinatura,
+    data_termino_locacao: loc?.dataTermino ? formatDateExtenso(loc.dataTermino) : '',
+    garantia_locaticia_tipo: loc?.garantiaTipo === 'caucao' ? 'Caução em Dinheiro' : (loc?.garantiaTipo === 'fiador' ? 'Fiança Solidária' : (loc?.garantiaTipo === 'seguro_fianca' ? 'Seguro Fiança' : 'Sem Garantia')),
+    garantia_locaticia_descricao: garantiaDescricao,
+    valor_caucao: valorCaucaoStr,
+    valor_caucao_extenso: valorCaucaoExtenso,
+    multa_atraso_percentual: `${loc?.multaAtrasoPercentual !== undefined ? loc.multaAtrasoPercentual : 10}%`,
+    juros_mora_percentual: `${loc?.jurosMoraMensalPercentual !== undefined ? loc.jurosMoraMensalPercentual : 1}% ao mês`,
+    multa_rescisoria: loc?.multaRescisao || 'Equivalente a 03 (três) meses de aluguel vigentes à época da infração, cobrada proporcionalmente ao tempo restante de contrato.',
+    despesas_locatario: loc?.despesasLocatario || 'Consumo de energia elétrica, abastecimento de água/esgoto, taxa de coleta de lixo, IPTU e despesas ordinárias de condomínio (quando houver).',
+
+    // FORO E DATAS
+    cidade_foro: contract.cidadeForo || 'Santarém',
+    uf_foro: contract.ufForo || 'PA',
+    foro_comarca: `${contract.cidadeForo || 'Santarém'}/${contract.ufForo || 'PA'}`,
+    cidade_assinatura: contract.cidadeAssinatura || contract.cidadeForo || 'Santarém',
+    uf_assinatura: contract.ufAssinatura || contract.ufForo || 'PA',
+    dia: dia,
+    mes_extenso: mesExtenso,
+    ano: ano,
+    data_assinatura: dataAssinatura
+  };
+}
+
+// Template padrão com as tags { } do Contrato de Locação de Imóvel (Casas, Galpões, etc. - Lei 8.245/91)
+export const TEMPLATE_CONTRATO_LOCACAO_IMOVEL = `
+INSTRUMENTO PARTICULAR DE CONTRATO DE LOCAÇÃO DE IMÓVEL
+
+DAS PARTES CONTRATANTES
+
+LOCADOR(A):
+{artigo_locador} {tratamento_locador} {locador}, {nacionalidade_locador}, {estado_civil_locador}, portador(a) do RG nº {rg_locador} {emissao_rg_locador}, inscrito(a) no CPF/CNPJ sob o nº {cpf_locador}, {concordancia_locador} na {endereco_locador}, nº {numero_locador}, Bairro {bairro_locador}, CEP {cep_locador}, na cidade de {cidade_locador}/{estado_locador}, telefone {telefone_locador}, doravante denominado(a) simplesmente LOCADOR(A).
+
+LOCATÁRIO(A):
+{artigo_locatario} {tratamento_locatario} {locatario}, {nacionalidade_locatario}, {estado_civil_locatario}, portador(a) do RG nº {rg_locatario} {emissao_rg_locatario}, inscrito(a) no CPF/CNPJ sob o nº {cpf_locatario}, {concordancia_locatario} na {endereco_locatario}, nº {numero_locatario}, Bairro {bairro_locatario}, CEP {cep_locatario}, na cidade de {cidade_locatario}/{estado_locatario}, telefone {telefone_locatario}, doravante denominado(a) simplesmente LOCATÁRIO(A).
+
+Têm entre si, justo e acertado, o presente CONTRATO DE LOCAÇÃO DE IMÓVEL, que se regerá pela Lei Federal nº 8.245/1991 (Lei do Inquilinato) e pelas seguintes cláusulas e condições:
+
+CLÁUSULA 1ª – DO OBJETO E DESTINAÇÃO DO IMÓVEL
+O presente contrato tem por objeto a locação do imóvel caracterizado como {tipo_imovel_locado}, situado na {endereco_imovel_locado}, na cidade de {cidade_imovel_locado}/{estado_imovel_locado}, com área aproximada de {area_imovel_locado}.
+Parágrafo Primeiro: O imóvel ora locado destina-se exclusivamente para fins de {destinacao_locacao}, sendo expressamente vedada a mudança de destinação, cessão, sublocação ou empréstimo sem a prévia e expressa autorização por escrito do(a) LOCADOR(A).
+Parágrafo Segundo: O(A) LOCATÁRIO(A) declara que vistoriou o imóvel e o recebe em perfeito estado de conservação, habitabilidade, uso e funcionamento elétrico e hidráulico, obrigando-se a devolvê-lo nas mesmíssimas condições ao término da locação.
+
+CLÁUSULA 2ª – DO VALOR DO ALUGUEL, FORMA E LOCAL DE PAGAMENTO
+O valor mensal da locação é fixado em {valor_aluguel} ({valor_aluguel_extenso}), que deverá ser pago impreterivelmente até o dia {dia_vencimento} de cada mês subsequente ao vencido.
+Parágrafo Primeiro: O pagamento será efetuado via {forma_pagamento_aluguel}, creditado na seguinte forma: {dados_bancarios_locador}, servindo o respectivo comprovante bancário de quitação plena da mensalidade.
+
+CLÁUSULA 3ª – DO REAJUSTE DO ALUGUEL
+O valor do aluguel avençado será reajustado com periodicidade {periodicidade_reajuste}, tomando-se por base a variação positiva acumulada do índice {indice_reajuste}, ou, na sua extinção ou impedimento legal, pelo índice oficial que legalmente vier a substituí-lo.
+
+CLÁUSULA 4ª – DO PRAZO DE VIGÊNCIA
+A presente locação vigorará pelo prazo determinado de {prazo_locacao_meses} meses, iniciando-se em {data_inicio_locacao} e findando em {data_termino_locacao}, data em que o(a) LOCATÁRIO(A) obriga-se a restituir o imóvel completamente desocupado, limpo e em perfeito estado de conservação.
+
+CLÁUSULA 5ª – DOS ENCARGOS, TRIBUTOS E DESPESAS DE CONSUMO
+Além do aluguel mensal, correrão por conta exclusiva do(a) LOCATÁRIO(A) durante todo o período em que permanecer na posse do imóvel as seguintes despesas e encargos: {despesas_locatario}.
+
+CLÁUSULA 6ª – DA GARANTIA LOCATÍCIA
+Para garantia do fiel cumprimento de todas as obrigações assumidas neste contrato, adota-se a modalidade de {garantia_locaticia_tipo}:
+{garantia_locaticia_descricao}
+
+CLÁUSULA 7ª – DO INADIMPLEMENTO, MULTA MORATÓRIA E JUROS
+O não pagamento do aluguel e encargos até a data de seu respectivo vencimento sujeitará o(a) LOCATÁRIO(A) à incidência automática de multa moratória de {multa_atraso_percentual} sobre o montante do débito, acrescida de juros moratórios de {juros_mora_percentual}, correção monetária e honorários advocatícios em caso de cobrança judicial ou extrajudicial.
+
+CLÁUSULA 8ª – DA RESCISÃO E MULTA CONTRATUAL
+A infração a qualquer das cláusulas e condições deste contrato facultará à parte inocente a rescisão de pleno direito deste instrumento, ficando a parte infratora sujeita ao pagamento da multa penal correspondente a: {multa_rescisoria}.
+
+CLÁUSULA 9ª – DO FORO
+Para dirimir qualquer questão, dúvida ou litígio decorrente da interpretação ou execução do presente contrato, as partes elegem expressamente o Foro da Comarca de {foro_comarca}, com renúncia expressa a qualquer outro, por mais privilegiado que seja.
+`.trim();
 
 // Template padrão com as tags { } do Contrato de Compra e Venda de Imóvel à Vista
 export const TEMPLATE_CONTRATO_IMOVEL_VISTA = `
@@ -1096,11 +1300,109 @@ ${compradoresPreambuloParcelado}
     };
   }
 
+  if (contract.tipo === 'locacao') {
+    const locTags = getContractLocacaoTags(contract);
+    const textoRenderizado = replaceContractTags(TEMPLATE_CONTRATO_LOCACAO_IMOVEL, locTags as unknown as Record<string, string | undefined>);
+
+    const titulo = `INSTRUMENTO PARTICULAR DE CONTRATO DE LOCAÇÃO DE IMÓVEL (${locTags.tipo_imovel_locado?.toUpperCase() || 'IMÓVEL'})`;
+
+    const preambulo = `
+DAS PARTES CONTRATANTES
+
+LOCADOR(A):
+${locTags.artigo_locador} ${locTags.tratamento_locador} ${locTags.locador}, ${locTags.nacionalidade_locador}, ${locTags.estado_civil_locador}, portador(a) do RG nº ${locTags.rg_locador} ${locTags.emissao_rg_locador}, inscrito(a) no CPF/CNPJ sob o nº ${locTags.cpf_locador}, ${locTags.concordancia_locador} na ${locTags.endereco_locador}, nº ${locTags.numero_locador}, Bairro ${locTags.bairro_locador}, CEP ${locTags.cep_locador}, na cidade de ${locTags.cidade_locador}/${locTags.estado_locador}, telefone ${locTags.telefone_locador}, doravante denominado(a) simplesmente LOCADOR(A).
+
+LOCATÁRIO(A):
+${locTags.artigo_locatario} ${locTags.tratamento_locatario} ${locTags.locatario}, ${locTags.nacionalidade_locatario}, ${locTags.estado_civil_locatario}, portador(a) do RG nº ${locTags.rg_locatario} ${locTags.emissao_rg_locatario}, inscrito(a) no CPF/CNPJ sob o nº ${locTags.cpf_locatario}, ${locTags.concordancia_locatario} na ${locTags.endereco_locatario}, nº ${locTags.numero_locatario}, Bairro ${locTags.bairro_locatario}, CEP ${locTags.cep_locatario}, na cidade de ${locTags.cidade_locatario}/${locTags.estado_locatario}, telefone ${locTags.telefone_locatario}, doravante denominado(a) simplesmente LOCATÁRIO(A).
+
+Têm entre si, justo e acertado, o presente CONTRATO DE LOCAÇÃO DE IMÓVEL, sob a égide da Lei Federal nº 8.245/1991 (Lei do Inquilinato), mediante as cláusulas e condições seguintes:
+    `.trim();
+
+    const clausulas = [
+      {
+        numero: 'CLÁUSULA 1ª',
+        titulo: 'DO OBJETO E DESTINAÇÃO DO IMÓVEL',
+        conteudo: `O presente contrato tem por objeto a locação do imóvel caracterizado como ${locTags.tipo_imovel_locado}, situado na ${locTags.endereco_imovel_locado}, na cidade de ${locTags.cidade_imovel_locado}/${locTags.estado_imovel_locado}, com área aproximada de ${locTags.area_imovel_locado}.\n` +
+          `Parágrafo Primeiro: O imóvel ora locado destina-se exclusivamente para fins de ${locTags.destinacao_locacao}, sendo expressamente vedada a mudança de destinação, cessão, sublocação ou empréstimo sem a prévia e expressa autorização por escrito do(a) LOCADOR(A).\n` +
+          `Parágrafo Segundo: O(A) LOCATÁRIO(A) declara que vistoriou o imóvel e o recebe em perfeito estado de conservação, habitabilidade, uso e funcionamento elétrico e hidráulico, obrigando-se a devolvê-lo nas mesmíssimas condições ao término da locação.`
+      },
+      {
+        numero: 'CLÁUSULA 2ª',
+        titulo: 'DO VALOR DO ALUGUEL, FORMA E LOCAL DE PAGAMENTO',
+        conteudo: `O valor mensal da locação é fixado em ${locTags.valor_aluguel} (${locTags.valor_aluguel_extenso}), que deverá ser pago impreterivelmente até o dia ${locTags.dia_vencimento} de cada mês subsequente ao vencido.\n` +
+          `Parágrafo Primeiro: O pagamento será efetuado via ${locTags.forma_pagamento_aluguel}, creditado na seguinte forma: ${locTags.dados_bancarios_locador}, servindo o respectivo comprovante bancário de quitação plena da mensalidade.`
+      },
+      {
+        numero: 'CLÁUSULA 3ª',
+        titulo: 'DO REAJUSTE DO ALUGUEL',
+        conteudo: `O valor do aluguel avençado será reajustado com periodicidade ${locTags.periodicidade_reajuste}, tomando-se por base a variação positiva acumulada do índice ${locTags.indice_reajuste}, ou, na sua extinção ou impedimento legal, pelo índice oficial que legalmente vier a substituí-lo.`
+      },
+      {
+        numero: 'CLÁUSULA 4ª',
+        titulo: 'DO PRAZO DE VIGÊNCIA',
+        conteudo: `A presente locação vigorará pelo prazo determinado de ${locTags.prazo_locacao_meses} meses, iniciando-se em ${locTags.data_inicio_locacao} e findando em ${locTags.data_termino_locacao || 'prazo final avençado'}, data em que o(a) LOCATÁRIO(A) obriga-se a restituir o imóvel completamente desocupado, limpo e em perfeito estado de conservação.`
+      },
+      {
+        numero: 'CLÁUSULA 5ª',
+        titulo: 'DOS ENCARGOS, TRIBUTOS E DESPESAS DE CONSUMO',
+        conteudo: `Além do aluguel mensal, correrão por conta exclusiva do(a) LOCATÁRIO(A) durante todo o período em que permanecer na posse do imóvel as seguintes despesas e encargos: ${locTags.despesas_locatario}.`
+      },
+      {
+        numero: 'CLÁUSULA 6ª',
+        titulo: 'DA GARANTIA LOCATÍCIA',
+        conteudo: `Para garantia do fiel cumprimento de todas as obrigações assumidas neste contrato, adota-se a modalidade de ${locTags.garantia_locaticia_tipo}:\n${locTags.garantia_locaticia_descricao}`
+      },
+      {
+        numero: 'CLÁUSULA 7ª',
+        titulo: 'DO INADIMPLEMENTO, MULTA MORATÓRIA E JUROS',
+        conteudo: `O não pagamento do aluguel e encargos até a data de seu respectivo vencimento sujeitará o(a) LOCATÁRIO(A) à incidência automática de multa moratória de ${locTags.multa_atraso_percentual} sobre o montante do débito, acrescida de juros moratórios de ${locTags.juros_mora_percentual}, correção monetária e honorários advocatícios em caso de cobrança judicial ou extrajudicial.`
+      },
+      {
+        numero: 'CLÁUSULA 8ª',
+        titulo: 'DA RESCISÃO E MULTA CONTRATUAL',
+        conteudo: `A infração a qualquer das cláusulas e condições deste contrato facultará à parte inocente a rescisão de pleno direito deste instrumento, ficando a parte infratora sujeita ao pagamento da multa penal correspondente a: ${locTags.multa_rescisoria}.`
+      },
+      {
+        numero: 'CLÁUSULA 9ª',
+        titulo: 'DO FORO',
+        conteudo: `Para dirimir qualquer questão, dúvida ou litígio decorrente da interpretação ou execução do presente contrato, as partes elegem expressamente o Foro da Comarca de ${locTags.foro_comarca}, com renúncia expressa a qualquer outro, por mais privilegiado que seja.`
+      }
+    ];
+
+    if (contract.clausulasExtras?.trim()) {
+      clausulas.push({
+        numero: 'CLÁUSULA 10ª',
+        titulo: 'DAS DISPOSIÇÕES COMPLEMENTARES',
+        conteudo: contract.clausulasExtras.trim()
+      });
+    }
+
+    const foro = `Foro da Comarca de ${locTags.foro_comarca}`;
+    const dataLocal = `${locTags.cidade_assinatura}/${locTags.uf_assinatura}, ${locTags.dia} de ${locTags.mes_extenso} de ${locTags.ano}.`;
+
+    return {
+      titulo,
+      preambulo,
+      clausulas,
+      foro,
+      dataLocal,
+      tagsMapping: locTags as unknown as ContractTagsMapping,
+      textoCompletoRenderizado: textoRenderizado
+    };
+  }
+
   // Exclusividade
   const exclTags = getContractExclusividadeTags(contract);
   const textoRenderizado = replaceContractTags(TEMPLATE_CONTRATO_EXCLUSIVIDADE, exclTags as unknown as Record<string, string | undefined>);
 
-  const titulo = 'CONTRATO DE CORRETAGEM DE VENDA DE BENS IMÓVEIS COM CLÁUSULA DE EXCLUSIVIDADE';
+  const isLocacaoExcl = contract.exclusividade?.tipoExclusividade === 'Locação de Imóvel' || contract.exclusividade?.finalidade === 'locacao';
+  const isVendaELocacao = contract.exclusividade?.tipoExclusividade === 'Venda e Locação' || contract.exclusividade?.finalidade === 'ambos';
+
+  const titulo = isLocacaoExcl
+    ? 'CONTRATO DE INTERMEDIAÇÃO E ADMINISTRAÇÃO DE LOCAÇÃO COM CLÁUSULA DE EXCLUSIVIDADE'
+    : (isVendaELocacao
+        ? 'CONTRATO DE CORRETAGEM DE VENDA E LOCAÇÃO DE IMÓVEIS COM CLÁUSULA DE EXCLUSIVIDADE'
+        : 'CONTRATO DE CORRETAGEM DE VENDA DE BENS IMÓVEIS COM CLÁUSULA DE EXCLUSIVIDADE');
   const preambulo = `
 DAS PARTES CONTRATANTES
 
@@ -1197,23 +1499,31 @@ export function exportToDoc(contract: ContractData): void {
     `;
   } else {
     const isExcl = contract.tipo === 'exclusividade';
-    // Mesma correção do ContractViewer.tsx: em exclusividade os papéis são
-    // invertidos (vendedor=Contratante/cliente, comprador=Contratado/corretor).
-    const corretorNome = isExcl
-      ? (tags.VENDEDOR_NOME || tags.comprador_nome || tags.comprador || 'CONTRATADO(A)')
-      : (tags.vendedor_nome || tags.vendedor || 'PROMITENTE VENDEDOR(A)');
-    const corretorDoc = isExcl
-      ? (tags.VENDEDOR_CRECI ? `CRECI nº ${tags.VENDEDOR_CRECI} | CPF/CNPJ: ${tags.VENDEDOR_CPF || ''}` : (tags.VENDEDOR_CPF || ''))
-      : (tags.vendedor_cpf_cnpj || tags.cpf_vendedor || '');
-    const corretorTermo = isExcl ? 'CONTRATADO(A)' : (tags.vendedor_termo || 'PROMITENTE VENDEDOR(A)');
+    const isLoc = contract.tipo === 'locacao';
 
-    const clienteNome = isExcl
-      ? (tags.CONTRATANTE_NOME || tags.vendedor_nome || tags.vendedor || 'CONTRATANTE')
-      : (tags.comprador_nome || tags.comprador || 'PROMITENTE COMPRADOR(A)');
-    const clienteDoc = isExcl
-      ? (tags.CONTRATANTE_CPF || tags.vendedor_cpf_cnpj || tags.cpf_vendedor || '')
-      : (tags.comprador_cpf || tags.cpf_comprador || '');
-    const clienteTermo = isExcl ? 'CONTRATANTE' : (tags.comprador_termo || 'PROMITENTE COMPRADOR(A)');
+    let corretorNome = tags.vendedor_nome || tags.vendedor || 'PROMITENTE VENDEDOR(A)';
+    let corretorDoc = tags.vendedor_cpf_cnpj || tags.cpf_vendedor || '';
+    let corretorTermo = tags.vendedor_termo || 'PROMITENTE VENDEDOR(A)';
+
+    let clienteNome = tags.comprador_nome || tags.comprador || 'PROMITENTE COMPRADOR(A)';
+    let clienteDoc = tags.comprador_cpf || tags.cpf_comprador || '';
+    let clienteTermo = tags.comprador_termo || 'PROMITENTE COMPRADOR(A)';
+
+    if (isExcl) {
+      corretorNome = tags.VENDEDOR_NOME || tags.comprador_nome || tags.comprador || 'CONTRATADO(A)';
+      corretorDoc = tags.VENDEDOR_CRECI ? `CRECI nº ${tags.VENDEDOR_CRECI} | CPF/CNPJ: ${tags.VENDEDOR_CPF || ''}` : (tags.VENDEDOR_CPF || '');
+      corretorTermo = 'CONTRATADO(A)';
+      clienteNome = tags.CONTRATANTE_NOME || tags.vendedor_nome || tags.vendedor || 'CONTRATANTE';
+      clienteDoc = tags.CONTRATANTE_CPF || tags.vendedor_cpf_cnpj || tags.cpf_vendedor || '';
+      clienteTermo = 'CONTRATANTE';
+    } else if (isLoc) {
+      corretorNome = tags.locador || tags.vendedor_nome || tags.vendedor || 'LOCADOR(A)';
+      corretorDoc = tags.cpf_locador || tags.vendedor_cpf_cnpj || tags.cpf_vendedor || '';
+      corretorTermo = 'LOCADOR(A)';
+      clienteNome = tags.locatario || tags.comprador_nome || tags.comprador || 'LOCATÁRIO(A)';
+      clienteDoc = tags.cpf_locatario || tags.comprador_cpf || tags.cpf_comprador || '';
+      clienteTermo = 'LOCATÁRIO(A)';
+    }
 
     const t1 = contract.testemunha1;
     const t2 = contract.testemunha2;
@@ -1403,16 +1713,32 @@ export async function generateContractPdfBlob(contract: ContractData): Promise<B
   const isDigital = contract.modalidadeAssinatura === 'digital' || (contract.modalidadeAssinatura !== 'manual' && contract.assinaturas && contract.assinaturas.length > 0);
 
   const isExcl = contract.tipo === 'exclusividade';
+  const isLoc = contract.tipo === 'locacao';
   const allCompradores = getAllCompradores(contract);
   const anyTags = tags as unknown as Record<string, string>;
-  const vNome = anyTags.CONTRATANTE_NOME || anyTags.vendedor_nome || anyTags.vendedor || (isExcl ? 'CONTRATANTE' : 'PROMITENTE VENDEDOR(A)');
-  const cNome = anyTags.VENDEDOR_NOME || anyTags.comprador_nome || anyTags.comprador || (isExcl ? 'CONTRATADO(A)' : 'PROMITENTE COMPRADOR(A)');
-  const vDoc = anyTags.CONTRATANTE_CPF || anyTags.vendedor_cpf_cnpj || anyTags.cpf_vendedor || '';
-  const cDoc = isExcl
-    ? (anyTags.VENDEDOR_CRECI ? `CRECI nº ${anyTags.VENDEDOR_CRECI} | CPF/CNPJ: ${anyTags.VENDEDOR_CPF || ''}` : (anyTags.VENDEDOR_CPF || ''))
-    : (anyTags.comprador_cpf || anyTags.cpf_comprador || '');
-  const vTermo = isExcl ? 'CONTRATANTE' : (anyTags.vendedor_termo || 'PROMITENTE VENDEDOR(A)');
-  const cTermo = isExcl ? 'CONTRATADO(A)' : (anyTags.comprador_termo || 'PROMITENTE COMPRADOR(A)');
+
+  let vNome = anyTags.vendedor_nome || anyTags.vendedor || 'PROMITENTE VENDEDOR(A)';
+  let cNome = anyTags.comprador_nome || anyTags.comprador || 'PROMITENTE COMPRADOR(A)';
+  let vDoc = anyTags.vendedor_cpf_cnpj || anyTags.cpf_vendedor || '';
+  let cDoc = anyTags.comprador_cpf || anyTags.cpf_comprador || '';
+  let vTermo = anyTags.vendedor_termo || 'PROMITENTE VENDEDOR(A)';
+  let cTermo = anyTags.comprador_termo || 'PROMITENTE COMPRADOR(A)';
+
+  if (isExcl) {
+    vNome = anyTags.CONTRATANTE_NOME || anyTags.vendedor_nome || anyTags.vendedor || 'CONTRATANTE';
+    cNome = anyTags.VENDEDOR_NOME || anyTags.comprador_nome || anyTags.comprador || 'CONTRATADO(A)';
+    vDoc = anyTags.CONTRATANTE_CPF || anyTags.vendedor_cpf_cnpj || anyTags.cpf_vendedor || '';
+    cDoc = anyTags.VENDEDOR_CRECI ? `CRECI nº ${anyTags.VENDEDOR_CRECI} | CPF/CNPJ: ${anyTags.VENDEDOR_CPF || ''}` : (anyTags.VENDEDOR_CPF || '');
+    vTermo = 'CONTRATANTE';
+    cTermo = 'CONTRATADO(A)';
+  } else if (isLoc) {
+    vNome = anyTags.locador || anyTags.vendedor_nome || anyTags.vendedor || 'LOCADOR(A)';
+    cNome = anyTags.locatario || anyTags.comprador_nome || anyTags.comprador || 'LOCATÁRIO(A)';
+    vDoc = anyTags.cpf_locador || anyTags.vendedor_cpf_cnpj || anyTags.cpf_vendedor || '';
+    cDoc = anyTags.cpf_locatario || anyTags.comprador_cpf || anyTags.cpf_comprador || '';
+    vTermo = 'LOCADOR(A)';
+    cTermo = 'LOCATÁRIO(A)';
+  }
 
   if (isDigital) {
     // =========================================================================

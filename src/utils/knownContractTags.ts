@@ -12,6 +12,10 @@ export const SIGNATURE_TAGS: Record<string, string> = {
   COMPRADOR_ASSINATURA_MANUAL: 'Linha de assinatura manual do comprador/cliente (não mexer)',
   CONTRATANTE_ASSINATURA_DIGITAL: 'Selo de assinatura digital do contratante (não mexer)',
   CONTRATANTE_ASSINATURA_MANUAL: 'Linha de assinatura manual do contratante (não mexer)',
+  LOCADOR_ASSINATURA_DIGITAL: 'Selo de assinatura digital do locador (não mexer)',
+  LOCADOR_ASSINATURA_MANUAL: 'Linha de assinatura manual do locador (não mexer)',
+  LOCATARIO_ASSINATURA_DIGITAL: 'Selo de assinatura digital do locatário (não mexer)',
+  LOCATARIO_ASSINATURA_MANUAL: 'Linha de assinatura manual do locatário (não mexer)',
 };
 
 export const KNOWN_CONTRACT_TAGS: Record<string, string> = {
@@ -135,6 +139,33 @@ export const KNOWN_CONTRACT_TAGS: Record<string, string> = {
   percentual_corretagem_extenso: 'Percentual de corretagem por extenso',
   prazo_exclusividade_dias: 'Prazo de exclusividade em dias',
   data_termino_exclusividade: 'Data de término da exclusividade',
+
+  // Locação
+  locador: 'Nome do locador/proprietário',
+  cpf_locador: 'CPF/CNPJ do locador',
+  rg_locador: 'RG do locador',
+  nacionalidade_locador: 'Nacionalidade do locador',
+  estado_civil_locador: 'Estado civil do locador',
+  endereco_locador: 'Endereço do locador',
+  telefone_locador: 'Telefone do locador',
+  locatario: 'Nome do locatário/inquilino',
+  cpf_locatario: 'CPF/CNPJ do locatário',
+  rg_locatario: 'RG do locatário',
+  nacionalidade_locatario: 'Nacionalidade do locatário',
+  estado_civil_locatario: 'Estado civil do locatário',
+  endereco_locatario: 'Endereço do locatário',
+  telefone_locatario: 'Telefone do locatário',
+  tipo_imovel_locado: 'Tipo de imóvel locado (Casa, Galpão, Prédio, etc.)',
+  destinacao_locacao: 'Destinação da locação (Residencial, Comercial, Industrial)',
+  valor_aluguel: 'Valor mensal do aluguel',
+  valor_aluguel_extenso: 'Valor do aluguel por extenso',
+  dia_vencimento: 'Dia de vencimento do aluguel',
+  prazo_locacao_meses: 'Prazo da locação em meses',
+  data_inicio_locacao: 'Data de início da locação',
+  data_termino_locacao: 'Data de término da locação',
+  garantia_locaticia_tipo: 'Tipo de garantia locatícia (Caução, Fiador, Seguro Fiança, etc.)',
+  garantia_locaticia_descricao: 'Detalhes da garantia locatícia',
+  autoriza_prospeccao_clientes: 'Autorização para prospecção de clientes de locação',
 };
 
 /**

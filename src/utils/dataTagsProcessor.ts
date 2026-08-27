@@ -4,7 +4,7 @@
  */
 
 import { ContractData } from '../types/contract';
-import { getContractExclusividadeTags } from './contractGenerators';
+import { getContractExclusividadeTags, getContractLocacaoTags } from './contractGenerators';
 import { getTratamento } from './tratamento';
 import JSZip from 'jszip';
 
@@ -295,6 +295,52 @@ export function generateContractTags(contract: ContractData): TagMapping {
     }
   }
 
+  // TAGS DO CONTRATO DE LOCAÇÃO (Casas, Galpões, Prédios, etc.)
+  if (contract.tipo === 'locacao') {
+    const locTags = getContractLocacaoTags(contract);
+    const cidAss = locTags.cidade_assinatura || contract.cidadeAssinatura || contract.cidadeForo || 'Santarém';
+    const estAss = locTags.uf_assinatura || contract.ufAssinatura || contract.ufForo || 'PA';
+
+    Object.assign(tags, {
+      ...locTags,
+      // Mapeamento cruzado para manter compatibilidade com templates que usam maiúsculo
+      LOCADOR_NOME: locTags.locador,
+      LOCADOR_CPF: locTags.cpf_locador,
+      LOCADOR_RG: locTags.rg_locador,
+      LOCADOR_ENDERECO: locTags.endereco_locador,
+      LOCATARIO_NOME: locTags.locatario,
+      LOCATARIO_CPF: locTags.cpf_locatario,
+      LOCATARIO_RG: locTags.rg_locatario,
+      LOCATARIO_ENDERECO: locTags.endereco_locatario,
+      VALOR_ALUGUEL: locTags.valor_aluguel,
+      VALOR_ALUGUEL_EXTENSO: locTags.valor_aluguel_extenso,
+      DIA_VENCIMENTO: locTags.dia_vencimento,
+      PRAZO_LOCACAO_MESES: locTags.prazo_locacao_meses,
+      DATA_INICIO_LOCACAO: locTags.data_inicio_locacao,
+      DATA_TERMINO_LOCACAO: locTags.data_termino_locacao,
+      TIPO_IMOVEL_LOCADO: locTags.tipo_imovel_locado,
+      DESTINACAO_LOCACAO: locTags.destinacao_locacao,
+      GARANTIA_LOCATICIA_TIPO: locTags.garantia_locaticia_tipo,
+      GARANTIA_LOCATICIA_DESCRICAO: locTags.garantia_locaticia_descricao,
+
+      cidade: cidAss,
+      estado: estAss,
+      uf: estAss,
+      cidade_assinatura: cidAss,
+      estado_assinatura: estAss,
+      uf_assinatura: estAss,
+      CIDADE_ASSINATURA: cidAss,
+      ESTADO_ASSINATURA: estAss,
+      UF_ASSINATURA: estAss,
+      cidade_foro: locTags.cidade_foro,
+      estado_foro: locTags.uf_foro,
+      uf_foro: locTags.uf_foro,
+      dia: locTags.dia,
+      mes_extenso: locTags.mes_extenso,
+      ano: locTags.ano,
+    });
+  }
+
   return tags;
 }
 
@@ -487,6 +533,7 @@ function getTipoContratoExtensoPT(tipo: string): string {
     venda_vista: 'Contrato de Compra e Venda à Vista',
     venda_parcelada: 'Contrato de Compra e Venda Parcelada',
     exclusividade: 'Contrato de Intermediação Imobiliária',
+    locacao: 'Contrato de Locação de Imóvel',
   };
   return tipos[tipo] || tipo;
 }

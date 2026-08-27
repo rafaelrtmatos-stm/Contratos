@@ -145,6 +145,7 @@ export async function buildFilledDocx(contract: ContractData): Promise<ArrayBuff
   // incluindo os selos).
   const tagsEncontradas = await findSignatureTags(docxBuffer);
   if (tagsEncontradas.length > 0) {
+    const isLoc = contract.tipo === 'locacao';
     const usuarioInfo: PartySignatureInfo = {
       assinou: !!sigCorretorAtual,
       modalidade: usuarioModalidade,
@@ -153,6 +154,8 @@ export async function buildFilledDocx(contract: ContractData): Promise<ArrayBuff
       documento: dadosCorretor?.cpfCnpj || '',
       roleLabel: isExcl
         ? getTratamento('contratado', dadosCorretor?.genero)
+        : isLoc
+        ? getTratamento('locador', dadosCorretor?.genero)
         : getTratamento('vendedor', dadosCorretor?.genero),
     };
     const compradorInfo: PartySignatureInfo = {
@@ -163,6 +166,8 @@ export async function buildFilledDocx(contract: ContractData): Promise<ArrayBuff
       documento: dadosCliente?.cpfCnpj || '',
       roleLabel: isExcl
         ? getTratamento('contratante', dadosCliente?.genero)
+        : isLoc
+        ? getTratamento('locatario', dadosCliente?.genero)
         : getTratamento('comprador', dadosCliente?.genero),
     };
 

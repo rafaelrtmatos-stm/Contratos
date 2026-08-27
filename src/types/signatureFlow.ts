@@ -33,7 +33,8 @@ export type DownloadAction =
 export type TipoContrato =
   | 'venda_vista'
   | 'venda_parcelada'
-  | 'exclusividade';
+  | 'exclusividade'
+  | 'locacao';
 
 /**
  * Variante de contrato (para exclusividade com/sem cônjuge)

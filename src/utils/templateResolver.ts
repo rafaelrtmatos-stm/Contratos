@@ -70,6 +70,23 @@ const TEMPLATES: Record<string, TemplateResolved> = {
     testemunhas: true,
     tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{CONTRATANTE_ASSINATURA_MANUAL}}'],
   },
+
+  // LOCAÇÃO (Aluguel de Casas, Galpões e Imóveis)
+  'locacao_digital': {
+    arquivo: 'locacao_assinatura_digital.docx',
+    testemunhas: false,
+    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{COMPRADOR_ASSINATURA_DIGITAL}}'],
+  },
+  'locacao_manual': {
+    arquivo: 'locacao_assinatura_manual_2_testemunhas.docx',
+    testemunhas: true,
+    tagsAssinatura: ['{{USUARIO_ASSINATURA_MANUAL}}', '{{COMPRADOR_ASSINATURA_MANUAL}}'],
+  },
+  'locacao_mista': {
+    arquivo: 'locacao_mista_2_testemunhas.docx',
+    testemunhas: true,
+    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{COMPRADOR_ASSINATURA_MANUAL}}'],
+  },
 };
 
 /**
@@ -252,5 +269,10 @@ export const TEMPLATE_MAP = {
     manual: TEMPLATES['exclusividade_manual'],
     mista: TEMPLATES['exclusividade_mista'],
     sem_conjuge_mista: TEMPLATES['exclusividade_sem_conjuge_mista'],
+  },
+  locacao: {
+    digital: TEMPLATES['locacao_digital'],
+    manual: TEMPLATES['locacao_manual'],
+    mista: TEMPLATES['locacao_mista'],
   },
 };

@@ -1,5 +1,32 @@
-export type ContractType = 'venda_vista' | 'venda_parcelada' | 'exclusividade';
+export type ContractType = 'venda_vista' | 'venda_parcelada' | 'exclusividade' | 'locacao';
 export type ContractSubtype = 'imovel' | 'outros_bens';
+
+export interface LocacaoDetails {
+  tipoImovel: 'casa' | 'galpao' | 'apartamento' | 'sala_comercial' | 'predio' | 'terreno' | 'outro';
+  finalidadeLocacao: 'residencial' | 'comercial' | 'industrial_galpao' | 'temporada';
+  valorAluguel: number;
+  valorAluguelExtenso?: string;
+  diaVencimento: number; // Ex: 5, 10, 15, 20
+  formaPagamento: 'PIX' | 'Boleto Bancário' | 'Transferência Bancária' | 'Depósito' | 'Dinheiro' | 'Outro' | string;
+  dadosBancariosLocador?: string;
+  indiceReajuste: 'IGP-M' | 'IPCA' | 'INPC' | 'FIPE-ZAP' | 'Sem Reajuste' | string;
+  periodicidadeReajuste: 'Anual' | 'Semestral' | string;
+  prazoMeses: number; // Ex: 12, 24, 30, 36
+  dataInicio: string;
+  dataTermino: string;
+  garantiaTipo: 'caucao' | 'fiador' | 'seguro_fianca' | 'sem_garantia';
+  valorCaucao?: number;
+  numeroMesesCaucao?: number;
+  fiador?: PartyDetailedInfo;
+  multaAtrasoPercentual: number; // Ex: 10%
+  jurosMoraMensalPercentual: number; // Ex: 1%
+  multaRescisao?: string; // Ex: 3 (três) meses de aluguel proporcional
+  despesasLocatario?: string; // Ex: Energia elétrica, água, taxa de lixo e condomínio
+  destinacaoUso?: string; // Ex: Armazenamento e logística de mercadorias / Residência familiar
+  vistoriaInicialRealizada: boolean;
+  autorizaSublocacao: boolean;
+  renovacaoAutomatica?: boolean;
+}
 
 export interface VehicleOrGoodsDetails {
   tipoBem?: 'veiculo' | 'moto' | 'carro' | 'caminhao' | 'embarcacao' | 'maquinario' | 'eletronico' | 'outro';
@@ -170,7 +197,12 @@ export interface ContractData {
 
   // Específico Exclusividade
   exclusividade?: {
-    tipoExclusividade: 'Venda de Imóvel' | 'Representação Comercial' | 'Prestação de Serviços' | 'Venda de Veículo/Bem';
+    tipoExclusividade: 'Venda de Imóvel' | 'Locação de Imóvel' | 'Venda e Locação' | 'Representação Comercial' | 'Prestação de Serviços' | 'Venda de Veículo/Bem';
+    finalidade?: 'venda' | 'locacao' | 'ambos';
+    tipoImovelLocacao?: 'casa' | 'galpao' | 'comercial' | 'apartamento' | 'terreno' | 'outro';
+    valorLocacaoSugerido?: number;
+    valorLocacaoSugeridoExtenso?: string;
+    comissaoLocacao?: string; // Ex: "100% do primeiro aluguel" ou "1º aluguel integral + taxa adm"
     dataInicio: string;
     dataTermino: string;
     prazoMesesOuDias: number;
@@ -181,12 +213,16 @@ export interface ContractData {
     multaRescisaoOuQuebra: number;
     renovacaoAutomatica: boolean;
     autorizaDivulgacaoPlacasRedes: boolean;
+    autorizaProspeccaoClientes?: boolean;
     condicoesPagamento?: string;
     documentoPropriedade?: string;
     matricula?: string;
     inscricaoPrefeitura?: string;
     outrosDadosImovel?: string;
   };
+
+  // Específico Contrato de Locação / Aluguel
+  locacao?: LocacaoDetails;
 
   // Cláusulas Adicionais Personalizadas
   clausulasExtras?: string;
@@ -419,4 +455,105 @@ export interface ContractExclusividadeTagsMapping {
   DIA: string;
   MES_EXTENSO: string;
   ANO: string;
+
+  // ESPECÍFICO PARA LOCAÇÃO EM EXCLUSIVIDADE
+  FINALIDADE_EXCLUSIVIDADE?: string;
+  VALOR_LOCACAO_SUGERIDO?: string;
+  VALOR_LOCACAO_SUGERIDO_EXTENSO?: string;
+  COMISSAO_LOCACAO?: string;
+  AUTORIZACAO_PROSPECCAO?: string;
+}
+
+// Mapeamento de Tags Padronizadas do Contrato de Locação
+export interface ContractLocacaoTagsMapping {
+  [key: string]: string | undefined;
+  // LOCADOR (PROPRIETÁRIO)
+  artigo_locador: string;
+  tratamento_locador: string;
+  locador: string;
+  nacionalidade_locador: string;
+  estado_civil_locador: string;
+  rg_locador: string;
+  emissao_rg_locador: string;
+  cpf_locador: string;
+  concordancia_locador: string;
+  endereco_locador: string;
+  numero_locador: string;
+  bairro_locador: string;
+  cep_locador: string;
+  cidade_locador: string;
+  estado_locador: string;
+  telefone_locador: string;
+  email_locador?: string;
+
+  // LOCATÁRIO (INQUILINO)
+  artigo_locatario: string;
+  tratamento_locatario: string;
+  locatario: string;
+  nacionalidade_locatario: string;
+  estado_civil_locatario: string;
+  rg_locatario: string;
+  emissao_rg_locatario: string;
+  cpf_locatario: string;
+  concordancia_locatario: string;
+  endereco_locatario: string;
+  numero_locatario: string;
+  bairro_locatario: string;
+  cep_locatario: string;
+  cidade_locatario: string;
+  estado_locatario: string;
+  telefone_locatario: string;
+  email_locatario?: string;
+
+  // FIADOR (QUANDO APLICÁVEL)
+  tem_fiador: string;
+  fiador_nome: string;
+  fiador_cpf: string;
+  fiador_rg: string;
+  fiador_nacionalidade: string;
+  fiador_estado_civil: string;
+  fiador_endereco: string;
+  fiador_telefone: string;
+  conjuge_fiador_nome: string;
+  conjuge_fiador_cpf: string;
+
+  // IMÓVEL LOCADO (CASA, GALPÃO, COMERCIAL)
+  tipo_imovel_locado: string;
+  destinacao_locacao: string;
+  endereco_imovel_locado: string;
+  cidade_imovel_locado: string;
+  estado_imovel_locado: string;
+  area_imovel_locado: string;
+  descricao_detalhada_imovel: string;
+
+  // VALORES E CONDIÇÕES
+  valor_aluguel: string;
+  valor_aluguel_extenso: string;
+  dia_vencimento: string;
+  forma_pagamento_aluguel: string;
+  dados_bancarios_locador: string;
+  indice_reajuste: string;
+  periodicidade_reajuste: string;
+  prazo_locacao_meses: string;
+  data_inicio_locacao: string;
+  data_termino_locacao: string;
+  garantia_locaticia_tipo: string;
+  garantia_locaticia_descricao: string;
+  valor_caucao: string;
+  valor_caucao_extenso: string;
+  multa_atraso_percentual: string;
+  juros_mora_percentual: string;
+  multa_rescisoria: string;
+  despesas_locatario: string;
+
+  // FORO E DATAS
+  cidade_foro: string;
+  uf_foro: string;
+  foro_comarca: string;
+  cidade_assinatura: string;
+  uf_assinatura: string;
+  dia: string;
+  mes_extenso: string;
+  ano: string;
+  data_assinatura: string;
 }

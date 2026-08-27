@@ -67,6 +67,7 @@ function toTemplateKey(tipo: TemplateCategory): CustomTemplateKey {
   if (tipo === 'venda_vista') return 'venda_vista_imovel';
   if (tipo === 'venda_parcelada') return 'venda_parcelada_imovel';
   if (tipo === 'outros_bens') return 'venda_vista_outros';
+  if (tipo === 'locacao') return 'locacao_imovel';
   return 'exclusividade';
 }
 
@@ -100,6 +101,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
     venda_vista: null,
     venda_parcelada: null,
     exclusividade: null,
+    locacao: null,
     outros_bens: null,
   });
 
@@ -355,6 +357,32 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
         badge: 'Sem Cônjuge • 2 Testemunhas',
       },
     ],
+    locacao: [
+      {
+        modalidade: 'digital',
+        titulo: 'Locação - Assinatura Digital',
+        arquivo: 'locacao_assinatura_digital.docx',
+        testemunhas: false,
+        descricao: 'Locação de casas, galpões e prédios com assinatura 100% digital e hashes SHA-256.',
+        badge: 'Sem Testemunhas',
+      },
+      {
+        modalidade: 'manual',
+        titulo: 'Locação - Assinatura Manual / Física',
+        arquivo: 'locacao_assinatura_manual_2_testemunhas.docx',
+        testemunhas: true,
+        descricao: 'Contrato de aluguel para assinatura física/caneta e 2 testemunhas.',
+        badge: '2 Testemunhas',
+      },
+      {
+        modalidade: 'mista',
+        titulo: 'Locação - Assinatura Mista',
+        arquivo: 'locacao_mista_2_testemunhas.docx',
+        testemunhas: true,
+        descricao: 'Locador assina digitalmente e Locatário assina em via impressa.',
+        badge: '2 Testemunhas',
+      },
+    ],
     outros_bens: [
       {
         modalidade: 'digital',
@@ -389,10 +417,11 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
   const loadAllData = async () => {
     setLoadingStorage(true);
     try {
-      const [vistaMeta, parcMeta, exclMeta, outrosMeta, listRes] = await Promise.all([
+      const [vistaMeta, parcMeta, exclMeta, locMeta, outrosMeta, listRes] = await Promise.all([
         getCustomWordTemplateMeta('venda_vista_imovel'),
         getCustomWordTemplateMeta('venda_parcelada_imovel'),
         getCustomWordTemplateMeta('exclusividade'),
+        getCustomWordTemplateMeta('locacao_imovel'),
         getCustomWordTemplateMeta('venda_vista_outros'),
         listTemplates(),
       ]);
@@ -401,6 +430,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
         venda_vista: vistaMeta,
         venda_parcelada: parcMeta,
         exclusividade: exclMeta,
+        locacao: locMeta,
         outros_bens: outrosMeta,
       });
 
@@ -811,7 +841,7 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
           </div>
 
           {/* Grid de Categorias */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
             {/* Card Venda à Vista */}
             <button
               type="button"
@@ -919,6 +949,43 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
                 <span className="text-slate-400 font-medium">3 matrizes</span>
                 <span className={`font-bold ${metas.exclusividade ? 'text-emerald-700' : 'text-slate-500'}`}>
                   {metas.exclusividade ? 'Customizado' : 'Oficial'}
+                </span>
+              </div>
+            </button>
+
+            {/* Card Locação / Aluguel */}
+            <button
+              type="button"
+              onClick={() => setActiveCategory('locacao')}
+              className={`p-2.5 sm:p-3 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer relative ${
+                activeCategory === 'locacao'
+                  ? 'bg-amber-50/95 border-amber-500 ring-2 ring-amber-500/20 shadow-xs'
+                  : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-1 w-full">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div
+                    className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
+                      activeCategory === 'locacao' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    <Building2 className="w-3.5 h-3.5 stroke-[2.3]" />
+                  </div>
+                  <span className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">
+                    Locação
+                  </span>
+                </div>
+                {metas.locacao ? (
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100 shrink-0" title="Customizado Ativo" />
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-slate-300 shrink-0" />
+                )}
+              </div>
+              <div className="mt-2 flex items-center justify-between pt-1 border-t border-slate-100 text-[10px]">
+                <span className="text-slate-400 font-medium">3 matrizes</span>
+                <span className={`font-bold ${metas.locacao ? 'text-emerald-700' : 'text-slate-500'}`}>
+                  {metas.locacao ? 'Customizado' : 'Oficial'}
                 </span>
               </div>
             </button>

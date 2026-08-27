@@ -139,6 +139,23 @@ const ModernModalidadeBadge: React.FC<{ contract: ContractData }> = ({ contract 
     );
   }
 
+  if (contract.tipo === 'locacao') {
+    const prazo = contract.locacao?.prazoMeses ? `${contract.locacao.prazoMeses}m` : 'Aluguel';
+    return (
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-teal-50 border border-teal-300 text-teal-950 font-bold text-[11px] shadow-2xs">
+        <span className="w-5 h-5 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0">
+          <Building2 className="w-3 h-3 text-white stroke-[2.5]" />
+        </span>
+        <div className="flex items-center gap-1">
+          <span>Locação</span>
+          <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-teal-200 text-teal-950 font-mono">
+            {prazo}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return null;
 };
 
@@ -181,8 +198,9 @@ const ModernAssinaturaBadge: React.FC<{ contract: ContractData }> = ({ contract 
 /** Componente moderno para visualização das Partes Envolvidas */
 const ModernPartesEnvolvidas: React.FC<{ contract: ContractData }> = ({ contract }) => {
   const isExclusividade = contract.tipo === 'exclusividade';
-  const label1 = isExclusividade ? 'Proprietário' : 'Vendedor';
-  const label2 = isExclusividade ? 'Corretor' : 'Comprador';
+  const isLocacao = contract.tipo === 'locacao';
+  const label1 = isExclusividade ? 'Proprietário' : isLocacao ? 'Locador' : 'Vendedor';
+  const label2 = isExclusividade ? 'Corretor' : isLocacao ? 'Locatário' : 'Comprador';
   
   const nome1 = contract.vendedor?.nome || 'Não informado';
   const doc1 = contract.vendedor?.cpfCnpj || '';
@@ -455,6 +473,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     .reduce((acc, c) => acc + (c.valorTotal || 0), 0);
 
   const countVendasParceladas = contracts.filter((c) => c.tipo === 'venda_parcelada').length;
+  const countLocacao = contracts.filter((c) => c.tipo === 'locacao').length;
 
   const totalVendasGeral = totalVendasAVista + totalVendasParceladas;
   const countTotalVendas = countVendasAVista + countVendasParceladas;
@@ -763,17 +782,50 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       Contrato de Exclusividade
                     </h2>
                     <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-yellow-400/20 text-yellow-300 text-[10px] font-bold border border-yellow-400/40">
-                      Corretor & Prazos
+                      Venda & Locação
                     </span>
                   </div>
                   <p className="text-slate-300 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
-                    Autorização de venda com exclusividade e controle automático de vigência.
+                    Autorização de venda ou locação com prospecção e controle de vigência.
                   </p>
                 </div>
               </div>
 
               {/* Botão de seta redonda à direita */}
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-yellow-400 text-slate-950 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
+                <ChevronRight className="w-5 h-5 stroke-[2.8]" />
+              </div>
+            </div>
+
+            {/* Card 4: Locação / Aluguel - Esmeralda / Grafite */}
+            <div
+              onClick={() => onNewContract('locacao')}
+              className="w-full rounded-[1.75rem] p-4 sm:p-5 bg-gradient-to-r from-teal-950 via-teal-900 to-slate-950 text-white shadow-md shadow-teal-950/20 hover:shadow-lg hover:shadow-teal-950/30 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-between gap-4 group border border-teal-800"
+              role="button"
+              title="Criar Contrato de Locação / Aluguel"
+            >
+              <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
+                {/* Ícone dentro de círculo esmeralda */}
+                <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform font-bold">
+                  <Building2 className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
+                </div>
+                <div className="min-w-0 text-left">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-snug">
+                      Contrato de Locação / Aluguel
+                    </h2>
+                    <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-teal-400/20 text-teal-300 text-[10px] font-bold border border-teal-400/40">
+                      Casas & Galpões
+                    </span>
+                  </div>
+                  <p className="text-slate-300 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
+                    Locação residencial e comercial com garantias, vistorias e reajustes.
+                  </p>
+                </div>
+              </div>
+
+              {/* Botão de seta redonda à direita */}
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-teal-400 text-slate-950 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
                 <ChevronRight className="w-5 h-5 stroke-[2.8]" />
               </div>
             </div>
@@ -1117,8 +1169,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Barra de Filtros: Categorias e Status de Assinatura (100% Responsivo sem rolagem lateral) */}
         <div className="space-y-3">
-          {/* 1. Filtros por Categoria de Contrato - Grid responsivo de 4 botões (2 colunas em celular, 4 colunas em tela maior) */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
+          {/* 1. Filtros por Categoria de Contrato - Grid responsivo de 5 botões (2 colunas em celular, 5 colunas em tela maior) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 w-full">
             {/* Todos */}
             <button
               onClick={() => setSelectedCategory('todos')}
@@ -1196,6 +1248,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 selectedCategory === 'exclusividade' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
               }`}>
                 {exclusivityContracts.length}
+              </span>
+            </button>
+
+            {/* Locação */}
+            <button
+              onClick={() => setSelectedCategory('locacao')}
+              className={`px-3 py-2 sm:py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-between sm:justify-center gap-2 cursor-pointer border ${
+                selectedCategory === 'locacao'
+                  ? 'bg-teal-800 text-white border-teal-800 shadow-sm'
+                  : 'bg-teal-50/50 text-teal-950 hover:bg-teal-100/60 border-teal-200/70 hover:border-teal-300'
+              }`}
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Building2 className={`w-3.5 h-3.5 shrink-0 ${selectedCategory === 'locacao' ? 'text-teal-300' : 'text-teal-700'}`} />
+                <span className="truncate">Locação</span>
+              </div>
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                selectedCategory === 'locacao' ? 'bg-white/20 text-white' : 'bg-teal-200 text-teal-950'
+              }`}>
+                {countLocacao}
               </span>
             </button>
           </div>
