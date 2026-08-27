@@ -13,11 +13,11 @@ interface TemplatePreferences {
 }
 
 const DEFAULT_TEMPLATES: TemplatePreferences = {
-  // venda_vista e venda_parcelada usam um arquivo mestre único (as 3
-  // modalidades saem do mesmo .docx - ver templateResolver.ts)
+  // venda_vista, venda_parcelada e exclusividade usam um arquivo mestre
+  // único cada (as 3 modalidades saem do mesmo .docx - ver templateResolver.ts)
   venda_vista: 'venda_vista_master.docx',
   venda_parcelada: 'venda_parcelada_master.docx',
-  exclusividade: 'exclusividade_digital_sem_testemunhas.docx',
+  exclusividade: 'exclusividade_master.docx',
 };
 
 /**

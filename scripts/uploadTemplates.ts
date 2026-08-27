@@ -42,12 +42,9 @@ const TEMPLATES = [
   // VENDA PARCELADA - idem, arquivo mestre único
   'venda_parcelada_master.docx',
 
-  // EXCLUSIVIDADE (ainda em arquivos separados por modalidade/variante -
-  // tem cláusula de cônjuge que difere de fato entre as variantes)
-  'exclusividade_digital_sem_testemunhas.docx',
-  'exclusividade_mista_2_testemunhas.docx',
-  'exclusividade_manual_2_testemunhas.docx',
-  'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
+  // EXCLUSIVIDADE - idem, arquivo mestre único (nenhum contrato tem cláusula
+  // de cônjuge, então não há mais variante "sem_conjuge" separada)
+  'exclusividade_master.docx',
 ];
 
 /**

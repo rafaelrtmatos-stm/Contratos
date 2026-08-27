@@ -302,27 +302,11 @@ export const WordTemplateModal: React.FC<WordTemplateModalProps> = ({
     exclusividade: [
       {
         modalidade: 'digital',
-        titulo: 'Assinatura Digital',
-        arquivo: 'exclusividade_digital_sem_testemunhas.docx',
-        testemunhas: false,
-        descricao: 'Corretor e Contratante/Proprietário assinam digitalmente pelo sistema.',
-        badge: 'Sem Testemunhas',
-      },
-      {
-        modalidade: 'mista',
-        titulo: 'Assinatura Mista',
-        arquivo: 'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',
+        titulo: 'Arquivo Mestre (Digital / Manual / Mista)',
+        arquivo: 'exclusividade_master.docx',
         testemunhas: true,
-        descricao: 'Corretor assina no sistema e Contratante assina presencialmente.',
-        badge: '2 Testemunhas',
-      },
-      {
-        modalidade: 'variante',
-        titulo: 'Variante Sem Cônjuge (Mista)',
-        arquivo: 'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
-        testemunhas: true,
-        descricao: 'Modelo adaptado para proprietário sem cônjuge ou solteiro.',
-        badge: 'Sem Cônjuge • 2 Testemunhas',
+        descricao: 'Único arquivo para as 3 modalidades: usa tags unificadas de assinatura e o bloco de testemunhas é adicionado ou removido automaticamente ao gerar o contrato, conforme a modalidade real de cada parte. Nenhuma variante de cônjuge - não é mais necessária.',
+        badge: 'Testemunhas Automáticas',
       },
     ],
     locacao: [

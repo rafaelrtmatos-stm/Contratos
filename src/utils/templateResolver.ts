@@ -54,29 +54,33 @@ const TEMPLATES: Record<string, TemplateResolved> = {
   },
 
   // EXCLUSIVIDADE
+  // Arquivo mestre único (mesmo esquema de venda_vista/venda_parcelada acima).
+  // Nenhum contrato de exclusividade envolve cláusula de cônjuge - a antiga
+  // variante "sem_conjuge" tinha texto IDENTICO à variante normal (conferido
+  // parágrafo a parágrafo), então não existe mais razão para arquivo
+  // separado: a chave 'sem_conjuge' abaixo aponta pro mesmo master só para
+  // não quebrar quem já persistiu esse valor de variante.
   'exclusividade_digital': {
-    arquivo: 'exclusividade_digital_sem_testemunhas.docx',
-    testemunhas: false,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{CONTRATANTE_ASSINATURA_DIGITAL}}'],
+    arquivo: 'exclusividade_master.docx',
+    testemunhas: true,
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{CONTRATANTE_ASSINATURA}}'],
   },
   'exclusividade_mista': {
-    arquivo: 'exclusividade_mista_2_testemunhas.docx',
+    arquivo: 'exclusividade_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{CONTRATANTE_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{CONTRATANTE_ASSINATURA}}'],
   },
-  // Totalmente manual (nenhuma das partes assina digitalmente): só linhas,
-  // nome e CPF de cada parte + testemunhas.
   'exclusividade_manual': {
-    arquivo: 'exclusividade_manual_2_testemunhas.docx',
+    arquivo: 'exclusividade_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_MANUAL}}', '{{CONTRATANTE_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{CONTRATANTE_ASSINATURA}}'],
   },
-  // "sem_conjuge_mista" precisa ser um arquivo MISTO (um digital, um
-  // manual)
+  // Mantida só por compatibilidade com o campo `variante` já persistido em
+  // contratos existentes - resolve para o mesmo arquivo mestre.
   'exclusividade_sem_conjuge_mista': {
-    arquivo: 'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
+    arquivo: 'exclusividade_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{CONTRATANTE_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{CONTRATANTE_ASSINATURA}}'],
   },
 
   // LOCAÇÃO (Aluguel de Casas, Galpões e Imóveis)
@@ -170,11 +174,8 @@ export function resolveTemplate(
    */
   if (acao === 'download_antes_assinar') {
     if (tipo === 'exclusividade') {
-      const key = variante === 'sem_conjuge' 
-        ? 'exclusividade_sem_conjuge_mista'
-        : 'exclusividade_mista';
       return {
-        ...TEMPLATES[key],
+        ...TEMPLATES['exclusividade_mista'],
         motivacao: 'Baixar antes de assinar - assume modalidade manual (pior caso)',
       };
     }
@@ -218,16 +219,7 @@ export function resolveTemplate(
 
     // Caso geral: verifica se precisa testemunhas
     const modalidade = determinarModalidade(state, tipo);
-    let key = variante === 'sem_conjuge' && tipo === 'exclusividade'
-      ? `exclusividade_sem_conjuge_${modalidade}`
-      : `${tipo}_${modalidade}`;
-
-    // "sem_conjuge" não tem arquivo dedicado pra modalidade 'manual' (só
-    // pra 'mista') - cai no template manual genérico da exclusividade,
-    // que não depende de cláusula de cônjuge.
-    if (!TEMPLATES[key]) {
-      key = `exclusividade_${modalidade}`;
-    }
+    const key = `${tipo}_${modalidade}`;
 
     return {
       ...TEMPLATES[key],
