@@ -12,37 +12,45 @@ import {
  */
 const TEMPLATES: Record<string, TemplateResolved> = {
   // VENDA À VISTA
+  // Arquivo mestre único para as 3 modalidades (digital/manual/mista): usa
+  // tags UNIFICADAS ({{USUARIO_ASSINATURA}}/{{COMPRADOR_ASSINATURA}}, ver
+  // signatureTagProcessor.ts) - quem decide selo-imagem vs linha manual é a
+  // modalidade real de cada parte, não o arquivo escolhido. O bloco de
+  // testemunhas ({{BLOCO_TESTEMUNHAS_INICIO/FIM}}) é removido ou mantido em
+  // tempo de geração por processarBlocoTestemunhas, conforme
+  // `testemunhaprecisa`. `testemunhas: true` aqui só documenta que o arquivo
+  // TEM o bloco (não que ele necessariamente aparece no resultado final).
   'venda_vista_digital': {
-    arquivo: 'venda_vista_assinatura_digital.docx',
-    testemunhas: false,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{COMPRADOR_ASSINATURA_DIGITAL}}'],
+    arquivo: 'venda_vista_master.docx',
+    testemunhas: true,
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{COMPRADOR_ASSINATURA}}'],
   },
   'venda_vista_manual': {
-    arquivo: 'venda_vista_assinatura_manual_2_testemunhas.docx',
+    arquivo: 'venda_vista_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_MANUAL}}', '{{COMPRADOR_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{COMPRADOR_ASSINATURA}}'],
   },
   'venda_vista_mista': {
-    arquivo: 'venda_vista_mista_2_testemunhas.docx',
+    arquivo: 'venda_vista_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{COMPRADOR_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{COMPRADOR_ASSINATURA}}'],
   },
 
-  // VENDA PARCELADA
+  // VENDA PARCELADA (mesmo esquema de arquivo mestre único - ver comentário acima)
   'venda_parcelada_digital': {
-    arquivo: 'venda_parcelada_assinatura_digital.docx',
-    testemunhas: false,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{COMPRADOR_ASSINATURA_DIGITAL}}'],
+    arquivo: 'venda_parcelada_master.docx',
+    testemunhas: true,
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{COMPRADOR_ASSINATURA}}'],
   },
   'venda_parcelada_manual': {
-    arquivo: 'venda_parcelada_assinatura_manual_2_testemunhas.docx',
+    arquivo: 'venda_parcelada_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_MANUAL}}', '{{COMPRADOR_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{COMPRADOR_ASSINATURA}}'],
   },
   'venda_parcelada_mista': {
-    arquivo: 'venda_parcelada_mista_2_testemunhas.docx',
+    arquivo: 'venda_parcelada_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{COMPRADOR_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{COMPRADOR_ASSINATURA}}'],
   },
 
   // EXCLUSIVIDADE
