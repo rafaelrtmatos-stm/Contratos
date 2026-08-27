@@ -27,6 +27,8 @@ import {
   FileCheck,
   Car,
   Package,
+  Key,
+  Layers,
 } from 'lucide-react';
 import { ValidatedInput } from './ValidatedInput';
 import { CEPSearch } from './CEPSearch';
@@ -395,7 +397,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     }
   }, [tipo, dataInicioLocacao, prazoMesesLocacao]);
 
-  const updateDefaultTitle = (t: ContractType, sub: ContractSubtype) => {
+  const updateDefaultTitle = (t: ContractType, sub: ContractSubtype, finExcl?: 'venda' | 'locacao' | 'ambos') => {
     if (t === 'venda_vista') {
       setTitulo(
         sub === 'outros_bens'
@@ -411,7 +413,14 @@ export const ContractForm: React.FC<ContractFormProps> = ({
     } else if (t === 'locacao') {
       setTitulo('Contrato de Locação de Imóvel Residencial / Comercial');
     } else {
-      setTitulo('Contrato de Prestação de Serviços de Corretagem com Exclusividade');
+      const fin = finExcl || finalidadeExclusividade;
+      if (fin === 'locacao') {
+        setTitulo('Contrato de Prestação de Serviços de Intermediação de Locação com Exclusividade');
+      } else if (fin === 'ambos') {
+        setTitulo('Contrato de Prestação de Serviços de Intermediação Imobiliária (Venda e Locação) com Exclusividade');
+      } else {
+        setTitulo('Contrato de Prestação de Serviços de Corretagem com Exclusividade');
+      }
     }
   };
 
@@ -427,14 +436,21 @@ export const ContractForm: React.FC<ContractFormProps> = ({
       setNumeroContrato(
         `CT-${newTipo === 'venda_vista' ? 'VISTA' : newTipo === 'venda_parcelada' ? 'PARC' : newTipo === 'locacao' ? 'LOC' : 'EXCL'}-${Date.now().toString().slice(-4)}`
       );
-      updateDefaultTitle(newTipo, subcategoria);
+      updateDefaultTitle(newTipo, subcategoria, finalidadeExclusividade);
     }
   };
 
   const handleSubcategoriaChange = (newSub: ContractSubtype) => {
     setSubcategoria(newSub);
     if (!initialData) {
-      updateDefaultTitle(tipo, newSub);
+      updateDefaultTitle(tipo, newSub, finalidadeExclusividade);
+    }
+  };
+
+  const handleFinalidadeExclusividadeChange = (newFin: 'venda' | 'locacao' | 'ambos') => {
+    setFinalidadeExclusividade(newFin);
+    if (!initialData) {
+      updateDefaultTitle(tipo, subcategoria, newFin);
     }
   };
 
@@ -847,6 +863,10 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                   ? 'Contrato de Compra e Venda Parcelada'
                   : tipo === 'locacao'
                   ? 'Contrato de Locação de Imóvel'
+                  : finalidadeExclusividade === 'locacao'
+                  ? 'Contrato de Intermediação de Locação com Exclusividade'
+                  : finalidadeExclusividade === 'ambos'
+                  ? 'Contrato de Intermediação de Venda e Locação com Exclusividade'
                   : 'Contrato de Prestação de Serviços com Exclusividade'}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500">
@@ -917,6 +937,76 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     <span className="text-xs font-extrabold text-slate-900 block">Outros Bens (Carro, Moto, Embarcação, etc.)</span>
                     <span className="text-[11px] text-slate-500 block mt-0.5">
                       Marca, modelo, placa, chassi, renavam e estado
+                    </span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* SELETOR DE MODALIDADE/FINALIDADE DA EXCLUSIVIDADE (Venda vs Locação vs Ambos) NO INÍCIO DA PÁGINA */}
+          {tipo === 'exclusividade' && (
+            <div className="space-y-2.5">
+              <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                Finalidade da Intermediação com Exclusividade:
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleFinalidadeExclusividadeChange('venda')}
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3.5 cursor-pointer ${
+                    finalidadeExclusividade === 'venda'
+                      ? 'border-yellow-400 bg-yellow-50/70 ring-2 ring-yellow-400/30 shadow-2xs'
+                      : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                  }`}
+                >
+                  <div className={`p-2.5 rounded-xl shrink-0 ${finalidadeExclusividade === 'venda' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-600'}`}>
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-extrabold text-slate-900 block">Venda do Imóvel</span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5">
+                      Alienação, divulgação e comercialização
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleFinalidadeExclusividadeChange('locacao')}
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3.5 cursor-pointer ${
+                    finalidadeExclusividade === 'locacao'
+                      ? 'border-yellow-400 bg-yellow-50/70 ring-2 ring-yellow-400/30 shadow-2xs'
+                      : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                  }`}
+                >
+                  <div className={`p-2.5 rounded-xl shrink-0 ${finalidadeExclusividade === 'locacao' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-600'}`}>
+                    <Key className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-extrabold text-slate-900 block">Intermediação de Locação</span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5">
+                      Prospecção, locação e administração
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleFinalidadeExclusividadeChange('ambos')}
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3.5 cursor-pointer ${
+                    finalidadeExclusividade === 'ambos'
+                      ? 'border-yellow-400 bg-yellow-50/70 ring-2 ring-yellow-400/30 shadow-2xs'
+                      : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                  }`}
+                >
+                  <div className={`p-2.5 rounded-xl shrink-0 ${finalidadeExclusividade === 'ambos' ? 'bg-yellow-400 text-slate-950' : 'bg-slate-200 text-slate-600'}`}>
+                    <Layers className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-extrabold text-slate-900 block">Venda e Locação</span>
+                    <span className="text-[11px] text-slate-500 block mt-0.5">
+                      Autorização mista e abrangente
                     </span>
                   </div>
                 </button>
@@ -1093,7 +1183,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <button
                         type="button"
-                        onClick={() => setFinalidadeExclusividade('venda')}
+                        onClick={() => handleFinalidadeExclusividadeChange('venda')}
                         className={`p-3 rounded-lg text-left border transition-all cursor-pointer ${
                           finalidadeExclusividade === 'venda'
                             ? 'bg-white border-amber-500 ring-2 ring-amber-400 shadow-xs'
@@ -1105,7 +1195,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       </button>
                       <button
                         type="button"
-                        onClick={() => setFinalidadeExclusividade('locacao')}
+                        onClick={() => handleFinalidadeExclusividadeChange('locacao')}
                         className={`p-3 rounded-lg text-left border transition-all cursor-pointer ${
                           finalidadeExclusividade === 'locacao'
                             ? 'bg-white border-amber-500 ring-2 ring-amber-400 shadow-xs'
@@ -1117,7 +1207,7 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       </button>
                       <button
                         type="button"
-                        onClick={() => setFinalidadeExclusividade('ambos')}
+                        onClick={() => handleFinalidadeExclusividadeChange('ambos')}
                         className={`p-3 rounded-lg text-left border transition-all cursor-pointer ${
                           finalidadeExclusividade === 'ambos'
                             ? 'bg-white border-amber-500 ring-2 ring-amber-400 shadow-xs'
