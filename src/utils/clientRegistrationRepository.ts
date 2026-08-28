@@ -478,8 +478,12 @@ export function buildWhatsAppNotificationMessage(params: {
     `🪪 *RG:* ${reg.rg ? `${formatRG(reg.rg)} (${toUpperCase(reg.rgOrgao || 'SSP')})` : 'Não informado'}`,
     `💍 *Estado Civil:* ${toUpperCase(reg.estadoCivil || 'Solteiro(a)')}`,
     `💼 *Profissão:* ${toUpperCase(reg.profissao || 'Não informada')}`,
-    `📱 *WhatsApp:* ${formatPhone(reg.telefone)}`,
+    `📞 *Contato:* ${formatPhone(reg.telefone)}`,
   ];
+
+  if (reg.telefone2 && reg.telefone2.trim()) {
+    lines.push(`📞 *Contato Secundário:* ${formatPhone(reg.telefone2)}`);
+  }
 
   if (reg.email) {
     lines.push(`✉️ *E-mail:* ${reg.email.toLowerCase().trim()}`);

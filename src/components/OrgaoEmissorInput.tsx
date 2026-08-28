@@ -185,7 +185,7 @@ export const OrgaoEmissorInput: React.FC<OrgaoEmissorInputProps> = ({
             type="text"
             value={value}
             onChange={(e) => onChange(e.target.value.toUpperCase())}
-            placeholder="Ex: SSP/PA, PC/SP, DIC, etc."
+            placeholder="SSP/PA, PC/SP, DIC, etc."
             autoFocus
             className={`w-full px-3 py-2.5 text-xs font-bold uppercase border-2 rounded-xl bg-white text-slate-800
               focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all shadow-2xs ${

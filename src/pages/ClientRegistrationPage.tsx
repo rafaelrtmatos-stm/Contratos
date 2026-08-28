@@ -209,7 +209,7 @@ export const ClientRegistrationPage: React.FC = () => {
     }
 
     if (!isPhoneValid) {
-      setSubmitError('Por favor, informe um número de WhatsApp/Telefone celular válido com DDD.');
+      setSubmitError('Por favor, informe um número de contato válido com DDD.');
       return;
     }
 
@@ -507,7 +507,7 @@ export const ClientRegistrationPage: React.FC = () => {
                     required
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
-                    placeholder={tipoPessoa === 'PJ' ? 'Ex: IMOBILIÁRIA BRASIL LTDA' : 'Ex: JOÃO PAULO DA SILVA'}
+                    placeholder={tipoPessoa === 'PJ' ? 'Razão Social da Empresa' : 'Nome Completo'}
                     className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 uppercase tracking-tight"
                   />
                 </div>
@@ -602,7 +602,7 @@ export const ClientRegistrationPage: React.FC = () => {
                         type="text"
                         value={profissao}
                         onChange={(e) => setProfissao(e.target.value)}
-                        placeholder="Ex: Engenheiro(a) Civil, Empresário(a)..."
+                        placeholder="Profissão"
                         className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 uppercase"
                       />
                     </div>
@@ -666,7 +666,7 @@ export const ClientRegistrationPage: React.FC = () => {
                         type="text"
                         value={conjugeNome}
                         onChange={(e) => setConjugeNome(e.target.value)}
-                        placeholder="Ex: MARIA HELENA DOS SANTOS"
+                        placeholder="Nome completo do cônjuge"
                         className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 uppercase"
                       />
                     </div>
@@ -743,7 +743,7 @@ export const ClientRegistrationPage: React.FC = () => {
                       required
                       value={endereco}
                       onChange={(e) => setEndereco(e.target.value)}
-                      placeholder="Ex: AV. NAZARÉ"
+                      placeholder="Rua / Avenida / Travessa"
                       className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 uppercase"
                     />
                   </div>
@@ -757,7 +757,7 @@ export const ClientRegistrationPage: React.FC = () => {
                       required
                       value={numero}
                       onChange={(e) => setNumero(e.target.value)}
-                      placeholder="123 ou S/N"
+                      placeholder="Número ou S/N"
                       className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 uppercase"
                     />
                   </div>
@@ -770,7 +770,7 @@ export const ClientRegistrationPage: React.FC = () => {
                       type="text"
                       value={complemento}
                       onChange={(e) => setComplemento(e.target.value)}
-                      placeholder="Ex: Apto 402, Bloco B"
+                      placeholder="Apartamento, bloco, sala (opcional)"
                       className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 uppercase"
                     />
                   </div>
@@ -784,7 +784,7 @@ export const ClientRegistrationPage: React.FC = () => {
                       required
                       value={bairro}
                       onChange={(e) => setBairro(e.target.value)}
-                      placeholder="Ex: CENTRO"
+                      placeholder="Bairro"
                       className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 uppercase"
                     />
                   </div>
@@ -817,20 +817,20 @@ export const ClientRegistrationPage: React.FC = () => {
               </div>
             </div>
 
-            {/* SEÇÃO 5: CONTATO & COMUNICAÇÃO */}
+            {/* SEÇÃO 3: CONTATO */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-slate-900 border-b border-slate-100 pb-2">
                 <Phone className="w-4 h-4 text-yellow-600" />
                 <h3 className="font-extrabold text-sm uppercase tracking-wide">
-                  3. Contatos para Notificações
+                  3. Contato
                 </h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* WhatsApp */}
+                {/* Contato Principal */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                    <span>WhatsApp / Celular <span className="text-rose-600">*</span></span>
+                    <span>Contato <span className="text-rose-600">*</span></span>
                     {telefone && (
                       <span className={`text-[10px] font-bold ${isPhoneValid ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {isPhoneValid ? '✓ Válido' : '✗ Incompleto'}
@@ -848,17 +848,17 @@ export const ClientRegistrationPage: React.FC = () => {
                   />
                 </div>
 
-                {/* Telefone Secundário */}
+                {/* Contato Secundário */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 block">
-                    Telefone Secundário / Fixo
+                    Contato Secundário
                   </label>
                   <input
                     type="text"
                     value={telefone2}
                     onChange={(e) => handlePhone2Change(e.target.value)}
                     maxLength={15}
-                    placeholder="(00) 0000-0000"
+                    placeholder="(00) 00000-0000"
                     className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                   />
                 </div>

@@ -189,7 +189,7 @@ export const ShareClientRegistrationModal: React.FC<ShareClientRegistrationModal
               type="text"
               value={brokerPhone}
               onChange={(e) => handleBrokerPhoneChange(e.target.value)}
-              placeholder="Ex: (91) 98765-4321"
+              placeholder="(00) 00000-0000"
               maxLength={15}
               className="w-full px-3 py-2 text-xs sm:text-sm font-mono font-bold rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
             />

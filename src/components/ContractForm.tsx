@@ -1966,8 +1966,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     validationType="phone"
                     value={vendedor.telefone}
                     onChange={(val) => setVendedor({ ...vendedor, telefone: val })}
-                    label="Telefone / WhatsApp"
-                    placeholder="(93) 99122-3344"
+                    label="Contato"
+                    placeholder="(00) 00000-0000"
                     className={errCls(`${vLabelUI}: Telefone`)}
                   />
                 </div>
@@ -2186,8 +2186,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                     validationType="phone"
                     value={comprador.telefone}
                     onChange={(val) => setComprador({ ...comprador, telefone: val })}
-                    label="Telefone / WhatsApp"
-                    placeholder="(93) 98400-5566"
+                    label="Contato"
+                    placeholder="(00) 00000-0000"
                     className={errCls(`${cLabelUI}: Telefone`)}
                   />
                 </div>
@@ -2198,8 +2198,8 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                       validationType="phone"
                       value={comprador.telefone2 || ''}
                       onChange={(val) => setComprador({ ...comprador, telefone2: val })}
-                      label="Telefone Secundário"
-                      placeholder="(93) 98400-9999"
+                      label="Contato Secundário"
+                      placeholder="(00) 00000-0000"
                       className={errCls(`${cLabelUI}: Telefone Secundário`)}
                     />
                   </div>
@@ -2573,12 +2573,12 @@ export const ContractForm: React.FC<ContractFormProps> = ({
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">Telefone / WhatsApp</label>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Contato</label>
                           <input
                             type="text"
                             value={fiadorLocacao.telefone}
                             onChange={(e) => setFiadorLocacao({ ...fiadorLocacao, telefone: e.target.value })}
-                            placeholder="(93) 99000-0000"
+                            placeholder="(00) 00000-0000"
                             className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
                           />
                         </div>
