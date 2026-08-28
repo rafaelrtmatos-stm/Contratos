@@ -35,20 +35,16 @@ const __dirname = path.dirname(__filename);
  * Lista de todos os 9 templates a fazer upload
  */
 const TEMPLATES = [
-  // VENDA À VISTA
-  'venda_vista_assinatura_digital.docx',
-  'venda_vista_assinatura_manual_2_testemunhas.docx',
-  'venda_vista_mista_2_testemunhas.docx',
+  // VENDA À VISTA - arquivo mestre único (digital/manual/mista no mesmo .docx,
+  // ver templateResolver.ts e src/utils/witnessBlockProcessor.ts)
+  'venda_vista_master.docx',
 
-  // VENDA PARCELADA
-  'venda_parcelada_assinatura_digital.docx',
-  'venda_parcelada_assinatura_manual_2_testemunhas.docx',
-  'venda_parcelada_mista_2_testemunhas.docx',
+  // VENDA PARCELADA - idem, arquivo mestre único
+  'venda_parcelada_master.docx',
 
-  // EXCLUSIVIDADE
-  'exclusividade_digital_sem_testemunhas.docx',
-  'exclusividade_usuario_digital_contratante_manual_2_testemunhas.docx',
-  'exclusividade_ambos_manuais_2_testemunhas.docx',
+  // EXCLUSIVIDADE - idem, arquivo mestre único (nenhum contrato tem cláusula
+  // de cônjuge, então não há mais variante "sem_conjuge" separada)
+  'exclusividade_master.docx',
 ];
 
 /**

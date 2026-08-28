@@ -203,6 +203,8 @@ export interface ContractData {
     valorLocacaoSugerido?: number;
     valorLocacaoSugeridoExtenso?: string;
     comissaoLocacao?: string; // Ex: "100% do primeiro aluguel" ou "1º aluguel integral + taxa adm"
+    taxaAdministracaoLocacao?: string; // Ex: "10% ao mês sobre os aluguéis recebidos" ou "Sem taxa de administração"
+    garantiasAceitasLocacao?: string; // Ex: "Caução em dinheiro, Fiador idôneo ou Seguro-Fiança"
     dataInicio: string;
     dataTermino: string;
     prazoMesesOuDias: number;
@@ -461,6 +463,8 @@ export interface ContractExclusividadeTagsMapping {
   VALOR_LOCACAO_SUGERIDO?: string;
   VALOR_LOCACAO_SUGERIDO_EXTENSO?: string;
   COMISSAO_LOCACAO?: string;
+  TAXA_ADMINISTRACAO_LOCACAO?: string;
+  GARANTIAS_ACEITAS_LOCACAO?: string;
   AUTORIZACAO_PROSPECCAO?: string;
 }
 

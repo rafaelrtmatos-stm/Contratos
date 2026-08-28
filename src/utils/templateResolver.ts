@@ -12,63 +12,75 @@ import {
  */
 const TEMPLATES: Record<string, TemplateResolved> = {
   // VENDA À VISTA
+  // Arquivo mestre único para as 3 modalidades (digital/manual/mista): usa
+  // tags UNIFICADAS ({{USUARIO_ASSINATURA}}/{{COMPRADOR_ASSINATURA}}, ver
+  // signatureTagProcessor.ts) - quem decide selo-imagem vs linha manual é a
+  // modalidade real de cada parte, não o arquivo escolhido. O bloco de
+  // testemunhas ({{BLOCO_TESTEMUNHAS_INICIO/FIM}}) é removido ou mantido em
+  // tempo de geração por processarBlocoTestemunhas, conforme
+  // `testemunhaprecisa`. `testemunhas: true` aqui só documenta que o arquivo
+  // TEM o bloco (não que ele necessariamente aparece no resultado final).
   'venda_vista_digital': {
-    arquivo: 'venda_vista_assinatura_digital.docx',
-    testemunhas: false,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{COMPRADOR_ASSINATURA_DIGITAL}}'],
+    arquivo: 'venda_vista_master.docx',
+    testemunhas: true,
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{COMPRADOR_ASSINATURA}}'],
   },
   'venda_vista_manual': {
-    arquivo: 'venda_vista_assinatura_manual_2_testemunhas.docx',
+    arquivo: 'venda_vista_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_MANUAL}}', '{{COMPRADOR_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{COMPRADOR_ASSINATURA}}'],
   },
   'venda_vista_mista': {
-    arquivo: 'venda_vista_mista_2_testemunhas.docx',
+    arquivo: 'venda_vista_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{COMPRADOR_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{COMPRADOR_ASSINATURA}}'],
   },
 
-  // VENDA PARCELADA
+  // VENDA PARCELADA (mesmo esquema de arquivo mestre único - ver comentário acima)
   'venda_parcelada_digital': {
-    arquivo: 'venda_parcelada_assinatura_digital.docx',
-    testemunhas: false,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{COMPRADOR_ASSINATURA_DIGITAL}}'],
+    arquivo: 'venda_parcelada_master.docx',
+    testemunhas: true,
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{COMPRADOR_ASSINATURA}}'],
   },
   'venda_parcelada_manual': {
-    arquivo: 'venda_parcelada_assinatura_manual_2_testemunhas.docx',
+    arquivo: 'venda_parcelada_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_MANUAL}}', '{{COMPRADOR_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{COMPRADOR_ASSINATURA}}'],
   },
   'venda_parcelada_mista': {
-    arquivo: 'venda_parcelada_mista_2_testemunhas.docx',
+    arquivo: 'venda_parcelada_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{COMPRADOR_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{COMPRADOR_ASSINATURA}}'],
   },
 
   // EXCLUSIVIDADE
+  // Arquivo mestre único (mesmo esquema de venda_vista/venda_parcelada acima).
+  // Nenhum contrato de exclusividade envolve cláusula de cônjuge - a antiga
+  // variante "sem_conjuge" tinha texto IDENTICO à variante normal (conferido
+  // parágrafo a parágrafo), então não existe mais razão para arquivo
+  // separado: a chave 'sem_conjuge' abaixo aponta pro mesmo master só para
+  // não quebrar quem já persistiu esse valor de variante.
   'exclusividade_digital': {
-    arquivo: 'exclusividade_digital_sem_testemunhas.docx',
-    testemunhas: false,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{CONTRATANTE_ASSINATURA_DIGITAL}}'],
+    arquivo: 'exclusividade_master.docx',
+    testemunhas: true,
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{CONTRATANTE_ASSINATURA}}'],
   },
   'exclusividade_mista': {
-    arquivo: 'exclusividade_mista_2_testemunhas.docx',
+    arquivo: 'exclusividade_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{CONTRATANTE_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{CONTRATANTE_ASSINATURA}}'],
   },
-  // Totalmente manual (nenhuma das partes assina digitalmente): só linhas,
-  // nome e CPF de cada parte + testemunhas.
   'exclusividade_manual': {
-    arquivo: 'exclusividade_manual_2_testemunhas.docx',
+    arquivo: 'exclusividade_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_MANUAL}}', '{{CONTRATANTE_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{CONTRATANTE_ASSINATURA}}'],
   },
-  // "sem_conjuge_mista" precisa ser um arquivo MISTO (um digital, um
-  // manual)
+  // Mantida só por compatibilidade com o campo `variante` já persistido em
+  // contratos existentes - resolve para o mesmo arquivo mestre.
   'exclusividade_sem_conjuge_mista': {
-    arquivo: 'exclusividade_sem_conjuge_mista_2_testemunhas.docx',
+    arquivo: 'exclusividade_master.docx',
     testemunhas: true,
-    tagsAssinatura: ['{{USUARIO_ASSINATURA_DIGITAL}}', '{{CONTRATANTE_ASSINATURA_MANUAL}}'],
+    tagsAssinatura: ['{{USUARIO_ASSINATURA}}', '{{CONTRATANTE_ASSINATURA}}'],
   },
 
   // LOCAÇÃO (Aluguel de Casas, Galpões e Imóveis)
@@ -162,11 +174,8 @@ export function resolveTemplate(
    */
   if (acao === 'download_antes_assinar') {
     if (tipo === 'exclusividade') {
-      const key = variante === 'sem_conjuge' 
-        ? 'exclusividade_sem_conjuge_mista'
-        : 'exclusividade_mista';
       return {
-        ...TEMPLATES[key],
+        ...TEMPLATES['exclusividade_mista'],
         motivacao: 'Baixar antes de assinar - assume modalidade manual (pior caso)',
       };
     }
@@ -210,16 +219,7 @@ export function resolveTemplate(
 
     // Caso geral: verifica se precisa testemunhas
     const modalidade = determinarModalidade(state, tipo);
-    let key = variante === 'sem_conjuge' && tipo === 'exclusividade'
-      ? `exclusividade_sem_conjuge_${modalidade}`
-      : `${tipo}_${modalidade}`;
-
-    // "sem_conjuge" não tem arquivo dedicado pra modalidade 'manual' (só
-    // pra 'mista') - cai no template manual genérico da exclusividade,
-    // que não depende de cláusula de cônjuge.
-    if (!TEMPLATES[key]) {
-      key = `exclusividade_${modalidade}`;
-    }
+    const key = `${tipo}_${modalidade}`;
 
     return {
       ...TEMPLATES[key],

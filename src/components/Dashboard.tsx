@@ -12,6 +12,7 @@ import { fetchSignatures } from '../utils/contractsRepository';
 import {
   downloadDocxContract,
 } from '../utils/docxProcessor';
+import { ShareClientRegistrationModal } from './ShareClientRegistrationModal';
 import {
   Home,
   CalendarDays,
@@ -54,6 +55,7 @@ import {
   Clock3,
   AlertCircle,
   CalendarRange,
+  UserPlus,
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -381,6 +383,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
   const [isMobileNewModalOpen, setIsMobileNewModalOpen] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [isShareClientRegOpen, setIsShareClientRegOpen] = useState(false);
+  const [shareClientRegContract, setShareClientRegContract] = useState<ContractData | null>(null);
   const [contractToDelete, setContractToDelete] = useState<ContractData | null>(null);
   const [isDeletingContract, setIsDeletingContract] = useState(false);
 
@@ -826,6 +830,40 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
               {/* Botão de seta redonda à direita */}
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-teal-400 text-slate-950 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
+                <ChevronRight className="w-5 h-5 stroke-[2.8]" />
+              </div>
+            </div>
+
+            {/* Card 5: Auto-Cadastro do Cliente (Link WhatsApp com Busca CEP) */}
+            <div
+              onClick={() => {
+                setShareClientRegContract(null);
+                setIsShareClientRegOpen(true);
+              }}
+              className="w-full rounded-[1.75rem] p-4 sm:p-5 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/5 hover:bg-amber-500/20 border-2 border-dashed border-amber-400/80 text-slate-900 shadow-sm active:scale-[0.99] transition-all cursor-pointer flex items-center justify-between gap-4 group"
+              role="button"
+              title="Gerar link para o cliente preencher seus dados cadastrais e avisar no WhatsApp"
+            >
+              <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
+                <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform font-bold">
+                  <UserPlus className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
+                </div>
+                <div className="min-w-0 text-left">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-950 leading-snug">
+                      Pedir Dados ao Cliente (Link de Cadastro)
+                    </h2>
+                    <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 text-[10px] font-black uppercase tracking-tight">
+                      Auto-Cadastro
+                    </span>
+                  </div>
+                  <p className="text-slate-700 text-xs sm:text-sm font-medium line-clamp-1 mt-0.5">
+                    Envie um link para o cliente preencher seus dados com facilidade. Ao finalizar, o sistema avisa no seu WhatsApp!
+                  </p>
+                </div>
+              </div>
+
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-xs shrink-0 group-hover:translate-x-1 transition-transform">
                 <ChevronRight className="w-5 h-5 stroke-[2.8]" />
               </div>
             </div>
@@ -1469,7 +1507,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         )}
                       </button>
 
-                      {/* 4. Botão Assinar / Assinado */}
+                      {/* 4. Botão Pedir Dados ao Cliente (Link WhatsApp) */}
+                      <button
+                        onClick={() => {
+                          setShareClientRegContract(contract);
+                          setIsShareClientRegOpen(true);
+                        }}
+                        className="px-3 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition-all cursor-pointer"
+                        title="Enviar link para o cliente preencher seus dados cadastrais"
+                      >
+                        <UserPlus className="w-4 h-4 text-amber-700 stroke-[2.2]" />
+                        <span className="hidden sm:inline text-[11px]">Pedir Dados</span>
+                      </button>
+
+                      {/* 5. Botão Assinar / Assinado */}
                       {isFullySigned ? (
                         <button
                           onClick={() => onSelectContract(contract)}
@@ -1490,7 +1541,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         </button>
                       )}
 
-                      {/* 5. Botão Excluir */}
+                      {/* 6. Botão Excluir */}
                       {canDeleteContracts && (
                         <button
                           onClick={() => setContractToDelete(contract)}
@@ -1890,6 +1941,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de Compartilhamento do Link de Auto-Cadastro do Cliente */}
+      {isShareClientRegOpen && (
+        <ShareClientRegistrationModal
+          isOpen={isShareClientRegOpen}
+          onClose={() => {
+            setIsShareClientRegOpen(false);
+            setShareClientRegContract(null);
+          }}
+          contract={shareClientRegContract}
+        />
       )}
     </div>
   );
