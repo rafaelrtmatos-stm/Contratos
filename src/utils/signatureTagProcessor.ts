@@ -364,10 +364,16 @@ function insertPendingSignatureNotice(xml: string, tag: string, info: PartySigna
 }
 
 /**
- * Limpa a tag de assinatura manual no template sem injetar linhas de sublinhado adicionais
+ * Insere UMA linha de assinatura manuscrita (sublinhado, centralizada) no lugar
+ * da tag - mesmo estilo visual da linha usada para as testemunhas (ver
+ * witnessBlockProcessor.ts). Antes, a modalidade manual só limpava a tag sem
+ * deixar nenhuma linha, deixando o nome/CPF "soltos" sem indicar onde assinar.
  */
 function insertSignatureSpace(xml: string, tag: string, _info: PartySignatureInfo): string {
-  return replaceEnclosingParagraph(xml, tag, '');
+  const runProps = `<w:rPr>${DOC_RFONTS}<w:sz w:val="24"/><w:szCs w:val="24"/><w:u w:val="single"/></w:rPr>`;
+  const tabRun = `<w:r>${runProps}<w:tab/></w:r>`;
+  const line = `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="120" w:after="60"/>${runProps}</w:pPr>${tabRun.repeat(8)}</w:p>`;
+  return replaceEnclosingParagraph(xml, tag, line);
 }
 
 /**
