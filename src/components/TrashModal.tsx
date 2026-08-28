@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Trash2, RotateCcw, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
+import { X, Trash2, RotateCcw, AlertCircle, Loader2, ShieldCheck, Search } from 'lucide-react';
 import { ContractData } from '../types/contract';
 import { formatCurrency } from '../utils/contractGenerators';
 import {
@@ -38,6 +38,7 @@ export const TrashModal: React.FC<TrashModalProps> = ({ isOpen, onClose, onContr
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmPermanentId, setConfirmPermanentId] = useState<string | null>(null);
+  const [busca, setBusca] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -53,10 +54,18 @@ export const TrashModal: React.FC<TrashModalProps> = ({ isOpen, onClose, onContr
   };
 
   useEffect(() => {
-    if (isOpen) load();
+    if (isOpen) {
+      setBusca('');
+      load();
+    }
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const termo = busca.trim().toLowerCase();
+  const itemsFiltrados = termo
+    ? items.filter((item) => nomeDoContrato(item.contract).toLowerCase().includes(termo))
+    : items;
 
   const handleRestore = async (item: TrashedContract) => {
     setBusyId(item.contract.id);
@@ -111,6 +120,21 @@ export const TrashModal: React.FC<TrashModalProps> = ({ isOpen, onClose, onContr
           </p>
         </div>
 
+        {items.length > 0 && (
+          <div className="px-5 pt-3">
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Buscar na lixeira..."
+                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-300"
+              />
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
           {loading && (
             <div className="flex items-center gap-2 text-sm text-slate-500 py-6 justify-center">
@@ -130,7 +154,11 @@ export const TrashModal: React.FC<TrashModalProps> = ({ isOpen, onClose, onContr
             <p className="text-sm text-slate-400 text-center py-10">A lixeira está vazia.</p>
           )}
 
-          {items.map((item) => {
+          {!loading && !error && items.length > 0 && itemsFiltrados.length === 0 && (
+            <p className="text-sm text-slate-400 text-center py-10">Nenhum contrato encontrado para "{busca}".</p>
+          )}
+
+          {itemsFiltrados.map((item) => {
             const restantes = diasRestantes(item.deletedAt);
             const isBusy = busyId === item.contract.id;
             return (
