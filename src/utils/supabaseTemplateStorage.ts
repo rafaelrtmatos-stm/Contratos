@@ -16,6 +16,12 @@ export async function uploadTemplate(
       .from(TEMPLATES_BUCKET)
       .upload(arquivoNome, arquivo, {
         upsert: true, // Sobrescreve se já existe
+        // Forçar o mimetype correto de .docx: sem isso, o Supabase usa o
+        // `type` que o navegador atribuiu ao File/Blob de origem, que às
+        // vezes vem errado (ex: text/plain) dependendo de como o arquivo
+        // foi selecionado/gerado - foi o que corrompeu o mimetype de
+        // venda_vista_assinatura_manual_2_testemunhas.docx no bucket.
+        contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       });
 
     if (error) {
