@@ -5,7 +5,56 @@
 
 import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+// Admin de emergência via variável de ambiente - mesmo caminho que o app
+// "rumo-ao-milhao" usa (ADMIN_EMAIL/ADMIN_PASSWORD), adaptado para rodar
+// em função serverless: aqui não há disco persistente para um fallback
+// em arquivo/memória, então o "plano B" é comparar direto contra as
+// variáveis de ambiente da Vercel, sem tocar no Supabase.
+//
+// Só funciona se ADMIN_EMAIL e ADMIN_PASSWORD estiverem configuradas na
+// Vercel (Settings → Environment Variables). Sem senha padrão fixa no
+// código - se não configurar, esse caminho fica desativado.
+export const ENV_ADMIN_ID = 'env-admin';
+
+function timingSafeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    // Ainda gasta um tempo comparável, pra não vazar o tamanho via timing.
+    crypto.timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+export function checkEnvAdmin(email: string, password: string): AppUserRow | null {
+  const envEmail = process.env.ADMIN_EMAIL;
+  const envPassword = process.env.ADMIN_PASSWORD;
+  if (!envEmail || !envPassword) return null;
+
+  const emailOk = timingSafeEqual(email.trim().toLowerCase(), envEmail.trim().toLowerCase());
+  const passwordOk = timingSafeEqual(password, envPassword);
+  if (!emailOk || !passwordOk) return null;
+
+  return {
+    id: ENV_ADMIN_ID,
+    email: envEmail.trim().toLowerCase(),
+    password_hash: '',
+    is_admin: true,
+    permissions: {
+      ver_financeiro: true,
+      gerenciar_contratos: true,
+      excluir_contratos: true,
+      gerenciar_templates: true,
+      gerenciar_usuarios: true,
+    },
+    profile: { nome: 'Administrador (acesso de emergência)' },
+    created_at: new Date().toISOString(),
+  };
+}
 
 export function getAdminClient() {
   const url = process.env.VITE_SUPABASE_URL as string;
