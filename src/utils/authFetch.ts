@@ -68,3 +68,28 @@ export async function apiLogin(email: string, password: string) {
 export async function apiGetCurrentUser() {
   return callAuthApi<{ user: AppUser }>('user', { method: 'GET' });
 }
+
+// --- Gerenciamento de usuários (somente admin) ---
+
+export async function apiListUsers() {
+  return callAuthApi<{ users: AppUser[] }>('users', { method: 'GET' });
+}
+
+export async function apiCreateUser(input: {
+  email: string;
+  password: string;
+  nome?: string;
+  is_admin?: boolean;
+  permissions?: Record<string, boolean>;
+}) {
+  return callAuthApi<{ user: AppUser }>('users', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function apiDeleteUser(id: string) {
+  return callAuthApi<{ ok: true }>(`users?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+}
