@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import bcrypt from 'bcryptjs';
-import { getAdminClient, requireAdmin, toPublicUser, type AppUserRow } from './_shared';
+import { getAdminClient, requireAdmin, toPublicUser, type AppUserRow } from './_shared.js';
 
 // Gerenciamento de usuários do sistema de login local (app_users).
 // Só admins podem listar ou criar novos usuários - diferente de
