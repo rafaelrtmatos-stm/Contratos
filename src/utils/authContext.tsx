@@ -1,9 +1,19 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, isSupabaseConfigured } from './supabaseClient';
-import type { Session } from '@supabase/supabase-js';
+import { apiGetCurrentUser, apiLogin, getStoredToken, setStoredToken, type AppUser } from './authFetch';
+
+// Sistema de login LOCAL (tabela app_users via /api/auth/*), independente
+// do Supabase Auth. Motivo: o Supabase Auth deste projeto está sofrendo
+// alguma restrição que bloqueia supabase.auth.signInWithPassword() para
+// este app - ver sql/migrations/create_app_users_local_auth.sql.
+//
+// IMPORTANTE: isso resolve só o LOGIN. Leitura/gravação de dados
+// (contracts, templates, contract_signature_links etc.) ainda depende
+// de RLS baseada em auth.uid() do Supabase Auth - migrar isso é um
+// trabalho separado, ainda não feito.
 
 export interface Profile {
   id: string;
+  email: string;
   nome: string | null;
   role: 'admin' | 'user';
   permissions: {
@@ -29,8 +39,19 @@ export function hasPermission(
   return !!profile.permissions?.[key];
 }
 
+function toProfile(user: AppUser): Profile {
+  const nome = typeof user.profile?.nome === 'string' ? (user.profile.nome as string) : null;
+  return {
+    id: user.id,
+    email: user.email,
+    nome,
+    role: user.is_admin ? 'admin' : 'user',
+    permissions: user.permissions ?? {},
+  };
+}
+
 interface AuthContextValue {
-  session: Session | null;
+  session: string | null; // token de sessão (ou null se deslogado)
   profile: Profile | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
@@ -40,69 +61,56 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadProfile = async (userId: string) => {
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, nome, role, permissions')
-        .eq('id', userId)
-        .single();
-      setProfile(data as Profile | null);
-    } catch {
-      setProfile(null);
-    }
-  };
-
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setIsLoading(false);
-      return;
-    }
-
     let isMounted = true;
 
-    supabase.auth
-      .getSession()
-      .then(async ({ data }) => {
-        if (!isMounted) return;
-        setSession(data?.session ?? null);
-        if (data?.session) {
-          await loadProfile(data.session.user.id);
-        }
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        console.warn('Erro ao obter sessão inicial:', err);
+    const restoreSession = async () => {
+      const token = getStoredToken();
+      if (!token) {
         if (isMounted) setIsLoading(false);
-      });
-
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      if (!isMounted) return;
-      setSession(newSession);
-      if (newSession) {
-        await loadProfile(newSession.user.id);
-      } else {
-        setProfile(null);
+        return;
       }
-    });
 
+      const { data, error } = await apiGetCurrentUser();
+      if (!isMounted) return;
+
+      if (error || !data?.user) {
+        // Token expirado/inválido - limpa e volta pro login
+        setStoredToken(null);
+        setSession(null);
+        setProfile(null);
+      } else {
+        setSession(token);
+        setProfile(toProfile(data.user));
+      }
+      setIsLoading(false);
+    };
+
+    restoreSession();
     return () => {
       isMounted = false;
-      listener?.subscription?.unsubscribe();
     };
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error ? error.message : null };
+    const { data, error } = await apiLogin(email, password);
+    if (error || !data) {
+      return { error: error || 'E-mail ou senha inválidos.' };
+    }
+    setStoredToken(data.token);
+    setSession(data.token);
+    setProfile(toProfile(data.user));
+    return { error: null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    setStoredToken(null);
+    setSession(null);
+    setProfile(null);
   };
 
   return (

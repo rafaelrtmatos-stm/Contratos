@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../utils/authContext';
-import { isSupabaseConfigured } from '../utils/supabaseClient';
-import { FileSignature, Lock, Mail, Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { FileSignature, Lock, Mail, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export const LoginScreen: React.FC = () => {
   const { signIn } = useAuth();
@@ -18,11 +17,7 @@ export const LoginScreen: React.FC = () => {
     const { error: signInError } = await signIn(email.trim(), password);
     setIsSubmitting(false);
     if (signInError) {
-      setError(
-        !isSupabaseConfigured
-          ? 'Supabase não configurado. Adicione VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY nas configurações/env.'
-          : 'E-mail ou senha inválidos.'
-      );
+      setError(signInError);
     }
   };
 
@@ -38,18 +33,6 @@ export const LoginScreen: React.FC = () => {
           <h1 className="font-extrabold text-2xl text-neutral-950 tracking-tight">Contratos</h1>
           <p className="text-xs text-neutral-500 mt-0.5">Acesse sua conta para continuar</p>
         </div>
-
-        {!isSupabaseConfigured && (
-          <div className="mb-4 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold">Configuração necessária</p>
-              <p className="text-amber-700 mt-0.5">
-                Defina <code className="bg-amber-100 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> e <code className="bg-amber-100 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code> no painel de configurações para conectar ao seu banco de dados.
-              </p>
-            </div>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
