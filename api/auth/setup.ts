@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import bcrypt from 'bcryptjs';
-import { getAdminClient, signToken, toPublicUser } from './_shared.js';
+import { getAdminClient, signToken, toPublicUser } from '../_shared.js';
 
 // Cria o PRIMEIRO admin do sistema de login local. Só funciona enquanto
 // a tabela app_users estiver vazia - depois disso, sempre retorna 403.

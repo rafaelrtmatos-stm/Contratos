@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import bcrypt from 'bcryptjs';
-import { checkEnvAdmin, getAdminClient, signToken, toPublicUser, type AppUserRow } from './_shared.js';
+import { checkEnvAdmin, getAdminClient, signToken, toPublicUser, type AppUserRow } from '../_shared.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

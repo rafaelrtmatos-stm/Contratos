@@ -1,7 +1,14 @@
-// Utilitários compartilhados pelas funções serverless de autenticação
-// local (login/setup/user/users). Nunca é importado pelo front-end -
+// Utilitários compartilhados por TODAS as funções serverless (auth,
+// contracts, etc.) - autenticação local via JWT + acesso ao Supabase com
+// a service role key (bypassa RLS). Nunca é importado pelo front-end -
 // só roda no servidor (Vercel), onde SUPABASE_SERVICE_ROLE_KEY e
 // JWT_SECRET existem como variáveis de ambiente privadas.
+//
+// Movido de api/auth/_shared.ts pra cá quando o acesso a dados
+// (contracts, templates etc.) começou a migrar do front-end (que dependia
+// de supabase.auth.getSession(), inexistente no login local - ver
+// src/utils/authContext.tsx) para endpoints de backend nesse mesmo
+// padrão de requireAuth/requireAdmin.
 
 import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
@@ -133,6 +140,41 @@ export function requireAdmin(
     return null;
   }
   return payload;
+}
+
+// Algumas ações (ex.: excluir contrato) exigem uma permissão específica
+// de app_users.permissions, não só estar logado. O token JWT só carrega
+// sub/email/is_admin (ver AuthTokenPayload) - não as permissions, então
+// pra quem não é admin é preciso consultar o banco. Admin sempre passa,
+// igual à regra hasPermission() do front-end (src/utils/authContext.tsx)
+// - evita o próprio admin se trancar fora por falta de permissions
+// específicas salvas na linha dele.
+export async function requirePermission(
+  req: VercelRequest,
+  res: VercelResponse,
+  permissionKey: string
+): Promise<AuthTokenPayload | null> {
+  const payload = requireAuth(req, res);
+  if (!payload) return null;
+  if (payload.is_admin) return payload;
+
+  try {
+    const supabase = getAdminClient();
+    const { data: user, error } = await supabase
+      .from('app_users')
+      .select('permissions')
+      .eq('id', payload.sub)
+      .maybeSingle<{ permissions: Record<string, boolean> }>();
+
+    if (error || !user || !user.permissions?.[permissionKey]) {
+      res.status(403).json({ error: 'Você não tem permissão para fazer isso.' });
+      return null;
+    }
+    return payload;
+  } catch (e) {
+    res.status(500).json({ error: e instanceof Error ? e.message : 'Erro interno.' });
+    return null;
+  }
 }
 
 // Formato exposto ao front-end: nunca inclui password_hash.

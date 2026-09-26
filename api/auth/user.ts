@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { ENV_ADMIN_ID, getAdminClient, requireAuth, toPublicUser, type AppUserRow } from './_shared.js';
+import { ENV_ADMIN_ID, getAdminClient, requireAuth, toPublicUser, type AppUserRow } from '../_shared.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
