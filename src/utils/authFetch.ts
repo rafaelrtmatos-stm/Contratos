@@ -27,6 +27,7 @@ export interface AppUser {
   is_admin: boolean;
   permissions: Record<string, boolean>;
   profile: Record<string, unknown>;
+  created_at?: string;
 }
 
 interface ApiResult<T> {
@@ -91,5 +92,18 @@ export async function apiCreateUser(input: {
 export async function apiDeleteUser(id: string) {
   return callAuthApi<{ ok: true }>(`users?id=${encodeURIComponent(id)}`, {
     method: 'DELETE',
+  });
+}
+
+export async function apiUpdateUser(
+  id: string,
+  input:
+    | { action: 'rename'; nome: string }
+    | { action: 'permissions'; permissions: Record<string, boolean> }
+    | { action: 'password'; newPassword: string }
+) {
+  return callAuthApi<{ ok: true }>('users', {
+    method: 'PATCH',
+    body: JSON.stringify({ id, ...input }),
   });
 }

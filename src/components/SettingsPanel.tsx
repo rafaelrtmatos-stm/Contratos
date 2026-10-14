@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { ContractData, SavedParty } from '../types/contract';
 import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
+import { apiListUsers, apiCreateUser, apiDeleteUser, apiUpdateUser } from '../utils/authFetch';
 import { fetchSavedParties, deleteSavedParty } from '../utils/savedPartiesRepository';
 import { saveContract } from '../utils/contractsRepository';
 
@@ -118,18 +119,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setIsSavingPerms(true);
     setPermsFeedback(null);
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData.session?.access_token;
-
-    const { data, error } = await supabase.functions.invoke('admin-update-user-permissions', {
-      body: { userId, permissions: permsDraft },
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
+    const { error } = await apiUpdateUser(userId, { action: 'permissions', permissions: permsDraft });
 
     setIsSavingPerms(false);
 
-    if (error || data?.error) {
-      setPermsFeedback({ type: 'error', message: data?.error || error?.message || 'Falha ao salvar permissões.' });
+    if (error) {
+      setPermsFeedback({ type: 'error', message: error || 'Falha ao salvar permissões.' });
       return;
     }
 
@@ -162,18 +157,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setIsRenaming(true);
     setRenameFeedback(null);
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData.session?.access_token;
-
-    const { data, error } = await supabase.functions.invoke('admin-edit-user', {
-      body: { action: 'rename', userId, nome: renameValue.trim() },
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
+    const { error } = await apiUpdateUser(userId, { action: 'rename', nome: renameValue.trim() });
 
     setIsRenaming(false);
 
-    if (error || data?.error) {
-      setRenameFeedback({ type: 'error', message: data?.error || error?.message || 'Falha ao renomear.' });
+    if (error) {
+      setRenameFeedback({ type: 'error', message: error || 'Falha ao renomear.' });
       return;
     }
 
@@ -194,18 +183,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setIsDeletingUser(true);
     setDeleteUserFeedback(null);
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData.session?.access_token;
-
-    const { data, error } = await supabase.functions.invoke('admin-edit-user', {
-      body: { action: 'delete', userId },
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
+    const { error } = await apiDeleteUser(userId);
 
     setIsDeletingUser(false);
 
-    if (error || data?.error) {
-      setDeleteUserFeedback({ type: 'error', message: data?.error || error?.message || 'Falha ao excluir usuário.' });
+    if (error) {
+      setDeleteUserFeedback({ type: 'error', message: error || 'Falha ao excluir usuário.' });
       return;
     }
 
@@ -232,18 +215,23 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setLoadingUsers(true);
     setUsersError(null);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
+      const { data, error } = await apiListUsers();
 
-      const { data, error } = await supabase.functions.invoke('admin-list-users', {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-
-      if (error || data?.error) {
-        setUsersError(data?.error || error?.message || 'Falha ao carregar usuários.');
+      if (error || !data) {
+        setUsersError(error || 'Falha ao carregar usuários.');
         return;
       }
-      setExistingUsers(data?.users || []);
+      setExistingUsers(
+        data.users.map((u) => ({
+          id: u.id,
+          email: u.email,
+          nome: typeof u.profile?.nome === 'string' ? (u.profile.nome as string) : null,
+          criadoEm: u.created_at ?? new Date().toISOString(),
+          ultimoLogin: null,
+          role: u.is_admin ? 'admin' : 'user',
+          permissions: u.permissions ?? {},
+        }))
+      );
     } catch (err: any) {
       setUsersError(err.message || 'Erro inesperado ao consultar usuários.');
     } finally {
@@ -533,16 +521,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setResetFeedback(null);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
+      const { error } = await apiUpdateUser(userId, { action: 'password', newPassword: resetPasswordValue });
 
-      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
-        body: { userId, newPassword: resetPasswordValue },
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-
-      if (error || data?.error) {
-        setResetFeedback({ type: 'error', message: data?.error || error?.message || 'Falha ao redefinir senha.' });
+      if (error) {
+        setResetFeedback({ type: 'error', message: error || 'Falha ao redefinir senha.' });
         return;
       }
 
@@ -581,16 +563,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setUserFeedback(null);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
+      const { error } = await apiCreateUser({ nome: novoNome, email: novoEmail, password: novaSenha });
 
-      const { data, error } = await supabase.functions.invoke('admin-create-user', {
-        body: { nome: novoNome, email: novoEmail, password: novaSenha },
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-
-      if (error || data?.error) {
-        setUserFeedback({ type: 'error', message: data?.error || error?.message || 'Falha ao criar usuário.' });
+      if (error) {
+        setUserFeedback({ type: 'error', message: error || 'Falha ao criar usuário.' });
         return;
       }
 

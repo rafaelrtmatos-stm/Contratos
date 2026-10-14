@@ -116,5 +116,93 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  if (req.method === 'PATCH') {
+    try {
+      const body = (req.body ?? {}) as {
+        id?: string;
+        action?: 'rename' | 'permissions' | 'password';
+        nome?: string;
+        permissions?: Record<string, boolean>;
+        newPassword?: string;
+      };
+      const { id, action } = body;
+
+      if (!id || !action) {
+        res.status(400).json({ error: 'id e action são obrigatórios.' });
+        return;
+      }
+
+      const { data: target, error: targetError } = await supabase
+        .from('app_users')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle<AppUserRow>();
+
+      if (targetError) {
+        res.status(500).json({ error: 'Erro ao buscar usuário.' });
+        return;
+      }
+      if (!target) {
+        res.status(404).json({ error: 'Usuário não encontrado.' });
+        return;
+      }
+
+      if (action === 'rename') {
+        const nome = body.nome?.trim();
+        if (!nome) {
+          res.status(400).json({ error: 'O nome não pode ficar vazio.' });
+          return;
+        }
+        const { error } = await supabase
+          .from('app_users')
+          .update({ profile: { ...(target.profile ?? {}), nome } })
+          .eq('id', id);
+        if (error) {
+          res.status(500).json({ error: 'Falha ao renomear usuário.' });
+          return;
+        }
+        res.status(200).json({ ok: true });
+        return;
+      }
+
+      if (action === 'permissions') {
+        if (!body.permissions || typeof body.permissions !== 'object') {
+          res.status(400).json({ error: 'permissions é obrigatório.' });
+          return;
+        }
+        const { error } = await supabase
+          .from('app_users')
+          .update({ permissions: { ...(target.permissions ?? {}), ...body.permissions } })
+          .eq('id', id);
+        if (error) {
+          res.status(500).json({ error: 'Falha ao salvar permissões.' });
+          return;
+        }
+        res.status(200).json({ ok: true });
+        return;
+      }
+
+      if (action === 'password') {
+        if (!body.newPassword || body.newPassword.length < 6) {
+          res.status(400).json({ error: 'A senha precisa ter pelo menos 6 caracteres.' });
+          return;
+        }
+        const password_hash = await bcrypt.hash(body.newPassword, 10);
+        const { error } = await supabase.from('app_users').update({ password_hash }).eq('id', id);
+        if (error) {
+          res.status(500).json({ error: 'Falha ao redefinir senha.' });
+          return;
+        }
+        res.status(200).json({ ok: true });
+        return;
+      }
+
+      res.status(400).json({ error: 'action inválida.' });
+    } catch (e) {
+      res.status(500).json({ error: e instanceof Error ? e.message : 'Erro interno.' });
+    }
+    return;
+  }
+
   res.status(405).json({ error: 'Método não permitido.' });
 }

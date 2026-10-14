@@ -185,5 +185,6 @@ export function toPublicUser(row: AppUserRow) {
     is_admin: row.is_admin,
     permissions: row.permissions ?? {},
     profile: row.profile ?? {},
+    created_at: row.created_at,
   };
 }
