@@ -20,7 +20,6 @@ import {
   ExternalLink,
   Info,
   KeyRound,
-  HeartHandshake,
 } from 'lucide-react';
 import {
   ClientRegistrationData,
@@ -96,14 +95,6 @@ export const ClientRegistrationPage: React.FC = () => {
   const [cidade, setCidade] = useState('');
   const [uf, setUf] = useState('');
 
-  // Cônjuge
-  const [possuiConjuge, setPossuiConjuge] = useState(false);
-  const [conjugeNome, setConjugeNome] = useState('');
-  const [conjugeCpf, setConjugeCpf] = useState('');
-  const [conjugeRg, setConjugeRg] = useState('');
-  const [conjugeRgOrgao, setConjugeRgOrgao] = useState('SSP');
-  const [conjugeProfissao, setConjugeProfissao] = useState('');
-
   // Validação em tempo real
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
@@ -142,7 +133,6 @@ export const ClientRegistrationPage: React.FC = () => {
   const isRgValid = !rg || isValidRG(rg);
   const isPhoneValid = isValidPhone(telefone);
   const isCepValid = isValidCEP(cep);
-  const isConjugeCpfValid = !isMarried || !possuiConjuge || !conjugeCpf || isValidCPF(conjugeCpf);
 
   const handleCpfChange = (val: string) => {
     if (tipoPessoa === 'PJ') {
@@ -162,14 +152,6 @@ export const ClientRegistrationPage: React.FC = () => {
 
   const handleRgChange = (val: string) => {
     setRg(formatRG(val));
-  };
-
-  const handleConjugeCpfChange = (val: string) => {
-    setConjugeCpf(formatCPF(val));
-  };
-
-  const handleConjugeRgChange = (val: string) => {
-    setConjugeRg(formatRG(val));
   };
 
   const handleCepSearchData = (data: { endereco: string; bairro: string; cidade: string; uf: string }) => {
@@ -194,8 +176,6 @@ export const ClientRegistrationPage: React.FC = () => {
       bairro: true,
       cidade: true,
       uf: true,
-      conjugeNome: isMarried && possuiConjuge,
-      conjugeCpf: isMarried && possuiConjuge,
     });
 
     if (!nome.trim()) {
@@ -223,11 +203,6 @@ export const ClientRegistrationPage: React.FC = () => {
       return;
     }
 
-    if (isMarried && possuiConjuge && conjugeCpf && !isConjugeCpfValid) {
-      setSubmitError('O CPF do cônjuge informado é inválido.');
-      return;
-    }
-
     setSubmitting(true);
 
     const registrationData: ClientRegistrationData = {
@@ -250,13 +225,6 @@ export const ClientRegistrationPage: React.FC = () => {
       bairro: bairro.trim(),
       cidade: cidade.trim(),
       uf: uf.trim(),
-      conjuge: isMarried && possuiConjuge && conjugeNome.trim() ? {
-        nome: conjugeNome.trim(),
-        cpf: conjugeCpf ? conjugeCpf.replace(/\D/g, '') : undefined,
-        rg: conjugeRg.trim() || undefined,
-        rgOrgao: conjugeRgOrgao.trim() || undefined,
-        profissao: conjugeProfissao.trim() || undefined,
-      } : undefined,
     };
 
     try {
@@ -319,13 +287,6 @@ export const ClientRegistrationPage: React.FC = () => {
       bairro: bairro.trim(),
       cidade: cidade.trim(),
       uf: uf.trim(),
-      conjuge: isMarried && possuiConjuge && conjugeNome.trim() ? {
-        nome: conjugeNome.trim(),
-        cpf: conjugeCpf ? conjugeCpf.replace(/\D/g, '') : undefined,
-        rg: conjugeRg.trim() || undefined,
-        rgOrgao: conjugeRgOrgao.trim() || undefined,
-        profissao: conjugeProfissao.trim() || undefined,
-      } : undefined,
     };
 
     const text = buildWhatsAppNotificationMessage({
@@ -611,111 +572,7 @@ export const ClientRegistrationPage: React.FC = () => {
               </div>
             </div>
 
-            {/* SEÇÃO 3: CÔNJUGE (SE CASADO / UNIÃO ESTÁVEL) */}
-            {tipoPessoa === 'PF' && isMarried && (
-              <div className="space-y-4 p-4 rounded-2xl bg-amber-50/60 border border-amber-200">
-                <div className="flex items-center gap-2 text-slate-900">
-                  <HeartHandshake className="w-4 h-4 text-amber-600" />
-                  <h3 className="font-extrabold text-sm uppercase tracking-wide text-amber-950">
-                    Cônjuge / Companheiro(a)
-                  </h3>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-800 block">
-                    Possui cônjuge / companheiro(a) a ser incluído(a) no contrato?
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPossuiConjuge(false)}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                        !possuiConjuge
-                          ? 'bg-white border-amber-500 text-amber-950 shadow-sm ring-2 ring-amber-400/30'
-                          : 'bg-amber-100/50 border-amber-200 text-amber-800 hover:bg-white'
-                      }`}
-                    >
-                      ✕ Não possui / Não incluir
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPossuiConjuge(true)}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                        possuiConjuge
-                          ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-sm ring-2 ring-amber-400/30'
-                          : 'bg-amber-100/50 border-amber-200 text-amber-800 hover:bg-white'
-                      }`}
-                    >
-                      ✓ Sim, incluir cônjuge
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-amber-800/80">
-                    {!possuiConjuge
-                      ? 'Nenhum dado de cônjuge será exigido ou adicionado ao contrato.'
-                      : 'Preencha abaixo os dados do cônjuge que constará na qualificação.'}
-                  </p>
-                </div>
-
-                {possuiConjuge && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-amber-200/80">
-                    <div className="sm:col-span-2 space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 block">
-                        Nome Completo do Cônjuge
-                      </label>
-                      <input
-                        type="text"
-                        value={conjugeNome}
-                        onChange={(e) => setConjugeNome(e.target.value)}
-                        placeholder="Nome completo do cônjuge"
-                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 uppercase"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                        <span>CPF do Cônjuge</span>
-                        {conjugeCpf && (
-                          <span className={`text-[10px] font-bold ${isConjugeCpfValid ? 'text-emerald-600' : 'text-rose-600'}`}>
-                            {isConjugeCpfValid ? '✓ Válido' : '✗ Inválido'}
-                          </span>
-                        )}
-                      </label>
-                      <input
-                        type="text"
-                        value={conjugeCpf}
-                        onChange={(e) => handleConjugeCpfChange(e.target.value)}
-                        maxLength={14}
-                        placeholder="000.000.000-00"
-                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 block">
-                        RG do Cônjuge
-                      </label>
-                      <input
-                        type="text"
-                        value={conjugeRg}
-                        onChange={(e) => handleConjugeRgChange(e.target.value)}
-                        placeholder="00.000.000-0"
-                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                      />
-                    </div>
-
-                    <div>
-                      <OrgaoEmissorInput
-                        value={conjugeRgOrgao}
-                        onChange={setConjugeRgOrgao}
-                        label="Órgão Emissor (Cônjuge)"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* SEÇÃO 4: ENDEREÇO COM BUSCA DE CEP */}
+            {/* SEÇÃO 3: ENDEREÇO COM BUSCA DE CEP */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-slate-900 border-b border-slate-100 pb-2">
                 <MapPin className="w-4 h-4 text-yellow-600" />
