@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import QRCode from 'qrcode';
 import {
   Menu,
   X,
@@ -11,7 +12,12 @@ import {
   ArrowLeft,
   CheckCircle2,
   Settings2,
+  QrCode,
+  Copy,
 } from 'lucide-react';
+
+const PIX_KEY = '60659875000121';
+const PIX_PAYLOAD = '00020126360014BR.GOV.BCB.PIX0114606598750001215204000053039865802BR5925Imobiliaria Geo Florestal6003stm62070503***63045E11';
 
 interface NavbarProps {
   currentView: 'dashboard' | 'form' | 'viewer';
@@ -41,6 +47,36 @@ export const Navbar: React.FC<NavbarProps> = ({
   canManageTemplates = true,
 }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isPixModalOpen, setIsPixModalOpen] = useState(false);
+  const [pixQrCode, setPixQrCode] = useState<string | null>(null);
+  const [pixCopied, setPixCopied] = useState(false);
+
+  const openPixModal = async () => {
+    setIsPixModalOpen(true);
+    setPixCopied(false);
+    if (!pixQrCode) {
+      try {
+        const dataUrl = await QRCode.toDataURL(PIX_PAYLOAD, {
+          width: 320,
+          margin: 2,
+          errorCorrectionLevel: 'M',
+          color: { dark: '#000000', light: '#FFFFFF' },
+        });
+        setPixQrCode(dataUrl);
+      } catch {
+        setPixQrCode(null);
+      }
+    }
+  };
+
+  const handleCopyPixKey = async () => {
+    try {
+      await navigator.clipboard.writeText(PIX_KEY);
+      setPixCopied(true);
+    } catch {
+      setPixCopied(false);
+    }
+  };
 
   // Iniciais do usuário para o avatar
   const displayName = userName || userEmail || 'Usuário';
@@ -94,6 +130,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               LADO DIREITO: BOTÃO HAMBÚRGUER & MENU DO SISTEMA
              ======================================================== */}
           <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={openPixModal}
+              className="flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-xs uppercase tracking-wide shadow-sm transition-all active:scale-95 cursor-pointer"
+              title="Abrir QR Code e chave PIX"
+              aria-label="Abrir PIX para recebimento"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>PIX</span>
+            </button>
             
             {/* BOTÃO HAMBÚRGUER DO MENU */}
             <div className="relative shrink-0">
@@ -268,6 +314,63 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       </div>
+
+      {isPixModalOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4"
+          onClick={() => setIsPixModalOpen(false)}
+          role="presentation"
+        >
+          <section
+            className="relative w-full max-w-md rounded-3xl bg-white p-5 sm:p-7 text-slate-900 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pix-modal-title"
+          >
+            <button
+              type="button"
+              onClick={() => setIsPixModalOpen(false)}
+              className="absolute right-4 top-4 rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 cursor-pointer"
+              aria-label="Fechar PIX"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                <QrCode className="h-6 w-6" />
+              </div>
+              <h2 id="pix-modal-title" className="text-xl font-black tracking-tight">Recebimento via PIX</h2>
+              <p className="mt-1 text-xs font-medium text-slate-500">Imobiliária Geo Florestal</p>
+            </div>
+
+            <div className="mx-auto mt-5 flex min-h-[280px] w-full max-w-[300px] items-center justify-center rounded-2xl border border-slate-200 bg-white p-3">
+              {pixQrCode ? (
+                <img src={pixQrCode} alt="QR Code PIX da Imobiliária Geo Florestal" className="h-auto w-full" />
+              ) : (
+                <p className="text-sm text-slate-500">Não foi possível gerar o QR Code.</p>
+              )}
+            </div>
+
+            <div className="mt-5 space-y-2 rounded-2xl bg-slate-50 p-4 text-xs">
+              <div className="flex justify-between gap-3"><span className="text-slate-500">Razão social</span><strong className="text-right">D Souza de Andrade Imóveis</strong></div>
+              <div className="flex justify-between gap-3"><span className="text-slate-500">Banco</span><strong className="text-right">Santander</strong></div>
+              <div className="flex justify-between gap-3"><span className="text-slate-500">CNPJ / Chave PIX</span><strong className="text-right">60.659.875/0001-21</strong></div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCopyPixKey}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-extrabold text-white hover:bg-emerald-700 transition-colors cursor-pointer"
+            >
+              {pixCopied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {pixCopied ? 'Chave PIX copiada' : 'Copiar chave PIX'}
+            </button>
+            <p className="mt-2 text-center text-[10px] text-slate-400">Confira o destinatário antes de confirmar o pagamento.</p>
+          </section>
+        </div>
+      )}
     </header>
   );
 };
