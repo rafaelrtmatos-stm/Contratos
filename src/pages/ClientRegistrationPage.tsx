@@ -110,11 +110,6 @@ export const ClientRegistrationPage: React.FC = () => {
     }
   }, [contractId]);
 
-  const isMarried =
-    estadoCivil.toLowerCase().includes('casad') ||
-    estadoCivil.toLowerCase().includes('união estável') ||
-    estadoCivil.toLowerCase().includes('uniao estavel');
-
   const roleLabel =
     roleParam === 'vendedor'
       ? 'Vendedor(a) / Proprietário(a)'
